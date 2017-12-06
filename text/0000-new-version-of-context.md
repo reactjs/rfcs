@@ -18,11 +18,13 @@ class ThemeToggler extends React.Component {
   render() {
     return (
       // Pass the current context value to the Provider's `value` prop.
-      // Changes  are detected using strict comparison
+      // Changes are detected using strict comparison (Object.is)
       <ThemeContext.Provider value={this.state.theme}>
         <button
-          onClick={state =>
-            this.setState({theme: state.theme === 'light' ? 'dark' : 'light'})
+          onClick={() =>
+            this.setState(state => ({
+              theme: state.theme === 'light' ? 'dark' : 'light',
+            }))
           }>
           Toggle theme
         </button>
@@ -108,7 +110,8 @@ been shifted from the framework to its users.
 
 ## Main goals of this proposal
 
-* Zero cost (or close to it) on initial mount.
+* Zero cost (or close to it) for initial mount, commit, and unmount, trading-off
+update cost as necessary.
 * Easy-to-use API.
 * Statically typable.
 * Encourage async-friendly practices, like immutability.
@@ -166,9 +169,11 @@ render() {
 ```
 
 To update the context value, the parent re-renders and passes a different value.
-Changes to context rely on strict comparison. This is meant to encourage the use
-of immutable or persistent data structures. In the typical scenario, context is
-updated by calling `setState` on the provider's parent.
+Changes to context are detected using `Object.is` comparison. (Referred to as
+strict comparision in this proposal, though `Object.is` is different from `===`
+in some edge cases.) This is meant to encourage the use of immutable or
+persistent data structures. In the typical scenario, context is updated by
+calling `setState` on the provider's parent.
 
 The consumer uses a render prop API:
 
@@ -187,8 +192,11 @@ arbitrary prop on the child component. The advantage of the render prop API is
 that we avoid clobbering the prop namespace.
 
 If a consumer is rendered without a matching provider as its ancestor, it
-receives the default value passed to `createContext`, ensuring type safety. We
-will log a warning in development.
+receives the default value passed to `createContext`, ensuring type safety.
+
+## Implementation
+
+TODO.
 
 # Drawbacks
 
@@ -267,8 +275,10 @@ class ThemeToggler extends React.Component {
     return (
       <>
         <button
-          onClick={state =>
-            this.setState({theme: state.theme === 'light' ? 'dark' : 'light'})
+          onClick={() =>
+            this.setState(state => ({
+              theme: state.theme === 'light' ? 'dark' : 'light',
+            }))
           }>
           Toggle theme
         </button>
@@ -327,16 +337,53 @@ with. We'll update the context documentation to use the new API.
 
 # Plan for adoption
 
+Before releasing, reach out to prominent third-party library maintainers.
+
 Initially, we will release the new API alongside the existing context API as a
 minor update. The APIs are different enough to avoid much confusion.
 
-We will deprecate the existing API either simultaneous to the new API's
-introduction, or after some period of time to allow users to migrate. We can't
-use a codemod to automatically convert, so this may take a while.
+Publish a migration guide. Make it clear that although the APIs are different,
+the new version of context provides a superset of functionality. Sending down
+static values is still supported.
+
+Replacing subscription-based patterns in favor of context's built-in change
+propgation may require a larger effort. However, as a first step, developers can
+migrate to the new API without abandoning subscriptions. Or, they can keep
+using subscriptions even with the new API, if that makes the most sense for
+their use case.
+
+Coordinate with library authors to migrate to the new API. Once the major
+libraries are ready, and we've allowed enough time for users to migrate, we will
+deprecate the old API in a minor update.
 
 In the following major release, we'll remove the old API.
 
-## Unresolved questions
+# Unresolved questions
+
+## Should we warn if a consumer is rendered without a matching provider?
+
+There are valid use cases for relying on the default context value. In many
+or most cases, it's likely a developer mistake. We could print a warning in
+development when a consumer is rendered without a matching provider. To supress
+the warning, the developer passes `true` to `allowDetached`.
+
+```js
+render() {
+  return (
+    // If there's no provider, this renders with the default theme.
+    // `allowDetached` suppresses the development warning
+    <ThemeContext.Consumer allowDetached={true}>
+      {theme => (
+        <h1 style={{color: theme === 'light' ? '#000' : '#fff'}}>
+          {this.props.children}
+        </h1>
+      )}
+    </ThemeContext.Consumer>
+  );
+}
+```
+
+## Other
 
 * Should the consumer use `children` as a render prop, or a named prop?
 * How quickly should we deprecate and remove the existing context API?
