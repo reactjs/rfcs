@@ -383,6 +383,13 @@ render() {
 }
 ```
 
+## Add displayName argument to createContext for better debugging
+
+For warnings and React DevTools, it would help if providers and consumers
+had a `displayName`. The question is whether it should be required. We could
+make it optional, and use a Babel transform to add the name automatically. This
+is the strategy we use for `createClass`.
+
 ## Other
 
 * Should the consumer use `children` as a render prop, or a named prop?
