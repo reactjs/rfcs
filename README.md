@@ -16,6 +16,16 @@ React is still **actively developing** this process, and it will still change as
 more features are implemented and the community settles on specific approaches
 to feature development.
 
+## Contributor License Agreement (CLA)
+
+In order to accept your pull request, we need you to submit a CLA. You only need
+to do this once, so if you've done this for another Facebook open source
+project, you're good to go. If you are submitting a pull request for the first
+time, just let us know that you have completed the CLA and we can cross-check
+with your GitHub username.
+
+**[Complete your CLA here.](https://code.facebook.com/cla)**
+
 ## When to follow this process
 
 You should consider using this process if you intend to make "substantial"
