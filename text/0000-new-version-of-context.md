@@ -14,7 +14,7 @@ type Theme = 'light' | 'dark';
 const ThemeContext: Context<Theme> = React.createContext('light');
 
 class ThemeToggler extends React.Component {
-  state = {theme: 'red'};
+  state = {theme: 'light'};
   render() {
     return (
       // Pass the current context value to the Provider's `value` prop.
@@ -267,7 +267,7 @@ have today:
 
 ```js
 class ThemeToggler extends React.Component {
-  state = {theme: 'red'};
+  state = {theme: 'light'};
   getChildContext() {
     return this.state.theme;
   }
