@@ -191,15 +191,15 @@ React does not call this method before the intial render/mount and so it is not 
 
 ## Deprecated lifecycle methods
 
-### `componentWillMount`
+### `componentWillMount` -> `unsafe_componentWillMount`
 
 This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillMount` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
 
-### `componentWillUpdate`
+### `componentWillUpdate` -> `unsafe_componentWillUpdate`
 
 This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillUpdate` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
 
-### `componentWillReceiveProps`
+### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
 
 This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillReceiveProps` or use the new static `deriveStateFromProps` method instead. It will be removed entirely in version 17.
 
