@@ -142,7 +142,7 @@ class ExampleComponent extends React.Component {
 
 # Motivation
 
-The React team recently added a feature flag to stress-test Facebook components for potential incompatibilities with our experimental async rendering mode (facebook/react/pull/11587). We enabled this feature flag internally so that we could:
+The React team recently added a feature flag to stress-test Facebook components for potential incompatibilities with our experimental async rendering mode ([facebook/react/pull/11587](https://github.com/facebook/react/pull/11587)). We enabled this feature flag internally so that we could:
 1. Identify common problematic coding patterns with the legacy component API to inform a new async component API.
 2. Find and fix async bugs before they impact end-users by intentionally triggering them in a deterministic way.
 3. Gain confidence that our existing products could work in async.
@@ -193,21 +193,21 @@ React does not call this method before the intial render/mount and so it is not 
 
 ### `componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `prefetch` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillMount` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
 
 ### `componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `prefetch` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillUpdate` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
 
 ### `componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `deriveStateFromProps` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillReceiveProps` or use the new static `deriveStateFromProps` method instead. It will be removed entirely in version 17.
 
 # Drawbacks
 
 The current component lifecycle hooks are familiar and used widely. This proposed change will introduce a lot of churn within the ecosystem. I hope that we can reduce the impact of this change through the use of codemods, but it will still require a manual review process and testing.
 
-This change is **not backwards compatible**. It will require library maintainers to drop support for older versions of React in order to support the future component API. Unfortunately, I believe this is unavoidable in order to safely transition to an async-compatible world.
+This change is **not fully backwards compatible**. Libraries will need to drop support for older versions of React in order to use the new, static API. Unfortunately, I believe this is unavoidable in order to safely transition to an async-compatible world.
 
 # Alternatives
 
@@ -227,9 +227,11 @@ There are no advanced proposals for such a stateful, functional component API th
 
 Begin by reaching out to prominent third-party library maintainers to make sure there are no use-cases we have failed to consider.
 
-Assuming we move forward with the proposal, release (at least one) minor 16.x update to add deprecation warnings for the legacy lifecycles and inform users to use the new static methods instead. We'll then cordinate with library authors to ensure they have enough time to migrate to the new API in advance of the major release that drops support for the legacy lifecycles.
+Assuming we move forward with the proposal, release (at least one) minor 16.x update to add deprecation warnings for the legacy lifecycles and inform users to either rename with the `unsafe_` prefix or use the new static methods instead. We'll then cordinate with library authors to ensure they have enough time to migrate to the new API in advance of the major release that drops support for the legacy lifecycles.
 
-We will also provide codemods to assist with the migration, although given the nature of the change, codemods will be insufficient to handle all cases. Manual verification will be required.
+We will provide a codemod to rename the deprecated lifecycle hooks with the new `unsafe_` prefix.
+
+We will also provide codemods to assist with the migration to static methods, although given the nature of the change, codemods will be insufficient to handle all cases. Manual verification will be required.
 
 # How we teach this
 
