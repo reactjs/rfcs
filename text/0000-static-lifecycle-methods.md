@@ -33,7 +33,7 @@ class ExampleComponent extends React.Component {
 
     addExternalEventListeners();
 
-    computeMemoizeData(nextProps, nextState);
+    this._computeMemoizeData(nextProps);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -57,7 +57,7 @@ class ExampleComponent extends React.Component {
       nextProps.onChange(nextState.someStatefulValue);
     }
 
-    computeMemoizeData(nextProps, nextState);
+    this._computeMemoizeData(nextProps);
   }
 
   render() {
@@ -127,8 +127,10 @@ class ExampleComponent extends React.Component {
 
   render() {
     // Memoization that doesn't go in state can be done in render.
-    // It should be idempotent and have no external side effects though.
-    computeMemoizeData(this.props, this.state);
+    // It should be idempotent and have no external side effects or mutations.
+    // Examples include incrementing unique ids,
+    // Lazily calculating and caching values, etc.
+    this._computeMemoizeData(this.props);
 
     if (this.state.externalData === null) {
       return <div>Loading...</div>;
