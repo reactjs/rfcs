@@ -119,7 +119,7 @@ class ExampleComponent extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     // Callbacks (side effects) are only safe after commit.
     if (this.state.someStatefulValue !== prevState.someStatefulValue) {
-      this.state.onChange(this.state.someStatefulValue);
+      this.props.onChange(this.state.someStatefulValue);
     }
   }
 
