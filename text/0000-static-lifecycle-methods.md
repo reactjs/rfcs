@@ -183,7 +183,7 @@ This method is invoked before `render` for both the initial render and all subse
 
 The purpose of this method is to initiate asynchronous request(s) as early as possible in a component's rendering lifecycle. Such requests will not block `render`. They can be used to pre-prime a cache that is later used in `componentDidMount`/`componentDidUpdate` to trigger a state update.
 
-Avoid introducing any side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
+Avoid introducing any non-idempotent side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
 
 ### `static deriveStateFromProps(props: Props, state: State, prevProps: Props): PartialState | null`
 
