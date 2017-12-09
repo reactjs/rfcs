@@ -17,6 +17,7 @@ class ExampleComponent extends React.Component {
   static deriveStateFromProps(props, state, prevProps) {
     // Called before a mounted component receives new props.
     // Return an object to update state in response to prop changes.
+    // Return null to indicate no change to state.
   }
 
   static prefetch(props, state) {
@@ -70,101 +71,55 @@ The goal of this proposal is to reduce the risk of writing async-compatible Reac
 
 ## Examples
 
-The following example combines all of the common, potentially-problematic patterns listed above. (Based on initial feedback, I will rewrite this as several smaller, more focused examples shortly.)
+Let's look at some of the common usage patterns mentioned above and how they might be adapted to the new proposed API.
+
+### Prefetching async data during mount
+
+The purpose of this pattern is to initiate data loading as early as possible.
+
+It is worth noting that in both examples below, the data will not finish loading before the initial render (so a second render pass will be required in either case).
+
+#### Before
 
 ```js
 class ExampleComponent extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      derivedData: null,
-      externalData: null,
-      someStatefulValue: null
-    };
-  }
+  state = {
+    externalData: null,
+  };
 
   componentWillMount() {
     asyncLoadData(this.props.someId).then(externalData =>
       this.setState({ externalData })
     );
-
-    // Note that this is not safe; (it can leak)
-    // But it is a common pattern so I'm showing it here.
-    addExternalEventListeners();
-
-    this._computeMemoizedInstanceData(this.props);
-  }
-
-  componentWillReceiveProps(nextProps) {
-    this.setState({
-      derivedData: computeDerivedState(nextProps)
-    });
-  }
-
-  componentWillUnmount() {
-    removeExternalEventListeners();
-  }
-
-  componentWillUpdate(nextProps, nextState) {
-    if (this.props.someId !== nextProps.someId) {
-      asyncLoadData(nextProps.someId).then(externalData =>
-        this.setState({ externalData })
-      );
-    }
-
-    if (this.state.someStatefulValue !== nextState.someStatefulValue) {
-      nextProps.onChange(nextState.someStatefulValue);
-    }
-
-    this._computeMemoizedInstanceData(nextProps);
   }
 
   render() {
     if (this.state.externalData === null) {
-      return <div>Loading...</div>;
+      // Render loading UI...
+    } else {
+      // Render real view...
     }
-
-    // Render real view...
   }
 }
 ```
 
-This proposal would modify the above component as follows:
+#### After
 
 ```js
 class ExampleComponent extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      derivedData: null,
-      externalData: null,
-      someStatefulValue: null
-    };
-  }
-
-  static deriveStateFromProps(props, state, prevProps) {
-    // If derived state is expensive to calculate,
-    // You can compare props to prevProps and conditionally update.
-    return {
-      derivedData: computeDerivedState(props)
-    };
-  }
+  state = {
+    externalData: null,
+  };
 
   static prefetch(props, state) {
-    // Prime the async cache early.
+    // Prime an external cache as early as possible.
     // (Async request won't complete before render anyway.)
-    // If you only need to pre-fetch before mount,
-    // You can conditionally fetch based on state.
-    asyncLoadData(props.someId);
+    if (state.externalData === null) {
+      asyncLoadData(props.someId);
+    }
   }
 
   componentDidMount() {
-    // Event listeners are only safe to add after mount,
-    // So they won't leak if mount is interrupted or errors.
-    addExternalEventListeners();
-
     // Wait for earlier pre-fetch to complete and update state.
     // (This assumes some kind of cache to avoid duplicate requests.)
     asyncLoadData(props.someId).then(externalData =>
@@ -172,29 +127,195 @@ class ExampleComponent extends React.Component {
     );
   }
 
+  render() {
+    if (this.state.externalData === null) {
+      // Render loading UI...
+    } else {
+      // Render real view...
+    }
+  }
+}
+```
+
+### State derived from props/state
+
+The purpose of this pattern is to calculate some values derived from props for use during render.
+
+Typically `componentWillReceiveProps` is used for this, although if the calculation is fast enough it could just be done in `render`.
+
+#### Before
+
+```js
+class ExampleComponent extends React.Component {
+  componentWillReceiveProps(nextProps) {
+    if (this.props.someValue !== nextProps.someValue) {
+      this.setState({
+        derivedData: computeDerivedState(nextProps)
+      });
+    }
+  }
+}
+```
+
+#### After
+
+```js
+class ExampleComponent extends React.Component {
+  static deriveStateFromProps(props, state, prevProps) {
+    if (props.someValue !== prevProps.someValue) {
+      return {
+        derivedData: computeDerivedState(props)
+      };
+    }
+
+    // Return null to indicate no change to state.
+    return null;
+  }
+}
+```
+
+### Adding event listeners/subscriptions
+
+The purpose of this pattern is to subscribe a component to external events when it mounts and unsubscribe it when it unmounts.
+
+The `componentWillMount` lifecycle is often used for this purpose, but this is problematic because any interruption _or_ error during initial mount will cause a memory leak. (The `componentWillUnmount` lifecycle hook is not invoked for a component that does not finish mounting and so there's no safe place to handle unsubscriptions in that case.)
+
+#### Before
+
+```js
+class ExampleComponent extends React.Component {
+  componentWillMount() {
+    // This is not safe; (it can leak).
+    addExternalEventListeners();
+  }
+
+  componentWillUnmount() {
+    removeExternalEventListeners();
+  }
+}
+```
+
+#### After
+
+```js
+class ExampleComponent extends React.Component {
+  componentDidMount() {
+    // Event listeners are only safe to add after mount,
+    // So they won't leak if mount is interrupted or errors.
+    addExternalEventListeners();
+  }
+
+  componentWillUnmount() {
+    removeExternalEventListeners();
+  }
+}
+```
+
+### External function calls (side effects, mutations)
+
+The purpose of this pattern is to send an external signal that something has changed internally (eg in `state`).
+
+The `componentWillUpdate` lifecycle hook is sometimes used for this but it is not ideal because this method may be called multiple times _or_ called for props that are never committed. `componentDidUpdate` should be used for this purpose rather than `componentWillUpdate`.
+
+#### Before
+
+```js
+class ExampleComponent extends React.Component {
+  componentWillUpdate(nextProps, nextState) {
+    if (this.state.someStatefulValue !== nextState.someStatefulValue) {
+      nextProps.onChange(nextState.someStatefulValue);
+    }
+  }
+}
+```
+
+#### After
+
+```js
+class ExampleComponent extends React.Component {
   componentDidUpdate(prevProps, prevState) {
     // Callbacks (side effects) are only safe after commit.
     if (this.state.someStatefulValue !== prevState.someStatefulValue) {
       this.props.onChange(this.state.someStatefulValue);
     }
   }
+}
+```
 
-  componentWillUnmount() {
-    removeExternalEventListeners();
+### Memoized values derived from `props` and/or `state`
+
+The purpose of this pattern is to memoize computed values based on `props` and/or `state`.
+
+Typically such values are stored in `state`, but in some cases the values require mutation and as such may not seem suited for state (although they could technically still be stored there). An example of this would be an external helper class that calculates and memoizes values interally.
+
+In other cases the value may be derived from `props` _and_ `state`.
+
+#### Before
+
+```js
+class ExampleComponent extends React.Component {
+  componentWillMount() {
+    this._calculateMemoizedValues(this.props, this.state);
+  }
+
+  componentWillUpdate(nextProps, nextState) {
+    if (
+      this.props.someValue !== nextProps.someValue ||
+      this.state.someOtherValue !== nextState.someOtherValue
+    ) {
+      this._calculateMemoizedValues(nextProps, nextState);
+    }
   }
 
   render() {
+    // Render view using calculated memoized values...
+  }
+}
+```
+
+#### After
+
+```js
+class ExampleComponent extends React.Component {
+  render() {
     // Memoization that doesn't go in state can be done in render.
     // It should be idempotent and have no external side effects or mutations.
-    // Examples include incrementing unique ids,
-    // Lazily calculating and caching values, etc.
-    this._computeMemoizedInstanceData();
+    this._calculateMemoizedValues(this.props, this.state);
 
-    if (this.state.externalData === null) {
-      return <div>Loading...</div>;
-    }
+    // Render view using calculated memoized values...
+  }
+}
+```
 
-    // Render real view...
+### Initializing Flux stores during mount
+
+The purpose of this pattern is to initialize some Flux state when a component is mounted.
+
+This is sometimes done in `componentWillMount` which can be problematic if, for example, the action is not idempotent. From the point of view of the component, it's often unclear whether dispatching the action more than once will cause a problem. It's also possible that it does not cause a problem when the component is authored but later does due to changes in the store. Because of this uncertainty, it should be avoided.
+
+We recommend using `componentDidMount` for such actions since it will only be invoked once.
+
+If for some reason your application _requires_ a store to be configured by your component before initial render, and you're certain the action will remain idempotent, this could still be accomplished using either the class constructor or the `render` method itself. It is not a recommended pattern though.
+
+#### Before
+
+```js
+class ExampleComponent extends React.Component {
+  componentWillMount() {
+    FluxStore.dispatchSomeAction();
+  }
+}
+
+```
+
+#### After
+
+```js
+class ExampleComponent extends React.Component {
+  componentDidMount() {
+    // Side effects (like Flux actions) should only be done after mount or update.
+    // This prevents duplicate actions or certain types of infinite loops.
+    FluxStore.dispatchSomeAction();
   }
 }
 ```
@@ -213,7 +334,7 @@ Avoid introducing any non-idempotent side-effects, mutations, or subscriptions i
 
 ### `static deriveStateFromProps(props: Props, state: State, prevProps: Props): PartialState | null`
 
-This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes.
+This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
 Note that React may call this method even if the props have not changed. I calculating derived data is expensive, compare new and previous prop values to conditionally handle changes.
 
