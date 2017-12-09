@@ -107,8 +107,6 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
-  _asyncRequest = null;
-
   state = {
     externalData: null,
   };
@@ -124,20 +122,12 @@ class ExampleComponent extends React.Component {
   componentDidMount() {
     // Wait for earlier pre-fetch to complete and update state.
     // (This assumes some kind of cache to avoid duplicate requests.)
-    this._asyncRequest = asyncLoadData(props.someId)
-      .then(externalData => {
-        this._asyncRequest = null;
-
-        this.setState({ externalData });
-      });
-  }
-
-  componentWillUnmount() {
-    // Note that cancelling on unmount is not really related to this proposal.
-    // I'm just showing it to avoid calling setState on an unmounted component.
-    if (this._asyncRequest !== null) {
-      this._asyncRequest.cancel();
-    }
+    asyncLoadData(props.someId).then(externalData => {
+      // Note that if the component unmounts before this request completes,
+      // It will trigger a warning, "cannot update an unmounted component".
+      // You can avoid this by tracking mounted state with an instance var if desired.
+      this.setState({ externalData });
+    });
   }
 
   render() {
@@ -160,6 +150,10 @@ Typically `componentWillReceiveProps` is used for this, although if the calculat
 
 ```js
 class ExampleComponent extends React.Component {
+  state = {
+    derivedData: computeDerivedState(this.props)
+  };
+
   componentWillReceiveProps(nextProps) {
     if (this.props.someValue !== nextProps.someValue) {
       this.setState({
@@ -174,6 +168,10 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
+  state = {
+    derivedData: computeDerivedState(this.props)
+  };
+
   static deriveStateFromProps(props, state, prevProps) {
     if (props.someValue !== prevProps.someValue) {
       return {
@@ -193,18 +191,32 @@ The purpose of this pattern is to subscribe a component to external events when 
 
 The `componentWillMount` lifecycle is often used for this purpose, but this is problematic because any interruption _or_ error during initial mount will cause a memory leak. (The `componentWillUnmount` lifecycle hook is not invoked for a component that does not finish mounting and so there's no safe place to handle unsubscriptions in that case.)
 
+Using `componentWillMount` for this purpose might also cause problems in the context of server-rendering.
+
 #### Before
 
 ```js
 class ExampleComponent extends React.Component {
   componentWillMount() {
+    this.setState({
+      subscribedValue: this.props.dataSource.value
+    });
+
     // This is not safe; (it can leak).
-    addExternalEventListeners();
+    this.props.dataSource.subscribe(this._onSubscriptionChange);
   }
 
   componentWillUnmount() {
-    removeExternalEventListeners();
+    this.props.dataSource.unsubscribe(this._onSubscriptionChange);
   }
+
+  render() {
+    // Render view using subscribed value...
+  }
+
+  _onSubscriptionChange = subscribedValue => {
+    this.setState({ subscribedValue });
+  };
 }
 ```
 
@@ -212,15 +224,35 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
+  state = {
+    subscribedValue: this.props.dataSource.value
+  };
+
   componentDidMount() {
     // Event listeners are only safe to add after mount,
     // So they won't leak if mount is interrupted or errors.
-    addExternalEventListeners();
+    this.props.dataSource.subscribe(this._onSubscriptionChange);
+
+    // External values could change between render and mount,
+    // In some cases it may be important to handle this case.
+    if (this.state.subscribedValue !== this.props.dataSource.value) {
+      this.setState({
+        subscribedValue: this.props.dataSource.value
+      });
+    }
   }
 
   componentWillUnmount() {
-    removeExternalEventListeners();
+    this.props.dataSource.unsubscribe(this._onSubscriptionChange);
   }
+
+  render() {
+    // Render view using subscribed value...
+  }
+
+  _onSubscriptionChange = subscribedValue => {
+    this.setState({ subscribedValue });
+  };
 }
 ```
 
@@ -308,8 +340,6 @@ This is sometimes done in `componentWillMount` which can be problematic if, for 
 
 We recommend using `componentDidMount` for such actions since it will only be invoked once.
 
-If for some reason your application _requires_ a store to be configured by your component before initial render, and you're certain the action will remain idempotent, this could still be accomplished using either the class constructor or the `render` method itself. It is not a recommended pattern though.
-
 #### Before
 
 ```js
@@ -349,7 +379,7 @@ Avoid introducing any non-idempotent side-effects, mutations, or subscriptions i
 
 This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
-Note that React may call this method even if the props have not changed. I calculating derived data is expensive, compare new and previous prop values to conditionally handle changes.
+Note that React may call this method even if the props have not changed. If calculating derived data is expensive, compare new and previous prop values to conditionally handle changes.
 
 React does not call this method before the intial render/mount and so it is not called during server rendering.
 
