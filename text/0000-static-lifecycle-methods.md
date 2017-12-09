@@ -151,7 +151,7 @@ The React team recently added a feature flag to stress-test Facebook components 
 2. Find and fix async bugs before they impact end-users by intentionally triggering them in a deterministic way.
 3. Gain confidence that our existing products could work in async.
 
-I believe this GK confirmed what we suspected about the legacy component API: _It has too many potential pitfalls to be safely used for async rendering._
+I believe the internal experiment confirmed what we suspected about the legacy component API: _It has too many potential pitfalls to be safely used for async rendering._
 
 ## Common problems
 
