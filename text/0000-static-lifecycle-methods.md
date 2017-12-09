@@ -107,6 +107,8 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
+  _asyncRequest = null;
+
   state = {
     externalData: null,
   };
@@ -122,12 +124,20 @@ class ExampleComponent extends React.Component {
   componentDidMount() {
     // Wait for earlier pre-fetch to complete and update state.
     // (This assumes some kind of cache to avoid duplicate requests.)
-    asyncLoadData(props.someId).then(externalData => {
-      // Note that if the component unmounts before this request completes,
-      // It will trigger a warning, "cannot update an unmounted component".
-      // You can avoid this by tracking mounted state with an instance var if desired.
-      this.setState({ externalData });
-    });
+    this._asyncRequest = asyncLoadData(props.someId)
+      .then(externalData => {
+        this._asyncRequest = null;
+
+        this.setState({ externalData });
+      });
+  }
+
+  componentWillUnmount() {
+    // Note that cancelling on unmount is not really related to this proposal.
+    // I'm just showing it to avoid calling setState on an unmounted component.
+    if (this._asyncRequest !== null) {
+      this._asyncRequest.cancel();
+    }
   }
 
   render() {
