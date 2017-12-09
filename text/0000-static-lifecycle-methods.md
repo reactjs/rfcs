@@ -33,7 +33,7 @@ class ExampleComponent extends React.Component {
 
     addExternalEventListeners();
 
-    this._computeMemoizeData(nextProps);
+    this._computeMemoizedInstanceData(nextProps);
   }
 
   componentWillReceiveProps(nextProps) {
@@ -57,7 +57,7 @@ class ExampleComponent extends React.Component {
       nextProps.onChange(nextState.someStatefulValue);
     }
 
-    this._computeMemoizeData(nextProps);
+    this._computeMemoizedInstanceData(nextProps);
   }
 
   render() {
@@ -130,7 +130,7 @@ class ExampleComponent extends React.Component {
     // It should be idempotent and have no external side effects or mutations.
     // Examples include incrementing unique ids,
     // Lazily calculating and caching values, etc.
-    this._computeMemoizeData(this.props);
+    this._computeMemoizedInstanceData();
 
     if (this.state.externalData === null) {
       return <div>Loading...</div>;
