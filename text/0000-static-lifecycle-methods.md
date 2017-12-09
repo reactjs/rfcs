@@ -10,9 +10,67 @@ Provide a clear migration path for legacy components to become async-ready.
 
 # Basic example
 
-## Current API
+At a high-level, I propose the following additions/changes to the component API. (The motivations for these changes are explained below.)
 
-The following example combines several patterns that I think are common in React components:
+```js
+class ExampleComponent extends React.Component {
+  static deriveStateFromProps(props, state, prevProps) {
+    // Called before a mounted component receives new props.
+    // Return an object to update state in response to prop changes.
+  }
+
+  static prefetch(props, state) {
+    // Initiate async request(s) as early as possible in rendering lifecycle.
+    // These requests do not block `render`.
+    // They can only pre-prime a cache that is used later to update state.
+    // (This is a micro-optimization and probably not a common use-case.)
+  }
+
+  unsafe_componentWillMount() {
+    // New name for componentWillMount()
+    // Indicates that this method can be unsafe for async rendering.
+  }
+
+  unsafe_componentWillUpdate(nextProps, nextState) {
+    // New name for componentWillUpdate()
+    // Indicates that this method can be unsafe for async rendering.
+  }
+
+  unsafe_componentWillReceiveProps(nextProps) {
+    // New name for componentWillReceiveProps()
+    // Indicates that this method can be unsafe for async rendering.
+  }
+}
+```
+
+# Motivation
+
+The React team recently added a feature flag to stress-test Facebook components for potential incompatibilities with our experimental async rendering mode ([facebook/react/pull/11587](https://github.com/facebook/react/pull/11587)). We enabled this feature flag internally so that we could:
+1. Identify common problematic coding patterns with the legacy component API to inform a new async component API.
+2. Find and fix async bugs before they impact end-users by intentionally triggering them in a deterministic way.
+3. Gain confidence that our existing products could work in async.
+
+I believe this internal experiment confirmed what we suspected about the legacy component API: _It has too many potential pitfalls to be safely used for async rendering._
+
+## Common problems
+
+Some of the most common problematic patterns that were uncovered include:
+* **Initializing Flux stores in `componentWillMount`**. It's often unclear whether this is an actual problem or just a potential one (eg if the store or its dependencies change in the future). Because of this uncertainty, it should be avoided.
+* **Adding event listeners/subscriptions** in `componentWillMount` and removing them in `componentWillUnmount`. This causes leaks if the initial render is interrupted (or errors) before completion.
+* **Non-idempotent external function calls** during `componentWillMount`, `componentWillUpdate`, or `componentWillReceiveProps` (eg registering callbacks that may be invoked multiple times, initializing or configuring shared controllers in such a way as to trigger invariants, etc.)
+
+## Goal
+
+The goal of this proposal is to reduce the risk of writing async-compatible React components. I believe that can be accomplished by removing many<sup>1</sup> of the potential pitfalls in the current API while retaining important functionality the API enables. This can be done through a combination of:
+
+1. Choosing lifecycle method names that have a clearer, more limited purpose.
+2. Making certain lifecycles static to prevent unsafe access of instance properties.
+
+<sup>1</sup> It is not possible to detect or prevent all side-effects (eg mutations of global/shared objects).
+
+## Examples
+
+The following example combines all of the common, potentially-problematic patterns listed above. (Based on initial feedback, I will rewrite this as several smaller, more focused examples shortly.)
 
 ```js
 class ExampleComponent extends React.Component {
@@ -71,8 +129,6 @@ class ExampleComponent extends React.Component {
   }
 }
 ```
-
-## Proposed API
 
 This proposal would modify the above component as follows:
 
@@ -141,37 +197,7 @@ class ExampleComponent extends React.Component {
     // Render real view...
   }
 }
-
 ```
-
-# Motivation
-
-The React team recently added a feature flag to stress-test Facebook components for potential incompatibilities with our experimental async rendering mode ([facebook/react/pull/11587](https://github.com/facebook/react/pull/11587)). We enabled this feature flag internally so that we could:
-1. Identify common problematic coding patterns with the legacy component API to inform a new async component API.
-2. Find and fix async bugs before they impact end-users by intentionally triggering them in a deterministic way.
-3. Gain confidence that our existing products could work in async.
-
-I believe the internal experiment confirmed what we suspected about the legacy component API: _It has too many potential pitfalls to be safely used for async rendering._
-
-## Common problems
-
-Some of the most common problematic patterns that were uncovered include:
-* **Initializing Flux stores in `componentWillMount`**. It's often unclear whether this is an actual problem or just a potential one (eg if the store or its dependencies change in the future). Because of this uncertainty, it should be avoided.
-* **Adding event listeners/subscriptions** in `componentWillMount` and removing them in `componentWillUnmount`. This causes leaks if the initial render is interrupted (or errors) before completion.
-* **Non-idempotent external function calls** during `componentWillMount`, `componentWillUpdate`, or `componentWillReceiveProps` (eg registering callbacks that may be invoked multiple times, initializing or configuring shared controllers in such a way as to trigger invariants, etc.)
-
-The [example above](#basic-example) attempts to illustrate a few of these patterns.
-
-## Proposal
-
-This proposal is intended to reduce the risk of writing async-compatible React components.
-
-It does this by removing many<sup>1</sup> of the potential pitfalls in the current API while retaining important functionality the API enables. I believe this can be accomplished through a combination of:
-
-1. Choosing lifecycle method names that have a clearer, more limited purpose.
-2. Making certain lifecycles static to prevent unsafe access of instance properties.
-
-<sup>1</sup> It is not possible to detect or prevent all side-effects (eg mutations of global/shared objects).
 
 # Detailed design
 
