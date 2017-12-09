@@ -31,6 +31,8 @@ class ExampleComponent extends React.Component {
       this.setState({ externalData })
     );
 
+    // Note that this is not safe; (it can leak)
+    // But it is a common pattern so I'm showing it here.
     addExternalEventListeners();
 
     this._computeMemoizedInstanceData(nextProps);
