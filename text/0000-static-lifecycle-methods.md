@@ -35,7 +35,7 @@ class ExampleComponent extends React.Component {
     // But it is a common pattern so I'm showing it here.
     addExternalEventListeners();
 
-    this._computeMemoizedInstanceData(nextProps);
+    this._computeMemoizedInstanceData(this.props);
   }
 
   componentWillReceiveProps(nextProps) {
