@@ -131,6 +131,11 @@ We try to make sure that any RFC that we accept is accepted at the
 weekly team meeting. Every accepted feature should have a core team champion,
 who will represent the feature and its progress.
 
+## Guidelines for RFCs
+
+Contributors are encouraged to use type annotations and proposal-stage syntax 
+when doing so makes an RFC easier to understand or to reason about. 
+
 **React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process]**
 
 [Yarn RFC process]: https://github.com/yarnpkg/rfcs
