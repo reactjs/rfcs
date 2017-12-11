@@ -42,10 +42,210 @@ class Example extends React.Component {
 
 Provide a place for initialization logic with side effects to safely run on the server. This includes things like:
 * Logging/metrics
+# Smarter default server-side behavior for virtualization/windowing libraries
 * Routing redirects if match was found (eg the legacy react-router `Match`/`Miss` components)
 * Initializaing shared localization data
 
 Typically, `componentWillMount` is used for this, but [RFC #6](https://github.com/reactjs/rfcs/pull/6) proposes to remove this method. (It is not a very ergonomic solution anyway.) The logic could be moved to the component constructor but it's generally considered bad practice for a constructor to have side effects.
+
+## Logging example
+
+This example shows how you might use the new `componentDidServerRender` method to do log analytics data for server renders.
+
+```js
+import API from './your-api-abstraction';
+
+class AnalyticsComponent extends React.Component {
+  componentDidServerRender() {
+    API.logSomeData();
+  }
+}
+```
+
+## Server-side fallbacks for virtualization/windowing libraries
+
+This example shows how a windowing library (like [react-virtualized](https://github.com/bvaughn/react-virtualized)) might implement a smarter default behavior when being rendered on the server.
+
+Windowing libraries typically require their dimensions to be injected via props in order to function. These measurements typically come from the DOM, after initial mount, and are unavailable on the server. This means that be default, no windowed content will render. A component like [`AutoSizer`](https://github.com/bvaughn/react-virtualized/blob/master/source/AutoSizer/AutoSizer.js) could use this new lifecycle hook to determine that it's been server-rendered and default to showing a fixed amount of content:
+
+```js
+class AutoSizer extends React.Component {
+  static defaultProps = {
+    serverHeight: 400,
+    serverWidth: 800,
+  };
+
+  state = {
+    height: 0,
+    width: 0,
+  };
+
+  componentDidMount() {
+    // Measure actual DOM element size and store in state
+  }
+
+  componentDidServerRender() {
+    // Use a default size to render *some* content
+    this.setState({
+      height: this.props.serverHeight,
+      width: this.props.serverWidth,
+    });
+  }
+
+  render() {
+    const { height, width } = this.state;
+
+    return this.props.children({
+      height,
+      width,
+    });
+  }
+}
+```
+
+The above example could be re-written to _assume_ a server context by default (with a flag in `state` that is updated by `componentDidMount`). This could result in the windowing component creating more content than is necessary on the initial render though (eg if the server fallback was larger than the actual measured size).
+
+## Routing redirect example
+
+This example shows how you might use the new `componentDidServerRender` method (along with `context`) to create a router that renders a default view if the current URL does not match one of the specified patterns. (Note that this example is over-simplified and a little silly.)
+
+```js
+class Router extends React.Component {
+  static childContextTypes = {
+    hasMatches: PropTypes.func.isRequired,
+    registerMatch: PropTypes.func.isRequired,
+  };
+
+  static GlobalState = {
+    matched: false,
+    hasMatches: () => Router.GlobalState.matched,
+    registerMatch: matched => {
+      if (matched) {
+        Router.GlobalState.matched = true;
+      }
+    },
+    resetMatched: () => {
+      Router.GlobalState.matched = false;
+    },
+  };
+
+  getChildContext() {
+    return {
+      hasMatches: Router.GlobalState.hasMatches,
+      registerMatch: Router.GlobalState.registerMatch,
+    };
+  }
+
+  componentWillUpdate() {
+    Router.GlobalState.resetMatched();
+  }
+
+  render() {
+    return this.props.children;
+  }
+}
+
+class Match extends React.Component {
+  static propTypes = {
+    children: PropTypes.node.isRequired,
+    location: PropTypes.object.isRequired,
+    pattern: PropTypes.string.isRequired,
+  };
+
+  static contextTypes = {
+    registerMatch: PropTypes.func.isRequired,
+  };
+
+  componentDidMount() {
+    this._registerMatch();
+  }
+
+  componentDidServerRender() {
+    this._registerMatch();
+  }
+
+  componentDidUpdate() {
+    this._registerMatch();
+  }
+
+  render() {
+    return this._doesMatch()
+      ? this.props.children
+      : null;
+  }
+
+  _doesMatch() {
+    const { location, pattern } = this.props;
+
+    // This is over-simplified :)
+    return location.pathname === pattern;
+  }
+
+  _registerMatch() {
+    const { registerMatch } = this.context;
+    const { pattern } = this.props;
+
+    registerMatch(this._doesMatch());
+  }
+}
+
+class Miss extends React.Component {
+  static propTypes = {
+    children: PropTypes.node.isRequired,
+  };
+
+  static contextTypes = {
+    hasMatches: PropTypes.func.isRequired,
+  };
+
+  state = {
+    hasMatchesInContext: true
+  };
+
+  componentDidMount() {
+    this._checkForMatches();
+  }
+
+  componentDidServerRender() {
+    this._checkForMatches();
+  }
+
+  componentDidUpdate() {
+    this._checkForMatches();
+  }
+
+  render() {
+    return this.state.hasMatchesInContext
+      ? null
+      : this.props.children;
+  }
+
+  _checkForMatches() {
+    const { hasMatchesInContext } = this.state;
+    const { hasMatches } = this.context;
+
+    if (hasMatches() !== hasMatchesInContext) {
+      this.setState({
+        hasMatchesInContext: hasMatches(),
+      });
+    }
+  }
+}
+
+const App = () => (
+  <Router>
+    <Match location={location} pattern='/some/url'>
+      <SomeView />
+    </Match>
+    <Match location={location} pattern='/some/other/url'>
+      <SomeOtherView />
+    </Match>
+    <Miss>
+      <DefaultView />
+    </Miss>
+  </Router>
+);
+```
 
 # Detailed design
 
