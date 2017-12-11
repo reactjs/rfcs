@@ -47,7 +47,7 @@ class Example extends React.Component {
 
 Provide a place for initialization logic with side effects to safely run on the server. This includes things like:
 * Logging/metrics
-# Smarter default server-side behavior for virtualization/windowing libraries
+* Smarter default server-side behavior for virtualization/windowing libraries
 * Routing redirects if match was found (eg the legacy react-router `Match`/`Miss` components)
 * Initializaing shared localization data
 
