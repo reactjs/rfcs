@@ -23,7 +23,7 @@ class FeedPage extends React.Component {
       <div>
         {feedItems.map(({ imageSrc, id }) =>
           <img
-            class="small-img"
+            className="small-img"
             key={id}
             src={imageSrc}
             onClick={this.changeRoute.bind(this, id)}
@@ -38,7 +38,7 @@ class DetailPage extends React.Component {
     const { imageSrc, id } = this.props.feedItem;
     return (
       <img
-        class="large-img"
+        className="large-img"
         src={imageSrc}
         dangerouslyRecycleNode={id}
       />
