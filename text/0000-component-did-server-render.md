@@ -46,9 +46,9 @@ class Example extends React.Component {
 # Motivation
 
 Provide a place for initialization logic with side effects to safely run on the server. This includes things like:
-* Logging/metrics
-* Smarter default server-side behavior for virtualization/windowing libraries
-* Routing redirects if match was found (eg the legacy react-router `Match`/`Miss` components)
+* [Logging/metrics](#logging-example)
+* [Smarter default server-side behavior for virtualization/windowing libraries](#server-side-fallbacks-for-virtualizationwindowing-libraries)
+* [Routing redirects if match was found (eg the legacy react-router `Match`/`Miss` components)](#routing-redirect-example)
 * Initializaing shared localization data
 
 Typically, `componentWillMount` is used for this, but [RFC #6](https://github.com/reactjs/rfcs/pull/6) proposes to remove this method. (It is not a very ergonomic solution anyway.) The logic could be moved to the component constructor but it's generally considered bad practice for a constructor to have side effects.
