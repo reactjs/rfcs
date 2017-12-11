@@ -16,6 +16,7 @@ class Example extends React.Component {
   componentWillMount() {
     if (typeof window === 'undefined') {
       // Server-side
+      // Children have not yet rendered
     }
   }
 
@@ -30,10 +31,14 @@ This RFC proposes to add a new lifecycle hook named `componentDidServerRender` t
 class Example extends React.Component {
   componentDidServerRender() {
     // Server-side
+    // All children have rendered but NOT mounted
+    // It is not safe to use refs to interact with eg the DOM
   }
 
   componentDidMount() {
     // Client-side
+    // All children have rendered and been mounted
+    // You can now safely use refs to interact with eg the DOM
   }
 }
 ```
