@@ -20,7 +20,7 @@ class ExampleComponent extends React.Component {
     // Return null to indicate no change to state.
   }
 
-  static prefetch(props, state) {
+  static optimisticallyPrepareToRender(props, state) {
     // Initiate async request(s) as early as possible in rendering lifecycle.
     // These requests do not block `render`.
     // They can only pre-prime a cache that is used later to update state.
@@ -111,7 +111,7 @@ class ExampleComponent extends React.Component {
     externalData: null,
   };
 
-  static prefetch(props, state) {
+  static optimisticallyPrepareToRender(props, state) {
     // Prime an external cache as early as possible.
     // (Async request won't complete before render anyway.)
     if (state.externalData === null) {
@@ -367,14 +367,6 @@ class ExampleComponent extends React.Component {
 
 ## New static lifecycle methods
 
-### `static prefetch(props: Props, state: State): void`
-
-This method is invoked before `render` for both the initial render and all subsequent updates. It is not called during server rendering.
-
-The purpose of this method is to initiate asynchronous request(s) as early as possible in a component's rendering lifecycle. Such requests will not block `render`. They can be used to pre-prime a cache that is later used in `componentDidMount`/`componentDidUpdate` to trigger a state update.
-
-Avoid introducing any non-idempotent side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
-
 ### `static getDerivedStateFromNextProps(nextProps: Props, prevProps: Props, prevState: Props): PartialState | null`
 
 This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
@@ -383,15 +375,23 @@ Note that React may call this method even if the props have not changed. If calc
 
 React does not call this method before the intial render/mount and so it is not called during server rendering.
 
+### `static optimisticallyPrepareToRender(props: Props, state: State): void`
+
+This method is invoked before `render` for both the initial render and all subsequent updates. It is not called during server rendering.
+
+The purpose of this method is to initiate asynchronous request(s) as early as possible in a component's rendering lifecycle. Such requests will not block `render`. They can be used to pre-prime a cache that is later used in `componentDidMount`/`componentDidUpdate` to trigger a state update.
+
+Avoid introducing any non-idempotent side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
+
 ## Deprecated lifecycle methods
 
 ### `componentWillMount` -> `unsafe_componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillMount` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillMount` or use the new static `optimisticallyPrepareToRender` method instead. It will be removed entirely in version 17.
 
 ### `componentWillUpdate` -> `unsafe_componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillUpdate` or use the new static `prefetch` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillUpdate` or use the new static `optimisticallyPrepareToRender` method instead. It will be removed entirely in version 17.
 
 ### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
 
