@@ -14,7 +14,7 @@ At a high-level, I propose the following additions/changes to the component API.
 
 ```js
 class ExampleComponent extends React.Component {
-  static deriveStateFromProps(props, state, prevProps) {
+  static getDerivedStateFromNextProps(nextProps, prevProps, prevState) {
     // Called before a mounted component receives new props.
     // Return an object to update state in response to prop changes.
     // Return null to indicate no change to state.
@@ -172,10 +172,10 @@ class ExampleComponent extends React.Component {
     derivedData: computeDerivedState(this.props)
   };
 
-  static deriveStateFromProps(props, state, prevProps) {
-    if (props.someValue !== prevProps.someValue) {
+  static getDerivedStateFromNextProps(nextProps, prevProps, prevState) {
+    if (nextProps.someValue !== prevProps.someValue) {
       return {
-        derivedData: computeDerivedState(props)
+        derivedData: computeDerivedState(nextProps)
       };
     }
 
@@ -375,11 +375,11 @@ The purpose of this method is to initiate asynchronous request(s) as early as po
 
 Avoid introducing any non-idempotent side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
 
-### `static deriveStateFromProps(props: Props, state: State, prevProps: Props): PartialState | null`
+### `static getDerivedStateFromNextProps(nextProps: Props, prevProps: Props, prevState: Props): PartialState | null`
 
 This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
-Note that React may call this method even if the props have not changed. If calculating derived data is expensive, compare new and previous prop values to conditionally handle changes.
+Note that React may call this method even if the props have not changed. If calculating derived data is expensive, compare next and previous props to conditionally handle changes.
 
 React does not call this method before the intial render/mount and so it is not called during server rendering.
 
@@ -395,7 +395,7 @@ This method will log a deprecation warning in development mode recommending that
 
 ### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillReceiveProps` or use the new static `deriveStateFromProps` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillReceiveProps` or use the new static `getDerivedStateFromNextProps` method instead. It will be removed entirely in version 17.
 
 # Drawbacks
 
