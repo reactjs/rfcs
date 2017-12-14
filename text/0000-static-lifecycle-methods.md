@@ -58,7 +58,7 @@ I believe this internal experiment confirmed what we suspected about the legacy 
 Some of the most common problematic patterns that were uncovered include:
 * **Initializing Flux stores in `componentWillMount`**. It's often unclear whether this is an actual problem or just a potential one (eg if the store or its dependencies change in the future). Because of this uncertainty, it should be avoided.
 * **Adding event listeners/subscriptions** in `componentWillMount` and removing them in `componentWillUnmount`. This causes leaks if the initial render is interrupted (or errors) before completion.
-* **Non-idempotent external function calls** during `componentWillMount`, `componentWillUpdate`, or `componentWillReceiveProps` (eg registering callbacks that may be invoked multiple times, initializing or configuring shared controllers in such a way as to trigger invariants, etc.)
+* **Non-idempotent external function calls** during `componentWillMount`, `componentWillUpdate`, `componentWillReceiveProps`, or `render` (eg registering callbacks that may be invoked multiple times, initializing or configuring shared controllers in such a way as to trigger invariants, etc.)
 
 ## Goal
 
