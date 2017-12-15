@@ -1,68 +1,50 @@
-- Start Date: (fill me in with today's date, YYYY-MM-DD)
+- Start Date: (2017-12-15)
 - RFC PR: (leave this empty)
 - React Issue: (leave this empty)
 
 # Summary
 
-Brief explanation of the feature.
+Add support for synchronous state in React:
+(1) Either replace the existing asynchronous ```setState``` method, or
+(2) Add a new function which should synchronously set state.
 
 # Basic example
+```this.setState({val: newVal}) // Now react should synchronously update state instead of asynchronously```
 
-If the proposal involves a new or changed API, include a basic code example.
-Omit this section if it's not applicable.
+or
+
+```this.setStateSync({val: newVal}) // Now react should synchronously update state instead of asynchronously```
+
 
 # Motivation
 
-Why are we doing this? What use cases does it support? What is the expected
-outcome?
+The motivation is that it is much easier to reason about application state
+when the function which modifies state does this synchronously.
 
-Please focus on explaining the motivation so that if this RFC is not accepted,
-the motivation could be used to develop alternative solutions. In other words,
-enumerate the constraints you are trying to solve without coupling them too
-closely to the solution you have in mind.
+Nobody will disagree that react's asynchronous ```setState``` has caused lot 
+of confusion among developers.
 
-# Detailed design
+Even given the solution react has - like ```setState``` with a function(which gives
+access to a so called "pending state"), still
+doesn't prove that there can't be any gotchas (or edge cases) when managing state
+asynchronously.
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with React to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
+Ask people why are they using mobx for example.
 
 # Drawbacks
 
-Why should we *not* do this? Please consider:
+Honestly I can't think of any drawbacks which would outweigh the advantages that
+synchronous ```setState``` would have.
 
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people React
-- integration of this feature with other existing and planned features
-- cost of migrating existing React applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
-
-# Alternatives
-
-What other designs have been considered? What is the impact of not doing this?
 
 # Adoption strategy
 
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+If you directly change the existing ```setState``` with a synchronous one this seems
+like a breaking change, if you add a new synchronous ```setState``` function this doesn't seem to be a 
+breaking change.
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing React patterns?
+It will be much easier to teach about it than the existing asynchronous ```setState```.
 
-Would the acceptance of this proposal mean the React documentation must be
-re-organized or altered? Does it change how React is taught to new developers
-at any level?
-
-How should this feature be taught to existing React developers?
-
-# Unresolved questions
-
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+ 
