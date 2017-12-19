@@ -20,26 +20,22 @@ class ExampleComponent extends React.Component {
     // Return null to indicate no change to state.
   }
 
-  static optimisticallyPrepareToRender(props, state) {
-    // Initiate async request(s) as early as possible in rendering lifecycle.
-    // These requests do not block `render`.
-    // They can only pre-prime a cache that is used later to update state.
-    // (This is a micro-optimization and probably not a common use-case.)
-  }
-
   unsafe_componentWillMount() {
     // New name for componentWillMount()
     // Indicates that this method can be unsafe for async rendering.
+    // Prefer componentDidMount() instead.
   }
 
   unsafe_componentWillUpdate(nextProps, nextState) {
     // New name for componentWillUpdate()
     // Indicates that this method can be unsafe for async rendering.
+    // Prefer componentDidUpdate() instead.
   }
 
   unsafe_componentWillReceiveProps(nextProps) {
     // New name for componentWillReceiveProps()
     // Indicates that this method can be unsafe for async rendering.
+    // Prefer static getDerivedStateFromNextProps() instead.
   }
 }
 ```
@@ -75,9 +71,9 @@ Let's look at some of the common usage patterns mentioned above and how they mig
 
 ### Prefetching async data during mount
 
-The purpose of this pattern is to initiate data loading as early as possible.
+The purpose of this pattern is to initiate data loading as early as possible. Particularly on slower, mobile devices, there may be several hundred miliseconds between the intial call to `render` and the subsequent `componentDidMount`. This pattern eagerly fetches data without waiting for the did-mount callback.
 
-It is worth noting that in both examples below, the data will not finish loading before the initial render (so a second render pass will be required in either case).
+It is worth noting that in both examples below, the data will not finish loading before the initial render and so a second render pass will be required in either case.
 
 #### Before
 
@@ -111,14 +107,6 @@ class ExampleComponent extends React.Component {
     externalData: null,
   };
 
-  static optimisticallyPrepareToRender(props, state) {
-    // Prime an external cache as early as possible.
-    // (Async request won't complete before render anyway.)
-    if (state.externalData === null) {
-      asyncLoadData(props.someId);
-    }
-  }
-
   componentDidMount() {
     // Wait for earlier pre-fetch to complete and update state.
     // (This assumes some kind of cache to avoid duplicate requests.)
@@ -132,6 +120,10 @@ class ExampleComponent extends React.Component {
 
   render() {
     if (this.state.externalData === null) {
+      // Prime an external cache as early as possible.
+      // (Async request would not complete before render anyway.)
+      asyncLoadData(this.props.someId);
+
       // Render loading UI...
     } else {
       // Render real view...
@@ -375,27 +367,25 @@ Note that React may call this method even if the props have not changed. If calc
 
 React does not call this method before the intial render/mount and so it is not called during server rendering.
 
-### `static optimisticallyPrepareToRender(props: Props, state: State): void`
-
-This method is invoked before `render` for both the initial render and all subsequent updates. It is not called during server rendering.
-
-The purpose of this method is to initiate asynchronous request(s) as early as possible in a component's rendering lifecycle. Such requests will not block `render`. They can be used to pre-prime a cache that is later used in `componentDidMount`/`componentDidUpdate` to trigger a state update.
-
-Avoid introducing any non-idempotent side-effects, mutations, or subscriptions in this method. For those use cases, use `componentDidMount`/`componentDidUpdate` instead.
-
 ## Deprecated lifecycle methods
 
 ### `componentWillMount` -> `unsafe_componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillMount` or use the new static `optimisticallyPrepareToRender` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users use `componentDidMount` instead (when possible) or rename to `unsafe_componentWillMount`.
+
+`componentWillMount` will be removed entirely in version 17.
 
 ### `componentWillUpdate` -> `unsafe_componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillUpdate` or use the new static `optimisticallyPrepareToRender` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users use `componentDidUpdate` instead (when possible) or rename to `unsafe_componentWillUpdate`.
+
+`componentWillUpdate` will be removed entirely in version 17.
 
 ### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users either rename to `unsafe_componentWillReceiveProps` or use the new static `getDerivedStateFromNextProps` method instead. It will be removed entirely in version 17.
+This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromNextProps` method instead (when possible) or rename to `unsafe_componentWillReceiveProps`.
+
+`componentWillReceiveProps` will be removed entirely in version 17.
 
 # Drawbacks
 
