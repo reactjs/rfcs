@@ -4,65 +4,77 @@
 
 # Summary
 
-
+Add React.Children.isRenderable() method which returns `boolean` depending
+on whether a passed child returns `ReactNode` or not.
 
 # Basic example
 
-If the proposal involves a new or changed API, include a basic code example.
-Omit this section if it's not applicable.
+`React.Children.isRenderable` lets us easily detect children without UI.
+```js
+const MaybeWrapper = ({children}) =>
+    React.Children.map(children, child =>
+        React.Children.isRenderable(child)
+            ? <Wrapper>{child}</Wrapper>
+            : child
+    )
+```
 
 # Motivation
 
-Why are we doing this? What use cases does it support? What is the expected
-outcome?
+Given a component which renders markup or `null` depending on its props there
+are cases when we want to know whether it renders something:
+- if we need to wrap it with layout, or draw something else around or add
+animations, etc and don't want to break styling with excessive wrappers;
+- if we want to show a placeholder when the component has not been rendered;
+- if we want to count actually visible children in an array.
 
-Please focus on explaining the motivation so that if this RFC is not accepted,
-the motivation could be used to develop alternative solutions. In other words,
-enumerate the constraints you are trying to solve without coupling them too
-closely to the solution you have in mind.
+`React.Children.isRenderable` would allow us easily check if a component
+renders anything without messing up it's internals. It is simple, useful and
+plays well with other methods from `React.Children` namespace.
 
 # Detailed design
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with React to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
+A method takes a `child` component instance, finds it's corresponding fiber and
+checks whether it has a `stateNode`. If a `stateNode` exist, the method returns
+true, else it starts recursively repeat this process on a child fiber and it's
+siblings until it finds a non-empty `stateNode` containing a DOM node.
 
 # Drawbacks
 
 Why should we *not* do this? Please consider:
 
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people React
-- integration of this feature with other existing and planned features
-- cost of migrating existing React applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
+- the proposed feature can be implemented in user space
 
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
-
-# Adoption strategy
-
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+Obviously, we could store the result of the rendering condition in the
+component's state, update it when props change and check passing handler from
+a parent or we could hoist condition to a parent but we might not want do
+anything of that because:
+- the component may receive props from context (e.g. from Redux store via
+`connect` function) so we cannot hoist the condition;
+- adding props for "renderability" handler to the component may break coherence;
+- we may not be able to modify the component's internals (e.g. it is from a 3rd
+party library);
+- we don't want to add complexity for a trivial action (e.g. we have
+a stateless functional component with rendering condition. Do we really need
+to make it stateful just to check if it renders anything?) or lose
+convenience (stateless conditional components are quite eloquent).
+We could also use refs to check if a component was rendered, but this is even
+more messy solution than previous.
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing React patterns?
-
-Would the acceptance of this proposal mean the React documentation must be
-re-organized or altered? Does it change how React is taught to new developers
-at any level?
-
-How should this feature be taught to existing React developers?
+To understand why this feature is useful and how it should be used, a user
+must be familiar with core React concepts covered in [React Components, Elements, and Instances](https://reactjs.org/blog/2015/12/18/react-components-elements-and-instances.html)
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+Another possible solution might be to create a method, which returns a complete
+Node (or `null`), rendered by the passed child though such functionality may
+lead to misuse and confusion. Also that would probably have some performance
+drawbacks because it requires to traverse deeper into a fiber.
+
+The name of this method might be reconsidered. The alternatives are:
+`hasNode`, `hasReactNode`, `rendersNull` (then should return `false` if
+renders anything).
