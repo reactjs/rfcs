@@ -36,8 +36,9 @@ plays well with other methods from `React.Children` namespace.
 
 A method takes a `child` component instance, finds it's corresponding fiber and
 checks whether it has a `stateNode`. If a `stateNode` exist, the method returns
-true, else it starts recursively repeat this process on a child fiber and it's
-siblings until it finds a non-empty `stateNode` containing a DOM node.
+`true`, else it starts recursively repeat this process on a child fiber and it's
+siblings until it finds a non-empty `stateNode` containing a DOM node, otherwise
+it returns `false`.
 
 # Drawbacks
 
