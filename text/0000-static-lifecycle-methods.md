@@ -14,7 +14,7 @@ At a high-level, I propose the following additions/changes to the component API.
 
 ```js
 class ExampleComponent extends React.Component {
-  static getDerivedStateFromNextProps(nextProps, prevProps, prevState) {
+  static getDerivedStateFromProps(nextProps, prevProps, prevState) {
     // Called before a mounted component receives new props.
     // Return an object to update state in response to prop changes.
     // Return null to indicate no change to state.
@@ -35,7 +35,7 @@ class ExampleComponent extends React.Component {
   unsafe_componentWillReceiveProps(nextProps) {
     // New name for componentWillReceiveProps()
     // Indicates that this method can be unsafe for async rendering.
-    // Prefer static getDerivedStateFromNextProps() instead.
+    // Prefer static getDerivedStateFromProps() instead.
   }
 }
 ```
@@ -164,7 +164,7 @@ class ExampleComponent extends React.Component {
     derivedData: computeDerivedState(this.props)
   };
 
-  static getDerivedStateFromNextProps(nextProps, prevProps, prevState) {
+  static getDerivedStateFromProps(nextProps, prevProps, prevState) {
     if (nextProps.someValue !== prevProps.someValue) {
       return {
         derivedData: computeDerivedState(nextProps)
@@ -359,7 +359,7 @@ class ExampleComponent extends React.Component {
 
 ## New static lifecycle methods
 
-### `static getDerivedStateFromNextProps(nextProps: Props, prevProps: Props, prevState: Props): PartialState | null`
+### `static getDerivedStateFromProps(nextProps: Props, prevProps: Props, prevState: Props): PartialState | null`
 
 This method is invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
@@ -383,7 +383,7 @@ This method will log a deprecation warning in development mode recommending that
 
 ### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromNextProps` method instead (when possible) or rename to `unsafe_componentWillReceiveProps`.
+This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromProps` method instead (when possible) or rename to `unsafe_componentWillReceiveProps`.
 
 `componentWillReceiveProps` will be removed entirely in version 17.
 
