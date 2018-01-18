@@ -20,19 +20,19 @@ class ExampleComponent extends React.Component {
     // Return null to indicate no change to state.
   }
 
-  unsafe_componentWillMount() {
+  UNSAFE_componentWillMount() {
     // New name for componentWillMount()
     // Indicates that this method can be unsafe for async rendering.
     // Prefer componentDidMount() instead.
   }
 
-  unsafe_componentWillUpdate(nextProps, nextState) {
+  UNSAFE_componentWillUpdate(nextProps, nextState) {
     // New name for componentWillUpdate()
     // Indicates that this method can be unsafe for async rendering.
     // Prefer componentDidUpdate() instead.
   }
 
-  unsafe_componentWillReceiveProps(nextProps) {
+  UNSAFE_componentWillReceiveProps(nextProps) {
     // New name for componentWillReceiveProps()
     // Indicates that this method can be unsafe for async rendering.
     // Prefer static getDerivedStateFromProps() instead.
@@ -369,21 +369,21 @@ Note that React may call this method even if the props have not changed. If calc
 
 ## Deprecated lifecycle methods
 
-### `componentWillMount` -> `unsafe_componentWillMount`
+### `componentWillMount` -> `UNSAFE_componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidMount` instead (when possible) or rename to `unsafe_componentWillMount`.
+This method will log a deprecation warning in development mode recommending that users use `componentDidMount` instead (when possible) or rename to `UNSAFE_componentWillMount`.
 
 `componentWillMount` will be removed entirely in version 17.
 
-### `componentWillUpdate` -> `unsafe_componentWillUpdate`
+### `componentWillUpdate` -> `UNSAFE_componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidUpdate` instead (when possible) or rename to `unsafe_componentWillUpdate`.
+This method will log a deprecation warning in development mode recommending that users use `componentDidUpdate` instead (when possible) or rename to `UNSAFE_componentWillUpdate`.
 
 `componentWillUpdate` will be removed entirely in version 17.
 
-### `componentWillReceiveProps` -> `unsafe_componentWillReceiveProps`
+### `componentWillReceiveProps` -> `UNSAFE_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromProps` method instead (when possible) or rename to `unsafe_componentWillReceiveProps`.
+This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromProps` method instead (when possible) or rename to `UNSAFE_componentWillReceiveProps`.
 
 `componentWillReceiveProps` will be removed entirely in version 17.
 
@@ -411,9 +411,9 @@ There are no advanced proposals for such a stateful, functional component API th
 
 Begin by reaching out to prominent third-party library maintainers to make sure there are no use-cases we have failed to consider.
 
-Assuming we move forward with the proposal, release (at least one) minor 16.x update to add deprecation warnings for the legacy lifecycles and inform users to either rename with the `unsafe_` prefix or use the new static methods instead. We'll then cordinate with library authors to ensure they have enough time to migrate to the new API in advance of the major release that drops support for the legacy lifecycles.
+Assuming we move forward with the proposal, release (at least one) minor 16.x update to add deprecation warnings for the legacy lifecycles and inform users to either rename with the `UNSAFE_` prefix or use the new static methods instead. We'll then cordinate with library authors to ensure they have enough time to migrate to the new API in advance of the major release that drops support for the legacy lifecycles.
 
-We will provide a codemod to rename the deprecated lifecycle hooks with the new `unsafe_` prefix.
+We will provide a codemod to rename the deprecated lifecycle hooks with the new `UNSAFE_` prefix.
 
 We will also provide codemods to assist with the migration to static methods, although given the nature of the change, codemods will be insufficient to handle all cases. Manual verification will be required.
 
