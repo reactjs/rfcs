@@ -160,11 +160,12 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
+  // Initialize state in constructor,
+  // Or as a property initializers.
+  state = {};
+
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (
-      !prevState ||
-      prevState.someMirroredValue !== nextProps.someValue
-    ) {
+    if (prevState.someMirroredValue !== nextProps.someValue) {
       return {
         derivedData: computeDerivedState(nextProps),
         someMirroredValue: nextProps.someValue
@@ -359,11 +360,11 @@ class ExampleComponent extends React.Component {
 
 ## New static lifecycle methods
 
-### `static getDerivedStateFromProps(nextProps: Props, prevState: State | null): PartialState | null`
+### `static getDerivedStateFromProps(nextProps: Props, prevState: State): PartialState | null`
 
-This method is invoked after a component is constructed. Return an object to initialize component state. Note that the value of `prevState` may be null in this case if the constructor did not initialize `this.state`.
+This method is invoked after a component is instantiated and when it receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
-This method is also invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
+If an object is returned, its keys will be merged into the existing state.
 
 Note that React may call this method even if the props have not changed. If calculating derived data is expensive, compare next and previous props to conditionally handle changes.
 
