@@ -160,11 +160,12 @@ class ExampleComponent extends React.Component {
 
 ```js
 class ExampleComponent extends React.Component {
+  // Initialize state in constructor,
+  // Or with a property initializer.
+  state = {};
+
   static getDerivedStateFromProps(nextProps, prevState) {
-    if (
-      !prevState ||
-      prevState.someMirroredValue !== nextProps.someValue
-    ) {
+    if (prevState.someMirroredValue !== nextProps.someValue) {
       return {
         derivedData: computeDerivedState(nextProps),
         someMirroredValue: nextProps.someValue
@@ -359,11 +360,11 @@ class ExampleComponent extends React.Component {
 
 ## New static lifecycle methods
 
-### `static getDerivedStateFromProps(nextProps: Props, prevState: State | null): PartialState | null`
+### `static getDerivedStateFromProps(nextProps: Props, prevState: State): PartialState | null`
 
-This method is invoked after a component is constructed. Return an object to initialize component state. Note that the value of `prevState` may be null in this case if the constructor did not initialize `this.state`.
+This method is invoked after a component is instantiated and when it receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
-This method is also invoked before a mounted component receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
+If an object is returned, its keys will be merged into the existing state.
 
 Note that React may call this method even if the props have not changed. If calculating derived data is expensive, compare next and previous props to conditionally handle changes.
 
@@ -371,21 +372,21 @@ Note that React may call this method even if the props have not changed. If calc
 
 ### `componentWillMount` -> `UNSAFE_componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidMount` instead (when possible) or rename to `UNSAFE_componentWillMount`.
+This method is deprecated and will be removed in the next major version. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillMount` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillMount` instead.
 
 ### `componentWillUpdate` -> `UNSAFE_componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidUpdate` instead (when possible) or rename to `UNSAFE_componentWillUpdate`.
+This method is deprecated and will be removed in the next major version. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillUpdate` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillUpdate` instead.
 
 ### `componentWillReceiveProps` -> `UNSAFE_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromProps` method instead (when possible) or rename to `UNSAFE_componentWillReceiveProps`.
+This method is deprecated and will be removed in the next major version. Use `static getDerivedStateFromProps()` instead. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillReceiveProps` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillReceiveProps` instead.
 
 # Drawbacks
 
