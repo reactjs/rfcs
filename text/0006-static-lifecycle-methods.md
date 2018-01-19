@@ -161,7 +161,7 @@ class ExampleComponent extends React.Component {
 ```js
 class ExampleComponent extends React.Component {
   // Initialize state in constructor,
-  // Or as a property initializers.
+  // Or with a property initializer.
   state = {};
 
   static getDerivedStateFromProps(nextProps, prevState) {
