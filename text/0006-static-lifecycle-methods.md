@@ -372,21 +372,21 @@ Note that React may call this method even if the props have not changed. If calc
 
 ### `componentWillMount` -> `UNSAFE_componentWillMount`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidMount` instead (when possible) or rename to `UNSAFE_componentWillMount`.
+This method is deprecated and will be removed in the next major version. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillMount` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillMount` instead.
 
 ### `componentWillUpdate` -> `UNSAFE_componentWillUpdate`
 
-This method will log a deprecation warning in development mode recommending that users use `componentDidUpdate` instead (when possible) or rename to `UNSAFE_componentWillUpdate`.
+This method is deprecated and will be removed in the next major version. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillUpdate` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillUpdate` instead.
 
 ### `componentWillReceiveProps` -> `UNSAFE_componentWillReceiveProps`
 
-This method will log a deprecation warning in development mode recommending that users use the new static `getDerivedStateFromProps` method instead (when possible) or rename to `UNSAFE_componentWillReceiveProps`.
+This method is deprecated and will be removed in the next major version. Use `static getDerivedStateFromProps()` instead. Read about the motivations behind this change at [fb.me/react-async-component-lifecycle-hooks](https://fb.me/react-async-component-lifecycle-hooks)
 
-`componentWillReceiveProps` will be removed entirely in version 17.
+As a temporary workaround, you can rename to `UNSAFE_componentWillReceiveProps` instead.
 
 # Drawbacks
 
