@@ -426,7 +426,7 @@ Write a blog post (or a series of posts) announcing the new lifecycle hooks and 
 
 ## Can `shouldComponentUpdate` remain an instance method?
 
-Anectdotally, it seems far less common for this lifecycle hook to be used in ways that are unsafe for async. The overwhelming common usagee of it seems to be returning a boolean value based on the comparison of current to next props.
+Anectdotally, it seems far less common for this lifecycle hook to be used in ways that are unsafe for async. The overwhelming common usage of it seems to be returning a boolean value based on the comparison of current to next props.
 
 On the one hand, this means the method could be easily codemodded to a static method, but it would be equally easy to write a custom ESLint rule to warn about `this` references to anything other than `this.props` inside of `shouldComponentUpdate`.
 
