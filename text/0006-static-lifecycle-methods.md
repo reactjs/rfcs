@@ -284,7 +284,7 @@ class ExampleComponent extends React.Component {
 
 The purpose of this pattern is to memoize computed values based on `props` and/or `state`.
 
-Typically such values are stored in `state`, but in some cases the values require mutation and as such may not seem suited for state (although they could technically still be stored there). An example of this would be an external helper class that calculates and memoizes values interally.
+Typically such values are stored in `state`, but in some cases the values require mutation and as such may not seem suited for state (although they could technically still be stored there). An example of this would be an external helper class that calculates and memoizes values internally.
 
 In other cases the value may be derived from `props` _and_ `state`.
 
