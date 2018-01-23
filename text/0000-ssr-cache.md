@@ -47,7 +47,7 @@ outcome?
 
 ```js
 
-interface CacheStrategy {
+interface CacheStrategy<T> {
 
   /**
    * Gets the cache strategy state for a component.
@@ -59,7 +59,7 @@ interface CacheStrategy {
    * @param context
    * @returns {*} if undefined is returned, the cache strategy render method will not be invoked for this component.
    */
-  getCacheState(component: ReactNode, props: Object, context: Object): any,
+  getCacheState(component: ReactNode, props: Object, context: Object): T | undefined,
 
   /**
    * Renders an element using a cache strategy.
@@ -72,7 +72,7 @@ interface CacheStrategy {
    * @param renderUtils to simplify rendering of cached component
    * @returns {string} the rendered component
    */
-  render(element: ReactElement, context: Object, cacheState: mixed, renderUtils: CacheRenderUtils): string,
+  render(element: ReactElement, context: Object, cacheState: T, renderUtils: CacheRenderUtils): string,
 }
 
 ```
