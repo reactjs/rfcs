@@ -8,7 +8,7 @@ Replace string refs with similar functionality to how they currently work but wi
 
 # Basic example
 
-The React.createRef() API will create an immutable object ref (where it's value is a mutable object referencing the actual ref). Accessing the ref value can be done via ref.value. An example of how this works is below:
+The React.createRef() API will create an immutable object ref (where its value is a mutable object referencing the actual ref). Accessing the ref value can be done via ref.value. An example of how this works is below:
 
 ```js
 class MyComponent extends React.Component {
