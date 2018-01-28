@@ -110,7 +110,7 @@ class ExampleComponent extends React.Component {
   componentDidMount() {
     // Wait for earlier pre-fetch to complete and update state.
     // (This assumes some kind of cache to avoid duplicate requests.)
-    asyncLoadData(props.someId).then(externalData => {
+    asyncLoadData(this.props.someId).then(externalData => {
       // Note that if the component unmounts before this request completes,
       // It will trigger a warning, "cannot update an unmounted component".
       // You can avoid this by tracking mounted state with an instance var if desired.
