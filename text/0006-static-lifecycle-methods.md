@@ -71,7 +71,7 @@ Let's look at some of the common usage patterns mentioned above and how they mig
 
 ### Prefetching async data during mount
 
-The purpose of this pattern is to initiate data loading as early as possible. Particularly on slower, mobile devices, there may be several hundred miliseconds between the intial call to `render` and the subsequent `componentDidMount`. This pattern eagerly fetches data without waiting for the did-mount callback.
+The purpose of this pattern is to initiate data loading as early as possible. Particularly on slower, mobile devices, there may be several hundred miliseconds between the initial call to `render` and the subsequent `componentDidMount`. This pattern eagerly fetches data without waiting for the did-mount callback.
 
 It is worth noting that in both examples below, the data will not finish loading before the initial render and so a second render pass will be required in either case.
 
@@ -400,7 +400,7 @@ This change is **not fully backwards compatible**. Libraries will need to drop s
 
 It is possible to create ESLint rules that attempt to detect and warn about potentially unsafe actions inside of render-phase lifecycle hooks. Such rules would need to be very strict though and would likely result in many false positives. It would also be difficult to ensure that library maintainers correctly used these lint rules, making it possible for async-unsafe components to cause problems within an async tree.
 
-Sebastian has also discussed the idea of side effect tracking with the Flow team. Conceptually this would enable us to know, statically, whether a method is free of side effects and mutations. This functionality does not currently exist in Flow though, and if it did there will still be an adoption problem. (Not everyone uses Flow and there's no way to gaurantee the shared components you rely on are safe.)
+Sebastian has also discussed the idea of side effect tracking with the Flow team. Conceptually this would enable us to know, statically, whether a method is free of side effects and mutations. This functionality does not currently exist in Flow though, and if it did there will still be an adoption problem. (Not everyone uses Flow and there's no way to guarantee the shared components you rely on are safe.)
 
 ## Don't support async with the legacy class component API
 
