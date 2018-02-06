@@ -81,7 +81,7 @@ comments.
 * Eventually, the team will decide whether the RFC is a candidate
 for inclusion in React.
 * RFCs that are candidates for inclusion in React will enter a "final comment
-period" lasting 7 days. The beginning of this period will be signaled with a
+period" lasting 3 calendar days. The beginning of this period will be signaled with a
 comment and tag on the RFCs pull request.
 * An RFC can be modified based upon feedback from the team and community.
 Significant modifications may trigger a new final comment period.
