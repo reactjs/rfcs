@@ -30,7 +30,7 @@ The primary motivation is to encourage people to migrate off string refs. Callba
 
 There's a few problems with them.
 
-Strings refs bind to the React's component's `currentOwner` rather than the parent. That's something that isn't statical analysable and leads to most of bugs.
+Strings refs bind to the React's component's `currentOwner` rather than the parent. This breaks "render prop" pattern.
 
 ```js
 class ComponentA {
@@ -48,6 +48,12 @@ class ComponentA {
   }
 }
 ```
+
+It is not statical analysable and leads to most of bugs.
+
+It requires that React keeps track of currently rendering component (since it can't guess this). This makes React a bit slower.
+
+Another problem is breaking with two instances of react if for some reason react packages weren't deduped.
 
 This alternative API shouldn't provide any big real wins over callback refs - other than being a nice convenience feature. There might be some small wins in performance - as a common pattern is to assign a ref value in a closure created in the render phase of a component - this avoids that (even more so when a ref property is assigned to a non-existent component instance property).
 
