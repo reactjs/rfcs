@@ -49,7 +49,7 @@ class ComponentA {
 }
 ```
 
-It is not statical analysable and leads to most of bugs.
+It is not statically-analyzable and leads to most of bugs.
 
 It requires that React keeps track of currently rendering component (since it can't guess this). This makes React a bit slower.
 
