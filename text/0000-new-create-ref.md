@@ -165,7 +165,7 @@ Also there's no point in changing from callback refs to createRef right now unle
 
 Initially, we will release the object refs alongside the existing string refs as a minor update. Also this update will include `StrictMode` which enables deprecation messages for its subtree, so people be able to catch using string refs in their components and replace with the new api incrementally.
 
-String refs will be removed in upcoming major release, so there will be enought time for migration.
+String refs will be removed in upcoming major release, so there will be enough time for migration.
 
 # How we teach this
 
