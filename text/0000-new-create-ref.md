@@ -28,6 +28,7 @@ class MyComponent extends React.Component {
 
 Strings refs bind to the React's component's `currentOwner` rather than the parent. That's something that isn't statical analysable and leads to most of bugs.
 
+```js
 class ComponentA {
   render() {
     return (
@@ -42,6 +43,7 @@ class ComponentA {
     );
   }
 }
+```
 
 This alternative API shouldn't provide any big real wins over callback refs - other than being a nice convenience feature. There might be some small wins in performance - as a common pattern is to assign a ref value in a closure created in the render phase of a component - this avoids that (even more so when a ref property is assigned to a non-existent component instance property).
 
@@ -87,15 +89,61 @@ render() {
 
 # Drawbacks
 
-Why should we *not* do this? Please consider:
+Callback refs are easier to use when child with ref and parent have different lifetime. With object ref it can be achieved with `componentDidUpdate` hook. As present in the example below callback refs are less verbose in this case.
 
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people React
-- integration of this feature with other existing and planned features
-- cost of migrating existing React applications (is it a breaking change?)
+```js
+class ComponentA extends React.Component {
+  setRef = (element) => {
+    if (element) {
+      // element is HTMLElement
+      // ref is created
+    } else {
+      // element is null
+      // ref is destroyed
+      // cached reference is required to stop listening events
+    }
+  }
 
-There are tradeoffs to choosing any path. Attempt to identify them here.
+  divRef = React.createRef();
+
+  componentDidMount() {
+    if (this.divRef.value) {
+      // ref is created
+    }
+  }
+
+  componentDidUpdate() {
+    if (this.divRef.value) {
+      // ref is created
+    } else {
+      // ref is null
+      // should be used cached reference to stop listening events
+    }
+  }
+
+  componentWillUnmount() {
+    if (this.divRef.value) {
+      // ref is HTMLElement, not removed yet
+      // cached reference is not required
+    }
+  }
+
+  render() {
+    if (this.props.enabled) {
+      return (
+        <>
+          <div ref={this.setRef} />
+          <div ref={this.divRef} />
+        </>
+      );
+    } else {
+      return null;
+    }
+  }
+}
+```
+
+And still in most cases the same parent and ref lifetime makes code cleaner and simpler.
 
 # Alternatives
 
