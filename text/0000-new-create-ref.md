@@ -26,6 +26,10 @@ class MyComponent extends React.Component {
 
 # Motivation
 
+The primary motivation is to encourage people to migrate off string refs. Callback refs meet some resistance because they are a bit harder to understand. The proposal introduces this API primarily for people who love string refs today.
+
+There's a few problems with them.
+
 Strings refs bind to the React's component's `currentOwner` rather than the parent. That's something that isn't statical analysable and leads to most of bugs.
 
 ```js
