@@ -147,13 +147,15 @@ And still in most cases the same parent and ref lifetime makes code cleaner and 
 
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+The common practice will be using ref objects (aka createRef), unless people have already been using callback refs and are happy with them.
+
+Also there's no point in changing from callback refs to createRef right now unless people see value in doing so, otherwise it's just tech debt with no real additional value other than maybe some perf wins from not creating closures in the render method.
 
 # Adoption strategy
 
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+Initially, we will release the object refs alongside the existing string refs as a minor update. Also this update will include `StrictMode` which enables deprecation messages for its subtree, so people be able to catch using string refs in their components and replace with the new api incrementally.
+
+String refs will be removed in upcoming major release, so there will be enought time for migration.
 
 # How we teach this
 
