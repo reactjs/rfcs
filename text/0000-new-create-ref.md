@@ -26,6 +26,23 @@ class MyComponent extends React.Component {
 
 # Motivation
 
+Strings refs bind to the React's component's `currentOwner` rather than the parent. That's something that isn't statical analysable and leads to most of bugs.
+
+class ComponentA {
+  render() {
+    return (
+      // ref foo1 would bind to ComponentA
+      <div ref="foo1"/>
+        <ComponentB>{
+          // ref foo2 would bind to ComponentB
+          // even though it's all in ComponentA's render
+          () => <div ref="foo2" />
+        }</ComponentB>
+      </div>
+    );
+  }
+}
+
 This alternative API shouldn't provide any big real wins over callback refs - other than being a nice convenience feature. There might be some small wins in performance - as a common pattern is to assign a ref value in a closure created in the render phase of a component - this avoids that (even more so when a ref property is assigned to a non-existent component instance property).
 
 One benefit would be more correct Flow types. People tend to type refs incorrectly because Flow doesn't enforce uninitialized class properties correctly:
