@@ -4,11 +4,20 @@
 
 # Summary
 
-Replace string refs with similar functionality to how they currently work but without many of the issues that string refs currently have (a list of them can be found at [#1373](https://github.com/facebook/react/issues/1373)).  
+Currently there are two ref APIs in React: string refs and callback refs.
+
+String refs are considered legacy due to [numerous issues](https://github.com/facebook/react/issues/1373) in their design. [Callback refs](https://reactjs.org/docs/refs-and-the-dom.html) don't share these deficiencies and were introduced to replace string refs. However, there is more ceremony around writing them, they have some [unintuitive caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats) and can be hard to teach.
+
+**The goal of this RFC is to introduce a new intuitive ref API. It is very similar in its "feel" to string refs, but doesn't suffer from their problems.** It is intentionally less poweful than the callback ref API. The plan is to:
+
+* Keep the callback ref API for more advanced use cases.
+* Replace the string refs by the newly proposed "object" ref API.
+
+String refs would get deprecated in a minor release, and support for them would eventually get removed in an upcoming major release.
 
 # Basic example
 
-The React.createRef() API will create an immutable object ref (where its value is a mutable object referencing the actual ref). Accessing the ref value can be done via ref.value. An example of how this works is below:
+The `React.createRef()` API will create an immutable object ref (where its value is a mutable object referencing the actual ref). Accessing the ref value can be done via `ref.value`. An example of how this works is below:
 
 ```js
 class MyComponent extends React.Component {
@@ -28,9 +37,9 @@ class MyComponent extends React.Component {
 
 The primary motivation is to encourage people to migrate off string refs. Callback refs meet some resistance because they are a bit harder to understand. The proposal introduces this API primarily for people who love string refs today.
 
-There's a few problems with them.
+### What's wrong with string refs?
 
-Strings refs bind to the React's component's `currentOwner` rather than the parent. This breaks "render prop" pattern.
+The main problem with string refs is that they require React to keep track of the "currently executing" component. However, that component doesn't always match where the string ref is defined. Consider the common "render prop" pattern:
 
 ```js
 class ComponentA {
@@ -49,21 +58,20 @@ class ComponentA {
 }
 ```
 
-It is not statically-analyzable and leads to most of bugs.
+This behavior is highly confusing.
 
-It requires that React keeps track of currently rendering component (since it can't guess this). This makes React a bit slower.
+There are other issues with string refs in practice:
 
-Another problem is breaking with two instances of react if for some reason react packages weren't deduped.
+* They cause bugs when [multiple React copies are on the same page](https://reactjs.org/warnings/refs-must-have-owner.html).
+* They're not friendly to static typing.
+* They aren't compatible with advanced compilation strategies that mangle class properties.
+* They can't be [composed](https://github.com/ide/react-clone-referenced-element/).
 
-This alternative API shouldn't provide any big real wins over callback refs - other than being a nice convenience feature. There might be some small wins in performance - as a common pattern is to assign a ref value in a closure created in the render phase of a component - this avoids that (even more so when a ref property is assigned to a non-existent component instance property).
+### Don't we have callback refs for this?
 
-One benefit would be more correct Flow types. People tend to type refs incorrectly because Flow doesn't enforce uninitialized class properties correctly:
+Many people continue to favor string refs because writing callback refs requires more mental overhead (you have to think about a field *and* a function that sets it). They are especially inconvenient when you need an array of refs. Callback refs also have [unusual caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats) that are [often](https://github.com/facebook/react/issues/9328) [mistaken for a bug](https://github.com/facebook/react/issues/8619).
 
-```js
-class Foo { neverSet: boolean; }
-let foo = new Foo();
-(foo.neverSet: boolean); // works
-```
+Callback refs are, strictly saying, more powerful than either string refs or the proposed object refs. However, there is definitely a niche for a simpler, more convenient API for the majority of cases. There might be some small wins in performance too: commonly, ref value is assigned in a closure created in the render phase of a component. This API avoids that. Similarly, this avoids assigning to a non-existent component instance property, which also can cause deopts in JavaScript engines.
 
 # Detailed design
 
@@ -99,53 +107,29 @@ render() {
 
 # Drawbacks
 
-Callback refs are easier to use when child with ref and parent have different lifetime. With object ref it can be achieved with `componentDidUpdate` hook. As present in the example below callback refs are less verbose in this case.
+Callback refs are easier to use when child with ref and parent have different lifetime. Consider this example:
 
 ```js
-class ComponentA extends React.Component {
-  setRef = (element) => {
-    if (element) {
-      // element is HTMLElement
-      // ref is created
+class CallbackRefExample extends React.Component {
+  // Callback refs offer a centralized place
+  // to perform side effects.
+  divRef = (div) => {
+    if (div) {
+      this.div = div;
+      this.div.addEventListener('foo', onFoo);
     } else {
-      // element is null
-      // ref is destroyed
-      // cached reference is required to stop listening events
+      this.div.removeEventListener('foo', onFoo);
+      this.div = null;
     }
   }
 
-  divRef = React.createRef();
-
-  componentDidMount() {
-    if (this.divRef.value) {
-      // ref is created
-    }
-  }
-
-  componentDidUpdate() {
-    if (this.divRef.value) {
-      // ref is created
-    } else {
-      // ref is null
-      // should be used cached reference to stop listening events
-    }
-  }
-
-  componentWillUnmount() {
-    if (this.divRef.value) {
-      // ref is HTMLElement, not removed yet
-      // cached reference is not required
-    }
+  onFoo = () => {
+    console.log('hello');
   }
 
   render() {
     if (this.props.enabled) {
-      return (
-        <>
-          <div ref={this.setRef} />
-          <div ref={this.divRef} />
-        </>
-      );
+      return <div ref={this.divRef} />;
     } else {
       return null;
     }
@@ -153,29 +137,32 @@ class ComponentA extends React.Component {
 }
 ```
 
-And still in most cases the same parent and ref lifetime makes code cleaner and simpler.
+We could write an equivalent example with object refs by using `componentDidMount` and `componentDidUpdate`. However, by the time `componentDidUpdate` fires, we have no way to access the previous ref value to remove the listener. So we'd have to "mirror" the ref value in a separate instance variable. This becomes very tedious and error-prone.
+
+The conclusion here is that for advanced use cases (such as side effects during ref attachment and detachment), callback refs are preferable. Still, in most cases this is not necessary, and object refs are sufficient.
 
 # Alternatives
 
-The common practice will be using ref objects (aka createRef), unless people have already been using callback refs and are happy with them.
+One potential alternative is to do nothing, and keep string refs and callback refs. The problem with keeping string refs is that they prevent some future work on React, including advanced compilation strategies. So we need a migration path off of them.
 
-Also there's no point in changing from callback refs to createRef right now unless people see value in doing so, otherwise it's just tech debt with no real additional value other than maybe some perf wins from not creating closures in the render method.
+Another potential alternative is to fully embrace callback refs but deprecate string refs. However, there is a lot of feedback suggesting that people struggle with understanding and using the callback ref API, and a simper option is necessary.
+
+The `createRef` API could potentially be implemented as a userland package. However, it would be a one-liner, and most people would not know about it. If we wanted everybody to use it, we might as well build it into React.
 
 # Adoption strategy
 
-Initially, we will release the object refs alongside the existing string refs as a minor update. Also this update will include `StrictMode` which enables deprecation messages for its subtree, so people be able to catch using string refs in their components and replace with the new api incrementally.
+Initially, we will release the object refs alongside the existing string and callback refs as a minor update. This update will also include a `<StrictMode>` component which enables deprecation messages for its subtree. This lets people catch string refs usage in their components and replace with the new API (or callback refs, if they prefer) incrementally.
 
-String refs will be removed in upcoming major release, so there will be enough time for migration.
+String refs will be removed in an upcoming major release, so there will be enough time for migration.
 
 # How we teach this
 
 Callback and object refs solve different problems and crossing over in what they offer too - much like how components in React do currently.
 
-Someone would likely choose an object ref when they only care about binding the object reference to the component instance/state they're in. Then the ref can be used for caching, or being passed to another component/handler in a lifecycle event.
+In most cases people would choose an object ref. They could use it when they only care about accessing the object reference. The ref object can be passed around, or stored in an array.
 
-Callback refs are great when someone likes to have find grain control over the node at the point where it gets provides and removed (like a subscription) to react to it.
+Callback refs will be positioned as an advanced API. It is useful when someone likes to have fine-grained control over the node when it gets attached and detached, or to compose multiple refs.
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+None.
