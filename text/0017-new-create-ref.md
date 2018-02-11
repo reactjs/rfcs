@@ -145,7 +145,7 @@ The conclusion here is that for advanced use cases (such as side effects during 
 
 One potential alternative is to do nothing, and keep string refs and callback refs. The problem with keeping string refs is that they prevent some future work on React, including advanced compilation strategies. So we need a migration path off of them.
 
-Another potential alternative is to fully embrace callback refs but deprecate string refs. However, there is a lot of feedback suggesting that people struggle with understanding and using the callback ref API, and a simper option is necessary.
+Another potential alternative is to fully embrace callback refs but deprecate string refs. However, there is a lot of feedback suggesting that people struggle with understanding and using the callback ref API, and a simpler option is necessary.
 
 The `createRef` API could potentially be implemented as a userland package. However, it would be a one-liner, and most people would not know about it. If we wanted everybody to use it, we might as well build it into React.
 
