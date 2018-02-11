@@ -1,6 +1,6 @@
-- Start Date: (fill me in with today's date, 2018-01-25)
-- RFC PR: (leave this empty)
-- React Issue: (leave this empty)
+- Start Date: 2018-01-25
+- RFC PR: https://github.com/reactjs/rfcs/pull/17
+- React Issue: https://github.com/facebook/react/issues/10581
 
 # Summary
 
