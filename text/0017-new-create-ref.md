@@ -89,7 +89,7 @@ interface React {
 
 `createRef` requires a explicit type annotation to ensure type correctness.
 
-After `componentDidMount` lifecycle `divRef.value` will be filled with element/component reference:
+Before `componentDidMount` lifecycle `divRef.value` will be filled with element/component reference:
 
 ```js
 componentDidMount() {
