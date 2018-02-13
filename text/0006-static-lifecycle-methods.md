@@ -360,7 +360,7 @@ class ExampleComponent extends React.Component {
 
 ## New static lifecycle methods
 
-### `static getDerivedStateFromProps(nextProps: Props, prevState: State): PartialState | null`
+### `static getDerivedStateFromProps(nextProps: Props, prevState: State): $Shape<State> | null`
 
 This method is invoked after a component is instantiated and when it receives new props. Return an object to update state in response to prop changes. Return null to indicate no change to state.
 
