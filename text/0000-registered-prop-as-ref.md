@@ -149,3 +149,60 @@ The `CustomPropRegistry` API itself will likely be considered an advanced API. I
 - For isomorphic web apps and code shared between React DOM / React Native versions of an app it may be beneficial to provide some way to make a `refProp` that is a no-op, so the same template can be used in multiple environments with no-ops replacing ref props that work on dom nodes.
 - Should we use `React.createCustomPropRegistry()` instead of `new CustomPropRegistry()` to match the new Context API a little closer?
 - Should `'react'` expose an internal/unstable helper to handle ref props in a component's props? This would allow other environments such as React Native to choose to permit the same kind of handling for components like `View` that directly expose native elements.
+
+# Sample libraries
+
+## react-create-event
+
+This is a simple library that exposes a memoized `createEvent` that can be used to quick and easily register custom events to use in prop names.
+
+### react-create-event/index.js
+```js
+import React, {CustomPropRegistry} from 'React';
+const EventPropRegistry = new CustomPropRegistry();
+
+export const Provider = EventPropRegistry.Provider;
+
+const events = Object.create(null);
+export default function createEvent(eventName) {
+  // memoize so the result of createEvent does not need to be stored
+  if ( !events[eventName] ) {
+    events[eventName] = ReactDOM.registerRefProp((ref, prevRef, value, prevValue) => {
+      if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
+        prevRef.removeEventListener(eventName, prevValue);
+      }
+
+      if ( ref && value && (ref !== prevRef || value !== prevValue) ) {
+        newRef.addEventListener(eventName, prevValue);
+      }
+    });
+  }
+
+  return events[name];
+};
+```
+
+### Examples
+```js
+import React from 'react';
+import createEvent, {Provider} from 'react-create-event';
+
+const onMyCustomEvent = createEvent('my-custom-event');
+
+const eventHandler = () => {};
+const MyComponent = () => (
+  <custom-element [onMyCustomEvent]={eventHandler} />
+);
+
+ReactDOM.render(<PropRegistry.Provider><MyComponent /></PropRegistry.Provider>, container);
+```
+
+Or it could be used without pre-registering events:
+```js
+import e from 'react-create-event';
+
+const eventHandler = () => {};
+const MyComponent = () => (
+  <custom-element [e('my-custom-event')]={eventHandler} />
+);
+```
