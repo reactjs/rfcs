@@ -150,7 +150,7 @@ The `CustomPropRegistry` API itself will likely be considered an advanced API. I
 - Should we use `React.createCustomPropRegistry()` instead of `new CustomPropRegistry()` to match the new Context API a little closer?
 - Should `'react'` expose an internal/unstable helper to handle ref props in a component's props? This would allow other environments such as React Native to choose to permit the same kind of handling for components like `View` that directly expose native elements.
 
-# Sample libraries
+# Sample libraries and extra examples
 
 ## react-create-event
 
@@ -256,4 +256,36 @@ const MyComponent = ({active, setActive}) => (
 );
 
 ReactDOM.render(<Provider><MyComponent /></Provider>, container);
+```
+
+### Video playback
+Use a custom `Playing` prop to control the paused state of a video.
+
+`paused` is a read-only property and can't be controlled from React. You can only play/pause videos using the imperative `.play()` and `.pause()` methods.
+
+```js
+import React, {CustomPropRegistry} from 'React';
+import {withState} from 'recompose';
+import e from 'react-create-event';
+const PropRegistry = new CustomPropRegistry();
+
+const Playing = PropRegistry.registerRefProp((ref, prevRef, value) => {
+  if ( ref && ref.paused && value ) {
+    ref.play();
+  } else if ( ref && !ref.paused && !value ) {
+    ref.pause();
+  }
+});
+
+@withState('isPlaying', 'setPlaying', false)
+const MyComponent = ({isPlaying, setPlaying}) => (
+  <video
+    [Playing]={isPlaying}
+    [e('play')]={() => setPlaying(true)}
+    [e('pause')]={() => setPlaying(false)}
+    [e('ended')]={() => setPlaying(false)}
+    src={...} />
+);
+
+ReactDOM.render(<PropRegistry.Provider><MyComponent /></PropRegistry.Provider>, container);
 ```
