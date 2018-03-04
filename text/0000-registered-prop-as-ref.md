@@ -4,7 +4,7 @@
 
 # Summary
 
-Provide a way of registering a non-string prop name with handler that will act on the ref and property value.
+Provide a way of registering a handler for a custom prop that is passed as a prop name using computed property syntax like `[customPropHandler]={value}` and acts as ref on the property value instead of a named prop.
 
 The intent is to allow implementation of props that can provide custom events, custom attributes, and other behaviours which are simple and act on a single prop value but require the use of a complex `ref` in order to work.
 
