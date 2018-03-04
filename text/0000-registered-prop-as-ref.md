@@ -206,3 +206,54 @@ const MyComponent = () => (
   <custom-element [e('my-custom-event')]={eventHandler} />
 );
 ```
+
+## react-observe-polymer-property
+
+This is a simple library that exposes a memoized `createObserver` that can be used to observe updates properties on Polymer elements that have `notify: true`.
+
+### react-observe-polymer-property/index.js
+```js
+import React, {CustomPropRegistry} from 'React';
+const ObservePropRegistry = new CustomPropRegistry();
+
+export const Provider = ObservePropRegistry.Provider;
+
+const handlers = new WeakMap();
+const events = Object.create(null);
+export default function createObserver(propName) {
+  const eventName = Polymer.CaseMap.camelToDashCase(propName) + '-changed';
+
+  if ( !events[eventName] ) {
+    events[eventName] = ObservePropRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
+      if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
+        prevRef.removeEventListener(eventName, handlers.get(prevValue));
+      }
+
+      if ( ref && value && (ref !== prevRef || value !== prevValue) ) {
+        value(ref[propName]);
+        const handler = (e) => value(e.details.value);
+        handlers.set(value, handler);
+        ref.addEventListener(eventName, handler);
+      }
+    });
+  }
+
+  return events[eventName];
+};
+```
+
+### Examples
+```js
+import React from 'react';
+import o, {Provider} from 'react-observe-polymer-property';
+import {withState} from 'recompose';
+
+@withState('active', 'setActive', false)
+const MyComponent = ({active, setActive}) => (
+  <paper-button toggles [o('active')]={(active) => setActive(active))} active={active}>
+    {active ? 'ON' : 'OFF'}
+  </paper-button>
+);
+
+ReactDOM.render(<Provider><MyComponent /></Provider>, container);
+```
