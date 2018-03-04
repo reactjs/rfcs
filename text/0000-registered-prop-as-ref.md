@@ -167,7 +167,7 @@ const events = Object.create(null);
 export default function createEvent(eventName) {
   // memoize so the result of createEvent does not need to be stored
   if ( !events[eventName] ) {
-    events[eventName] = ReactDOM.registerRefProp((ref, prevRef, value, prevValue) => {
+    events[eventName] = EventPropRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
       if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
         prevRef.removeEventListener(eventName, prevValue);
       }
@@ -178,7 +178,7 @@ export default function createEvent(eventName) {
     });
   }
 
-  return events[name];
+  return events[eventName];
 };
 ```
 
@@ -194,7 +194,7 @@ const MyComponent = () => (
   <custom-element [onMyCustomEvent]={eventHandler} />
 );
 
-ReactDOM.render(<PropRegistry.Provider><MyComponent /></PropRegistry.Provider>, container);
+ReactDOM.render(<Provider><MyComponent /></Provider>, container);
 ```
 
 Or it could be used without pre-registering events:
