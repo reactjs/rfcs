@@ -12,8 +12,13 @@ The intent is to allow implementation of props that can provide custom events, c
 
 Custom events are not the only you can do with registered props as refs. However they are a good example use case that is useful and requires complex ref handler behaviour to work.
 ```js
+import React, {CustomPropRegistry} from 'React';
+import ReactDOM from 'react-dom';
+
+const propRegistry = new CustomPropRegistry();
+
 // Register an ref prop that binds a my-custom-event event handler and stores it in a onMyCustomEvent variable
-const onMyCustomEvent = ReactDOM.registerRefProp((ref, prevRef, value, prevValue) => {
+const onMyCustomEvent = propRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
   if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
     prevRef.removeEventListener('my-custom-event', prevValue);
   }
@@ -22,12 +27,14 @@ const onMyCustomEvent = ReactDOM.registerRefProp((ref, prevRef, value, prevValue
     newRef.addEventListener('my-custom-event', prevValue);
   }
 });
-```
-```jsx
+
 // Use the onMyCustomEvent variable as a prop name
 const MyComponent = () => (
     <custom-element [onMyCustomEvent]={(e) => { console.log(e); }} />
 );
+
+// Render, providing the propRegistry as an option
+ReactDOM.render(<MyComponent />, container, {propRegistries: [propRegistry]});
 ```
 
 # Motivation
@@ -44,11 +51,19 @@ I believe this RFC is not mutually exclusive with the fixes for the custom attri
 
 # Detailed design
 
-### ReactDOM.registerRefProp((ref, prevRef, value, prevValue) => void) => symbol
+### CustomPropRegistry
 
-A "symbol => handler" registry of ref prop handlers should be added to ReactDOM. `registerRefProp` creates a Symbol and associates it with the handler in the registry and then returns the symbol.
+A `CustomPropRegistry` class is exposed from the `'react'` package, the class contains a "symbol => handler" registry of ref prop handlers.
 
 In environments that do not support `Symbol` it may not be necessary for an entire `Symbol` polyfill to be included, instead a sufficiently unique and possibly random prefix to an incrementing integer should be enough to separate the result of registerRefProp from normal string props. Including a character not valid in a JSX Attribute name such as "!"" or "|" in the prefix would also make it difficult for the prefix to match an actual prop name.
+
+### CustomPropRegistry#registerRefProp((ref, prevRef, value, prevValue) => void) => symbol
+
+`registerRefProp` creates a Symbol and associates it with the handler in the registry and then returns the symbol.
+
+### ReactDOM.render(element, container[, options: {propRegistries: Array<CustomPropRegistry>}][, callback])
+
+`ReactDOM.render` takes an additional options argument in between the `container` and `callback`. The `propRegistries` option is an array of CustomPropRegistry instances that ReactDOM should look for registered props in.
 
 ### <some-element [refProp]={value} />
 
@@ -94,8 +109,6 @@ Conditions that also cover multiple actions are also possible:
 
 # Drawbacks
 
-- Putting a registry within ReactDOM means that the same `ReactDOM` must be used to `render` as was used to call `registerRefProp`. This could break if multiple instances are present. Such as ordering errors if multiple React/ReactDOM `<script>` elements are included or different versions of React/ReactDOM are used in package dependencies for an application and react libraries it uses.
-- The registry in ReactDOM is permanent, it is not possible to reclaim memory by setting `refProp` to null to "forget" the ref prop and its handler because strings and symbols are the only valid types for object keys and both are primitives that cannot be used as keys in a WeakMap.
 - The `[refProp]={...}` syntax requires either pre-registration or an inline function call to a memoized function. Even if it's a helpful advanced feature custom attribute/property issues are best solved in other ways and the other custom event proposals do not all require custom registration.
 - If JSX is updated to support computed property name / computed JSX Attribute name syntax it may be possible for wrappers like [skatejs/val](https://github.com/skatejs/val) to implement this in user-space.
   - The library would have to implement a registry and registration function,
@@ -118,7 +131,7 @@ Separate handlers like `{add: handler, change: handler, remove: handler}` were c
 
 JSX's syntax already contains a spread operator that matches ES2015's spread. It should be sufficient to teach the ES2015 computed property syntax in relation to JSX the same way as we teach JSX's spread operator.
 
-The `ReactDOM.registerRefProp` API itself will likely be considered an advanced API. Instead of directly teaching the API to users it would likely be more useful to create libraries for common use cases like custom events and teach usage of those to people.
+The `CustomPropRegistry` API itself will likely be considered an advanced API. Instead of directly teaching the API to users it would likely be more useful to create libraries for common use cases like custom events and teach usage of those to people.
 
 # Unresolved questions
 
