@@ -24,7 +24,7 @@ const onMyCustomEvent = PropRegistry.registerRefProp((ref, prevRef, value, prevV
   }
 
   if ( ref && value && (ref !== prevRef || value !== prevValue) ) {
-    newRef.addEventListener('my-custom-event', prevValue);
+    ref.addEventListener('my-custom-event', value);
   }
 });
 
@@ -173,7 +173,7 @@ export default function createEvent(eventName) {
       }
 
       if ( ref && value && (ref !== prevRef || value !== prevValue) ) {
-        newRef.addEventListener(eventName, prevValue);
+        ref.addEventListener(eventName, value);
       }
     });
   }
