@@ -15,10 +15,10 @@ Custom events are not the only you can do with registered props as refs. However
 import React, {CustomPropRegistry} from 'React';
 import ReactDOM from 'react-dom';
 
-const propRegistry = new CustomPropRegistry();
+const PropRegistry = new CustomPropRegistry();
 
 // Register an ref prop that binds a my-custom-event event handler and stores it in a onMyCustomEvent variable
-const onMyCustomEvent = propRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
+const onMyCustomEvent = PropRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
   if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
     prevRef.removeEventListener('my-custom-event', prevValue);
   }
@@ -34,7 +34,7 @@ const MyComponent = () => (
 );
 
 // Render, providing the propRegistry as an option
-ReactDOM.render(<MyComponent />, container, {propRegistries: [propRegistry]});
+ReactDOM.render(<PropRegistry.Provider><MyComponent /></PropRegistry.Provider>, container);
 ```
 
 # Motivation
@@ -61,9 +61,9 @@ In environments that do not support `Symbol` it may not be necessary for an enti
 
 `registerRefProp` creates a Symbol and associates it with the handler in the registry and then returns the symbol.
 
-### ReactDOM.render(element, container[, options: {propRegistries: Array<CustomPropRegistry>}][, callback])
+### CustomPropRegistry#Provider
 
-`ReactDOM.render` takes an additional options argument in between the `container` and `callback`. The `propRegistries` option is an array of CustomPropRegistry instances that ReactDOM should look for registered props in.
+When instantiated a wrapped `Provider` component is created for the registry. This Provider component works similarly to the `createContext` API's `Provider`. However instead of accepting a `value` the Provider merely provides the `CustomPropRegistry` instance. And there is no `Consumer`, instead registries are provided internally to all components below the provider for use in internal element implementations.
 
 ### <some-element [refProp]={value} />
 
@@ -119,7 +119,15 @@ Conditions that also cover multiple actions are also possible:
 
 # Alternatives
 
+## Handler interface
+
 Separate handlers like `{add: handler, change: handler, remove: handler}` were considered as instead of the `ref, prevRef, value, prevValue` interface. However events, properties, and attributes have different requirements and typically need to run the same code for multiple types of operations. An interface with an `action` argument was also considered, but would likely result in code like `if ( action === "prop-add" || action === "prop-change" )` which would not be reliable if new actions were added and would still additionally require the same set of of ref/value/prev/next props for both cleanup and setup operations to work.
+
+## Alternative registry location
+
+A ref prop registry internal to ReactDOM where `CustomPropRegistry#registerRefProp` would instead be `ReactDOM.registerRefProp` was considered. However this had drawbacks if there were multiple instances of React/ReactDOM or no longer needed the registered props and wanted to reclaim memory.
+
+Passing registries as an option to the `ReactDOM.render` function was also considered. However a whole new options argument may not be warranted if we can use Providers. Providers also leaves the door open for CustomPropRegistry to be used in environments other than `react-dom`.
 
 # Adoption strategy
 
@@ -139,3 +147,5 @@ The `CustomPropRegistry` API itself will likely be considered an advanced API. I
   a. Iterate over all Symbol property names on `props`, check the registry for each one and process the prop as a ref prop instead of a normal one if found. When Symbol is not available do the same but instead on keys that match the string prefix used by the library.
   b. Iterate over all ref prop names registered, if it is present in `props` process it as a ref prop instead of a normal prop.
 - For isomorphic web apps and code shared between React DOM / React Native versions of an app it may be beneficial to provide some way to make a `refProp` that is a no-op, so the same template can be used in multiple environments with no-ops replacing ref props that work on dom nodes.
+- Should we use `React.createCustomPropRegistry()` instead of `new CustomPropRegistry()` to match the new Context API a little closer?
+- Should `'react'` expose an internal/unstable helper to handle ref props in a component's props? This would allow other environments such as React Native to choose to permit the same kind of handling for components like `View` that directly expose native elements.
