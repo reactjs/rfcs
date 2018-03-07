@@ -102,11 +102,15 @@ Coming soon...
 
 # Drawbacks
 
-Coming soon...
+This API increases the surface area of React slightly, and may complicate compatibility efforts for react-like frameworks (e.g. `preact-compat`). I believe this is worth the benefit of having a standardized, transparent way to forward refs.
 
 # Alternatives
 
-Coming soon...
+Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that coudl be used to get the inner ref. (Drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
+
+Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it.
+
+[Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) I don't believe this approach would be sufficient, since wrapper components often require class lifecycles.
 
 # Adoption strategy
 
