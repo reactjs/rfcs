@@ -114,11 +114,15 @@ Specify a ["high-level" flag on the component](https://github.com/facebook/react
 
 # Adoption strategy
 
-Coming soon...
+This is a new feature. Since there are no backwards-compatibility concerns, adoption can be organic.
+
+One candidate that would immediately benefit from this feature would be [`create-subscription`](https://github.com/facebook/react/pull/12325).
 
 # How we teach this
 
-Coming soon...
+Add a section to the ["Refs and the DOM" documentation page](https://reactjs.org/docs/refs-and-the-dom.html) about ref-forwarding.
+
+Write a blog post about the new feature and when/why you might want to use it. Highlight examples using the new context API.
 
 # Unresolved questions
 
