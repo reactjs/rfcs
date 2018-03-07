@@ -4,7 +4,7 @@
 
 # Summary
 
-Provide an API that enables [`refs`](https://reactjs.org/docs/refs-and-the-dom.html) to be forwarded to a child component.
+Provide an API that enables [`refs`](https://reactjs.org/docs/refs-and-the-dom.html) to be forwarded to a descendant (child or grandchild component).
 
 # Motivation
 
@@ -106,11 +106,28 @@ This API increases the surface area of React slightly, and may complicate compat
 
 # Alternatives
 
-Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that coudl be used to get the inner ref. (Drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
+1. Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that coudl be used to get the inner ref. (Drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
 
-Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it.
+2. Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it. This appraoch could enable refs to be forwarded one level (to the immediate child) but would not enable forwarding to deeper child, e.g.:
 
-[Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) I don't believe this approach would be sufficient, since wrapper components often require class lifecycles.
+```js
+const ThemeContext = React.createContext("light");
+
+function withTheme(ThemedComponent) {
+  return function ThemeContextInjector(props) {
+    return (
+      <ThemeContext.Consumer>
+        {value => (
+          // ref belongs here
+          <ThemedComponent {...props} ref={props.componentRef} theme={value} />
+        )}
+      </ThemeContext.Consumer>
+    );
+  };
+}
+```
+
+3. [Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) I don't believe this approach would be sufficient, since wrapper components often require class lifecycles.
 
 # Adoption strategy
 
