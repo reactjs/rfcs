@@ -121,7 +121,9 @@ function withTheme(ThemedComponent) {
 
 # Detailed design
 
-TODO
+Hopefully the usage of this API is clear from the [above examples](#basic-example), so in this section I'll outline a possible implementation strategy.
+
+The `useRef` function could return a wrapper object (similar to what the context API uses) with a `$$typeof` indicating that it's a ref-forwarding component. When React encounters this type, it can assign a new type-of-work to React (e.g. `UseRef`). The "begin" phase could then invoke the render prop argument, passing it `workInProgress.pendingProps` and `workInProgress.ref` to create the children, and then continue reconciliation.
 
 # Drawbacks
 
