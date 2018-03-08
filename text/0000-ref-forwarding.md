@@ -96,6 +96,29 @@ function injectLegacyRelayContext(Component) {
 }
 ```
 
+The theme context wrapper could as well:
+
+```js
+const ThemeContext = React.createContext("light");
+
+function withTheme(ThemedComponent) {
+  function ThemeContextInjector(props) {
+    return (
+      <ThemeContext.Consumer>
+        {value => (
+          <ThemedComponent {...props} ref={props.forwardedRef} theme={value} />
+        )}
+      </ThemeContext.Consumer>
+    );
+  }
+
+  // Forward refs through to the inner, "themed" component:
+  return React.useRef((props, ref) => (
+    <ThemeContextInjector {...props} forwardedRef={ref} />
+  ));
+}
+```
+
 # Detailed design
 
 TODO
