@@ -24,7 +24,7 @@ class Checkbox extends React.Component {
   
   render() {
     const { label, value, name, disabled } = this.props;
-    const id = generateUniqueId();
+    const id = generateUniqueId(); // Any UUID-generating function.
     
     return (
       <div>
