@@ -90,7 +90,7 @@ function injectLegacyRelayContext(Component) {
   // Create a special React component type that exposes the external 'ref'.
   // This lets us pass it along as a regular prop,
   // And attach it as a regular React 'ref' on the component we choose.
-  return React.withRef((props, ref) => (
+  return React.useRef((props, ref) => (
     <LegacyRelayContextConsumer {...props} forwardedRef={ref} />
   ));
 }
@@ -98,7 +98,7 @@ function injectLegacyRelayContext(Component) {
 
 # Detailed design
 
-Coming soon...
+TODO
 
 # Drawbacks
 
@@ -106,7 +106,7 @@ This API increases the surface area of React slightly, and may complicate compat
 
 # Alternatives
 
-1. Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that coudl be used to get the inner ref. (Some drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
+1. Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that could be used to get the inner ref. (Some drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
 
 2. Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it. This appraoch could enable refs to be forwarded one level (to the immediate child) but would not enable forwarding to deeper child, e.g.:
 
@@ -127,7 +127,7 @@ function withTheme(ThemedComponent) {
 }
 ```
 
-3. [Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) This appraoch would not enable class components to forward refs, and so would not be sufficient, since wrapper components often require class lifecycles.
+3. [Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) This appraoch would not enable class components to forward refs, and so would not be sufficient, since wrapper components often require class lifecycles. It would also have the same child-depth limitations as the above option.
 
 # Adoption strategy
 
