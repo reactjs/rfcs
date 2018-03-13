@@ -4,9 +4,9 @@
 
 # Summary
 
-Add new "commit" phase lifecycle, `getSnapshotBeforeUpdate`, that fires during an update, before mutations are made.
+Add new "commit" phase lifecycle, `getSnapshotBeforeUpdate`, that fires during an update, before mutations are made. The return value from this lifecycle will be passed as a third parameter to `componentDidUpdate`.
 
-These will be important for [async rendering](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html), where there may be delays between "render" phase lifecycles (e.g. `componentWillUpdate` and `render`) and "commit" phase lifecycles (e.g. `componentDidUpdate`).
+This lifecycle will be important for [async rendering](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html), where there may be delays between "render" phase lifecycles (e.g. `componentWillUpdate` and `render`) and "commit" phase lifecycles (e.g. `componentDidUpdate`).
 
 # Basic example
 
