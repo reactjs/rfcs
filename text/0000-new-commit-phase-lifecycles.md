@@ -4,7 +4,7 @@
 
 # Summary
 
-Add two new "commit" phase lifecycles, `componentIsMounting` and `componentIsUpdating`, that fire before mutations are made.
+Add new "commit" phase lifecycle, `getSnapshotBeforeUpdate`, that fires during an update, before mutations are made.
 
 These will be important for [async rendering](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html), where there may be delays between "render" phase lifecycles (e.g. `componentWillUpdate` and `render`) and "commit" phase lifecycles (e.g. `componentDidUpdate`).
 
@@ -19,24 +19,23 @@ The solution to this is to introduce a new lifecycle that gets called during the
 ```js
 class ScrollingList extends React.Component {
   listRef = React.createRef();
-  cachedScrollHeight = null;
 
-  componentIsUpdating(prevProps, prevState) {
+  getSnapshotBeforeUpdate(prevProps, prevState) {
     // We are adding new items to the list.
-    // Store the current height of the list so we can compare after updating,
-    // And adjust scroll so that new comments don't push old ones out of view.
-    if (this.props.list.length > prevProps.list.length) {
-      this.cachedScrollHeight = this.listRef.value.scrollHeight;
+    // Capture the current height of the list so we can adjust scroll later.
+    if (prevProps.list.length < this.props.list.length) {
+      return this.listRef.value.scrollHeight;
     }
+
+    return null;
   }
 
-  componentDidUpdate(prevProps, prevState) {
-    // If we have a cached scroll height then we've just added new items.
+  componentDidUpdate(prevProps, prevState, snapshot) {
+    // If we have an snapshot then we've just added new items.
     // Adjust scroll so these new items don't push the old ones out of view.
-    if (this.cachedScrollHeight !== null) {
+    if (snapshot !== null) {
       this.listRef.value.scrollTop +=
-        this.listRef.value.scrollHeight - this.cachedScrollHeight;
-      this.cachedScrollHeight = null;
+        this.listRef.value.scrollHeight - snapshot;
     }
   }
 
