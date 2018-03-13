@@ -17,10 +17,12 @@ This approach does not work with async rendering, since there might be a delay b
 The solution to this is to introduce a new lifecycle that gets called during the commit phase _before_ mutations have been made to e.g. the DOM. For example:
 
 ```js
+type Snapshot = number;
+
 class ScrollingList extends React.Component {
   listRef = React.createRef();
 
-  getSnapshotBeforeUpdate(prevProps, prevState) {
+  getSnapshotBeforeUpdate(prevProps: Props, prevState: State): Snapshot | null {
     // We are adding new items to the list.
     // Capture the current height of the list so we can adjust scroll later.
     if (prevProps.list.length < this.props.list.length) {
@@ -30,7 +32,11 @@ class ScrollingList extends React.Component {
     return null;
   }
 
-  componentDidUpdate(prevProps, prevState, snapshot) {
+  componentDidUpdate(
+    prevProps: Props,
+    prevState: State,
+    snapshot: Snapshot | null
+  ) {
     // If we have an snapshot then we've just added new items.
     // Adjust scroll so these new items don't push the old ones out of view.
     if (snapshot !== null) {
