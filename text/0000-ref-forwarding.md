@@ -119,6 +119,24 @@ function withTheme(ThemedComponent) {
 }
 ```
 
+Here is another example [Dan mentioned on Twitter](https://twitter.com/dan_abramov/status/974008682311815169):
+
+```js
+// Tell React I want to be able to put a ref on LikeButton.
+const LikeButton = React.forwardRef((props, ref) => (
+  <div className="LikeButton">
+    {/* Forward LikeButton's ref to the button inside. */}
+    <button ref={ref} onClick={props.onClick}>
+      Like
+    </button>
+  </div>
+));
+
+// I can put a ref on it as if it was a DOM node or a class!
+// (In this example, the ref points directly to the DOM node.)
+<LikeButton ref={myRef} />;
+```
+
 # Detailed design
 
 Hopefully the usage of this API is clear from the [above examples](#basic-example), so in this section I'll outline a possible implementation strategy.
