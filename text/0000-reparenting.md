@@ -247,6 +247,8 @@ In addition to retaining the dom/native tree for future use the rest of the stat
 
 Unlike a normal fragment the fragment returned by a reparent may only be used once in the entire state tree. If a fragment returned by a Reparent is used multiple times only the latest one will be rendered (they will not be duplicated as normal in React) and during development React may emit warnings that a reparent is used in multiple spots like the warnings when a duplicate key is found.
 
+When React DOM intends to detach a DOM node (because the Reparent from a previous call to render is no longer returned in the virtual DOM for a later render), it may use `removeChild` to detach the DOM node, but must retain a reference to it so it may be re-inserted later if the Reparent is rendered in a future render. However when React DOM intends to move a DOM node (because the Reparent from a previous calls to render has a different parent in the virtual DOM on a later render) React DOM should avoid using `removeChild` and instead just call `appendChild`/`insertChild` without first calling `removeChild` (unless it detects some sort of situation like a reference cycle that would make this impossible). This is an attempt to avoid some of the side effects of Reparenting, in particular it is to avoid IE11's behaviour of pausing a `<video>` when you `removeChild` then `appendChild` instead of just using `appendChild`.
+
 The fragment returned has an implicit key which is unique to the Reparent. A Reparent itself is like a key that is unique beyond just a single element's children so there is no need for the user to specify an additional key to use its contents in an array.
 
 Naively, createReparent without the reparenting and unmount behaviour behaves similar to the following implementation:
@@ -277,6 +279,16 @@ interface React {
     createReparent(Component): Reparent;
 }
 ```
+
+# Limitations
+
+Some DOM nodes have quirks they exhibit when they are moved from one parent DOM node to another parent DOM node. These quirks are unavoidable and solving them is not part of the reparenting RFC. The benefits of having the option to reparent nodes if desired is still significant even given the limitations. Some of these quirks may be fixed by either making the state controlled (see [registered prop as ref](https://github.com/reactjs/rfcs/pull/28) for a possible solution for this) or by storing the state before the reparent and restoring it afterwards (see [getSnapshotBeforeUpdate](https://github.com/reactjs/rfcs/pull/33) for a possible solution).
+
+- `<video>`/`<audio>` elements may pause (Chrome exhibits this behaviour; IE11 only exhibits this behaviour if you `removeChild` before you `appendChild`/`insertChild`; Firefox and Safari do not exhibit this quirk)
+- `<iframe>` elements will refresh, completely losing their state. This is unavoidable. However, iframes have very limited use cases so those making use of iframes should be aware that they cannot move their iframes around unless they accept that it will refresh when they do.
+- `.swf` Flash players will reload. (*unconfirmed*)
+- The currently focused element may lose its focus if it is being moved. (*unconfirmed*)
+- Scrollable containers will lose their scroll position and reset to the initial scroll position when they are moved.
 
 # Drawbacks
 
