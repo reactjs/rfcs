@@ -226,21 +226,26 @@ More motivation can be found in past discussions on reparenting:
 - [Support for reparenting (facebook/react#3965)](https://github.com/facebook/react/issues/3965)
 - [A gist that has hosted a lot of reparenting discussion](https://gist.github.com/chenglou/34b155691a6f58091953)
 
+# Glossary
+
+- **state tree**: The state tree refers to both the tree of DOM nodes or other tree of native elements React is rendering to (for React Native and 3rd party environments) and the tree of React Components that allows React to reuse an instance of a Component on a future render.
+- **Reparent owner**: A reparent owner is the component passed to the `React.createReparent(component)` function. The owner does not have to be the one rendering the Reparent, you can pass the reparent down for a descendant to render, but it cannot be passed upwards to be rendered by a parent or cousin of the Reparent owner (notwithstanding use of Portals).
+
 # Detailed design
 
-This proposal introduces a `React.createReparent(component)` function. It accepts a component instance (typically `this`) and returns a *Reparent*. The "Reparent" naming is open to better name proposals.
+This proposal introduces a `React.createReparent(component)` function. It accepts a component instance (typically `this`) which is the reparent owner and returns a *Reparent*. The "Reparent" naming is open to better name proposals.
 
-A Reparent is tied to a component, when this component is unmounted the reparent is unmounted and the detached tree is discarded. This allows reparents to hold detached trees without doing so in a permanent way that would leak memory.
+A Reparent is tied to its owner, when its owner is unmounted the reparent is also unmounted and the detached state tree is discarded. This allows reparents to hold detached state trees without doing so in a permanent way that would leak memory.
 
-A Reparent has an additional `.unmount()` method, this can be used to force the reparent to unmount and discard its tree like it would when the component it is tied to unmounts. This allows reparents to be hoisted upwards and used for dynamic content and explicitly unmounted when necessary.
+A Reparent has an additional `.unmount()` method, this can be used to force the reparent to unmount and discard its state tree like it would when it's owner unmounts, even when the owner is not unmounting. This allows reparents to be hoisted upwards by registering the Reparent in a parent Component and then passing the Reparent down to children through props or context for a descendant to render. And allows them to be used for dynamic content and explicitly unmounted when necessary (the descendant no longer needs the Reparent but the Reparent owner will not be unmounting). See the "Dynamic template" example.
 
-The Reparent itself is a function that accepts children for the reparent. The return value is a special Fragment used to render the reparent and its contents somewhere in the React tree.
+The Reparent itself is a function that accepts children for the reparent. The return value is a special Fragment used to render the reparent and its contents somewhere in the state tree.
 
 When React intends to remove the dom/native tree rendered from this special fragment because it is not present in a later render, React instead detaches the tree and holds a reference to it in the Reparent instead of purging it. If a fragment returned by the reparent later is rendered by a component the detached dom/native tree is re-used.
 
-In addition to retaining the dom/native tree for future use React Component instances present in a Reparent are not unmounted until the Reparent is rendered without them, the Reparent is unmounted via .unmount(), or the Reparent is implicitly unmounted when its owner unmounts.
+In addition to retaining the dom/native tree for future use the rest of the state tree belonging to the Reparent is also retained. Such that React Component instances present in a Reparent are not unmounted until the Reparent is rendered without them (explicitly discarding the component), the Reparent is unmounted via `.unmount()` (explicitly destroying the Reparent and its whole tree), or the Reparent is implicitly unmounted when its owner unmounts (implicitly destroying the Reparent and its whole tree).
 
-Unlike a normal fragment the fragment returned by a reparent may only be used once in a react tree. If a fragment returned by a Reparent is used multiple times only the latest one will be rendered (they will not be duplicated as normal in React) and during development React may emit warnings that a reparent is used in multiple spots like the warnings when a duplicate key is found.
+Unlike a normal fragment the fragment returned by a reparent may only be used once in the entire state tree. If a fragment returned by a Reparent is used multiple times only the latest one will be rendered (they will not be duplicated as normal in React) and during development React may emit warnings that a reparent is used in multiple spots like the warnings when a duplicate key is found.
 
 The fragment returned has an implicit key which is unique to the Reparent. A Reparent itself is like a key that is unique beyond just a single element's children so there is no need for the user to specify an additional key to use its contents in an array.
 
@@ -340,7 +345,7 @@ If people are still using some experimental 3rd party libraries like [react-tele
 
 # How we teach this
 
-"Reparents" may not be the best terminology, some terminology including "root" in the name to refer to the segment of the tree created by a reparent that can be moved.
+"Reparents" may not be the best terminology, some terminology including "root" in the name to refer to the segment of the state tree created by a reparent that can be moved.
 
 We may need a new documentation page to explain reparenting as one was added for portals. Like portals this is an advanced feature that does not need to be part of the main tutorials.
 
@@ -349,3 +354,4 @@ We may need a new documentation page to explain reparenting as one was added for
 - How do reparent instances interact with hydration?
   - Perhaps when hydrating the dom tree, portions of the dom tree that match up with portions of the virtual dom belonging to a reparent will be given to the Reparent to hydrate as its dom tree.
 - Should the Reparent function just accept a single children argument, or should it accept ...children rest and pass it on to createElement to behave similar to createElement.
+- If a Reparent is detached and it's DOM tree is detached from the document, should it render the children it is passed in the Reparent function; or should it save the most recent children value passed to it and wait till it is re-mounted before actually rendering those children?
