@@ -258,6 +258,76 @@ const MyComponent = ({active, setActive}) => (
 ReactDOM.render(<Provider><MyComponent /></Provider>, container);
 ```
 
+## react-dom-hammer-events
+
+Registered ref props can be used to bind more than just normal DOM events, they can also be used to bind events to libraries implementing higher-level custom types of events such as gestures.
+
+### react-dom-hammer-events/index.js
+```js
+import Hammer from 'hammerjs';
+import React from 'react';
+const HammerPropRegistry = new CustomPropRegistry();
+
+export const Provider = HammerPropRegistry.Provider;
+
+const hammerMap = new WeakMap();
+function hammerMapFor(ref) {
+  if ( !hammerMap.has(ref) ) {
+    const hammer = new Hammer(ref);
+    hammerMap.set(ref, hammer);
+  }
+
+  return hammerMap.get(ref);
+}
+
+const events = Object.create(null);
+export default function createHammerEvent(eventName) {
+  // memoize so the result of createHammerEvent does not need to be stored
+  if ( !events[eventName] ) {
+    events[eventName] = HammerPropRegistry.registerRefProp((ref, prevRef, value, prevValue) => {
+      if ( prevRef && prevValue && (ref !== prevRef || value !== prevValue) ) {
+        const hammer = hammerMapFor(prevRef);
+        hammer.off(eventName, prevValue);
+        if ( eventName === 'pinch' || eventName === 'rotate' ) {
+          hammer.get(eventName).set({enable: false});
+        }
+        // @todo Track the list of events bound on a Hammer instance and .destroy()
+        //       it when all hammer events are unbound.
+      }
+
+      if ( ref && value && (ref !== prevRef || value !== prevValue) ) {
+        const hammer = hammerMapFor(ref);
+        if ( eventName === 'pinch' || eventName === 'rotate' ) {
+          hammer.get(eventName).set({enable: true});
+        }
+        hammer.on(eventName, value);
+      }
+    });
+  }
+
+  return events[eventName];
+};
+
+export const pan = createHammerEvent('pan');
+export const pinch = createHammerEvent('pinch');
+export const press = createHammerEvent('press');
+export const rotate = createHammerEvent('rotate');
+export const swipe = createHammerEvent('swipe');
+export const tap = createHammerEvent('tap');
+```
+
+### Examples
+```js
+import React from 'react';
+import {Provider, tap, press} from 'react-dom-hammer-events';
+
+const MyComponent = ({onClick, onLongClick}) => (
+  <paper-button [tap]={onClick} [press]={onLongClick}>Button</paper-button>
+);
+
+ReactDOM.render(<Provider><MyComponent /></Provider>, container);
+```
+
 ### Video playback
 Use a custom `Playing` prop to control the paused state of a video.
 
