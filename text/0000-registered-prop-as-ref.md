@@ -131,7 +131,7 @@ Passing registries as an option to the `ReactDOM.render` function was also consi
 
 # Adoption strategy
 
-- Coordination with JSX implementations will be necessary. The spec will need to be updated to add ES2015's computed property names to JSXAttribute. And implementations will need to be updated to convert a computed JSX property to an ES2015 computed property.
+- Coordination with JSX implementations will be necessary. The spec will need to be updated to add ES2015's computed property names to JSXAttribute. And implementations will need to be updated to convert a computed JSX property to an ES2015 computed property. A separate RFC for [adding computed attribute syntax](https://github.com/facebook/jsx/issues/108) has been opened.
 - This is an additional feature, it does not remove or change existing behaviour so it should not be a breaking change.
 - When Symbol is not available a unique string is enough for ref props to work. It should not be necessary to make a breaking change that raises React's minimum environment to one that includes a Symbol polyfill.
 
