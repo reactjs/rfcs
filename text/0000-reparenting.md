@@ -262,14 +262,14 @@ React.createReparent = function() {
 
 And conforms to the following types/interface:
 ```js
-type ReparentFunction = (Component) => ReactFragment;
+type ReparentFunction = (ReactNodeList) => ReactFragment;
 type ReparentObject = {
     unmount(): void;
 };
 type Reparent = ReparentFunction & ReparentObject;
 
 interface React {
-    createReparent(): Reparent;
+    createReparent(Component): Reparent;
 }
 ```
 
