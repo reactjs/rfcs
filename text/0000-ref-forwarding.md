@@ -10,7 +10,7 @@ Provide an API that enables [`refs`](https://reactjs.org/docs/refs-and-the-dom.h
 
 I recently began contributing to [`react-relay` modern](https://github.com/facebook/relay/tree/master/packages/react-relay/modern) in order to prepare it for the [upcoming React async-rendering feature](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html).
 
-One of the first challenges I encountered was that `react-relay` depends on the legacy, unstable context API, and values passed through legacy `context` aren't accessible in the new, [static `getDerivedStateFromProps` lifecycle](https://github.com/reactjs/rfcs/blob/master/text/0006-static-lifecycle-methods.md#static-getderivedstatefrompropsnextprops-props-prevstate-state-shapestate--null). The long-term plan for `react-relay` is to use the [new and improved contex API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md) but this can't be done without dropping support for older versions of React- (something `react-relay` may not be able to do yet).
+One of the first challenges I encountered was that `react-relay` depends on the legacy, unstable context API, and values passed through legacy `context` aren't accessible in the new, [static `getDerivedStateFromProps` lifecycle](https://github.com/reactjs/rfcs/blob/master/text/0006-static-lifecycle-methods.md#static-getderivedstatefrompropsnextprops-props-prevstate-state-shapestate--null). The long-term plan for `react-relay` is to use the [new and improved context API](https://github.com/reactjs/rfcs/blob/master/text/0002-new-version-of-context.md) but this can't be done without dropping support for older versions of React- (something `react-relay` may not be able to do yet).
 
 In an effort to work around this, I created a smaller wrapper component to convert the necessary `context` value to a `prop` so that it could be accessed within the static lifecycle:
 
@@ -151,7 +151,7 @@ This API increases the surface area of React slightly, and may complicate compat
 
 1. Add a new class method, e.g. `getPublicInstance` or `getWrappedInstance` that could be used to get the inner ref. (Some drawbacks listed [here](https://github.com/facebook/react/issues/4213#issuecomment-115019321).)
 
-2. Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it. This appraoch could enable refs to be forwarded one level (to the immediate child) but would not enable forwarding to deeper child, e.g.:
+2. Specify a ["high-level" flag on the component](https://github.com/facebook/react/issues/4213#issuecomment-115048260) that instructs React to forward refs past it. This approach could enable refs to be forwarded one level (to the immediate child) but would not enable forwarding to deeper child, e.g.:
 
 ```js
 const ThemeContext = React.createContext("light");
