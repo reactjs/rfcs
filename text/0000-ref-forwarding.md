@@ -170,7 +170,7 @@ function withTheme(ThemedComponent) {
 }
 ```
 
-3. [Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) This appraoch would not enable class components to forward refs, and so would not be sufficient, since wrapper components often require class lifecycles. It would also have the same child-depth limitations as the above option.
+3. [Automatically forward refs for stateless functions components](https://github.com/facebook/react/issues/4213#issuecomment-115051991). (React currently warns if you try attaching a `ref` to a functional component, since there is no backing instance to reference.) This approach would not enable class components to forward refs, and so would not be sufficient, since wrapper components often require class lifecycles. It would also have the same child-depth limitations as the above option.
 
 # Adoption strategy
 
