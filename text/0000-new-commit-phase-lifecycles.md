@@ -151,11 +151,11 @@ class ScrollingList extends React.Component<Props, State> {
 
 # Adoption strategy
 
-Since this lifecycle- and async rendering in general- is new functionality, adoption will be organic. Documentation and dev-mode warnings have already been created to encourage people to move away from render phase lifecycles like `componentWillUpdate` to commit phase lifecycles.
+Since this lifecycle- and async rendering in general- is new functionality, adoption will be organic. Documentation and dev-mode warnings have already been created to encourage people to move away from render phase lifecycles like `componentWillUpdate` in favor of commit phase lifecycles.
 
 # How we teach this
 
-Lifecycle documentation on the website. Add a before an after example (like above) to the [Update on Async Rendering](https://github.com/reactjs/reactjs.org/pull/596) blog post "recipes".
+Lifecycle documentation on the website. Add a before an after example (like [the one above](#basic-example)) to the [Update on Async Rendering](https://github.com/reactjs/reactjs.org/pull/596) blog post "recipes".
 
 # Unresolved questions
 
