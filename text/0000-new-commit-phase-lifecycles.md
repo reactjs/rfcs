@@ -10,11 +10,11 @@ This lifecycle will be important for [async rendering](https://reactjs.org/blog/
 
 # Basic example
 
-Consider the use-case of preserving scroll position within a list as its contents are updated. The way this is typically done is to read `scrollHeight` during render (`componentWillUpdate`) and then adjust it after the update has been committed (`componentDidUpdate`).
+Consider the use case of preserving scroll position within a list as its contents are updated. The way this is typically done is to read `scrollHeight` during render (`componentWillUpdate`) and then adjust it after the update has been committed (`componentDidUpdate`).
 
-Unfortunately this approach **does not work with async rendering**, because there might be a delay between these lifecycles during which the user continues scrolling. The only way to ensure an accurate scroll position was read would be to _force a synchronous render_.
+Unfortunately this approach **does not work with async rendering**, because there might be a delay between these lifecycles during which the user continues scrolling. The only way to ensure an accurate scroll position is read would be to _force a synchronous render_.
 
-The solution is to introduce a new lifecycle that gets called during the commit phase _before_ mutations have been made to e.g. the DOM. For example:
+The solution is to introduce a new lifecycle that gets called during the commit phase before mutations have been made to e.g. the DOM. For example:
 
 ```js
 type Snapshot = number;
@@ -68,20 +68,95 @@ Coming soon...
 
 # Drawbacks
 
-Coming soon...
+Each new lifecycle adds complexity and makes the component API harder for beginners to understand. Although this lifecycle _is important_, it will probably _not be used often_, and so I think the impact is minimal.
 
 # Alternatives
 
-Coming soon...
+A new commit-phase lifecycle is necessary. The signature does not have to match the one proposed by this RFC however. Below are some alternatives that were considered.
+
+### Static method
+
+The most recently-added lifecycle, `getDerivedStateFromProps`, was a static method in order to prevent unsafe access of instance properties. I don't think that concern is as relevant in this case though because this lifecycle is invoked during the commit phase.
+
+A static lifecycle would also be unable to access refs on the instance, requiring them to be stored in `state`.
+
+```js
+class ScrollingList extends React.Component<Props, State> {
+  state = {
+    listRef: React.createRef(),
+    prevList: this.props.list
+  };
+
+  static getDerivedStateFromProps(
+    nextProps: Props,
+    prevState: State
+  ): $Shape<State> | null {
+    if (prevState.prevList !== nextProps.list) {
+      return {
+        prevList: nextProps.list
+      };
+    }
+
+    return null;
+  }
+
+  static getSnapshotBeforeUpdate(
+    prevProps: Props,
+    prevState: State
+  ): Snapshot | null {
+    if (
+      prevState.prevList.length < this.props.list.length
+    ) {
+      return prevState.listRef.value.scrollHeight;
+    }
+
+    return null;
+  }
+
+  // ...
+}
+```
+
+### No return value
+
+The proposed lifecycle will be the first commit phase lifecycle with a meaningful return value and the first lifecyle whose return value is passed as a parameter to another lifecycle. Likewise, the new parameter for `componentDidUpdate` will be the first passed to a lifecycle that isn't some form of `Props` or `State`. This adds some complexity to the API, since it requires a more nuanced understanding the relationship between `getSnapshotBeforeUpdate` and `componentDidUpdate`.
+
+An alternative would be to scrap the return value in favor of storing snapshot values on the instance.
+
+```js
+class ScrollingList extends React.Component<Props, State> {
+  listRef = React.createRef();
+  listScrollHeight = null;
+
+  getSnapshotBeforeUpdate(
+    prevProps: Props,
+    prevState: State
+  ) {
+    if (prevProps.list.length < this.props.list.length) {
+      this.listScrollHeight = this.listRef.value.scrollHeight;
+    }
+  }
+
+  componentDidUpdate(prevProps: Props, prevState: State) {
+    if (this.listScrollHeight !== null) {
+      this.listRef.value.scrollTop +=
+        this.listRef.value.scrollHeight - snapshot;
+      this.listScrollHeight = null;
+    }
+  }
+
+  // ...
+}
+```
 
 # Adoption strategy
 
-Coming soon...
+Since this lifecycle- and async rendering in general- is new functionality, adoption will be organic. Documentation and dev-mode warnings have already been created to encourage people to move away from render phase lifecycles like `componentWillUpdate` to commit phase lifecycles.
 
 # How we teach this
 
-Coming soon...
+Lifecycle documentation on the website. Add a before an after example (like above) to the [Update on Async Rendering](https://github.com/reactjs/reactjs.org/pull/596) blog post "recipes".
 
 # Unresolved questions
 
-Coming soon...
+None presently.
