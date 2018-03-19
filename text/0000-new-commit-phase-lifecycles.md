@@ -58,7 +58,7 @@ class ScrollingList extends React.Component<Props, State> {
 
 # Motivation
 
-This lifecycle provides a way for asynchronously rendered components to accurately read values from the host envirnment (e.g. the DOM) before it is mutated.
+This lifecycle provides a way for asynchronously rendered components to accurately read values from the host environment (e.g. the DOM) before it is mutated.
 
 The [example above](#basic-example) describes one use case in which this could be useful. Others might involve text selection and cursor position, audio/video playback position, etc.
 
@@ -124,7 +124,7 @@ class ScrollingList extends React.Component<Props, State> {
 
 ### No return value
 
-The proposed lifecycle will be the first commit phase lifecycle with a meaningful return value and the first lifecyle whose return value is passed as a parameter to another lifecycle. Likewise, the new parameter for `componentDidUpdate` will be the first passed to a lifecycle that isn't some form of `Props` or `State`. This adds some complexity to the API, since it requires a more nuanced understanding the relationship between `getSnapshotBeforeUpdate` and `componentDidUpdate`.
+The proposed lifecycle will be the first commit phase lifecycle with a meaningful return value and the first lifecycle whose return value is passed as a parameter to another lifecycle. Likewise, the new parameter for `componentDidUpdate` will be the first passed to a lifecycle that isn't some form of `Props` or `State`. This adds some complexity to the API, since it requires a more nuanced understanding the relationship between `getSnapshotBeforeUpdate` and `componentDidUpdate`.
 
 An alternative would be to scrap the return value in favor of storing snapshot values on the instance.
 
