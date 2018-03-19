@@ -83,6 +83,7 @@ A static lifecycle would also be unable to access refs on the instance, requirin
 ```js
 class ScrollingList extends React.Component<Props, State> {
   state = {
+    listHasGrown: false,
     listRef: React.createRef(),
     prevList: this.props.list
   };
@@ -91,9 +92,15 @@ class ScrollingList extends React.Component<Props, State> {
     nextProps: Props,
     prevState: State
   ): $Shape<State> | null {
-    if (prevState.prevList !== nextProps.list) {
+    if (nextProps.list !== prevState.prevList) {
       return {
+        listHasGrown:
+          nextProps.list.length > prevState.prevList.length,
         prevList: nextProps.list
+      };
+    } else if (prevState.listHasGrown) {
+      return {
+        listHasGrown: false
       };
     }
 
@@ -104,9 +111,7 @@ class ScrollingList extends React.Component<Props, State> {
     prevProps: Props,
     prevState: State
   ): Snapshot | null {
-    if (
-      prevState.prevList.length < this.props.list.length
-    ) {
+    if (prevState.listHasGrown) {
       return prevState.listRef.value.scrollHeight;
     }
 
