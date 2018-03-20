@@ -64,7 +64,9 @@ The [example above](#basic-example) describes one use case in which this could b
 
 # Detailed design
 
-Add a new effect type, `Snapshot`, and update `ReactFiberClassComponent` to add this type when updating components that define the new `getSnapshotBeforeUpdate` lifecycle. During the  `commitAllHostEffects` traversal, call `getSnapshotBeforeUpdate` for any fiber tagged with the new `Snapshot` effect type. Store return value on the instance (as `__reactInternalSnapshotBeforeUpdate`) and later pass to `componentDidUpdate` within `commitLifeCycles`.
+Add a new effect type, `Snapshot`, and update `ReactFiberClassComponent` to assign this type when updating components that define the new `getSnapshotBeforeUpdate` lifecycle.
+
+During the  `commitAllHostEffects` traversal, call `getSnapshotBeforeUpdate` for any fiber tagged with the new `Snapshot` effect type. Store return value on the instance (as `__reactInternalSnapshotBeforeUpdate`) and later pass to `componentDidUpdate` from `commitLifeCycles`.
 
 Add DEV warnings for the following conditions:
 * Undefined return values for `getSnapshotBeforeUpdate`
