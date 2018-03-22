@@ -88,9 +88,13 @@ class Example extends React.Component<Props, State = void, Snapshot> {}
 
 ### Polyfill support
 
-It might be possible for [react-lifecycles-compat](https://github.com/reactjs/react-lifecycles-compat) to polyfill this new method for older, synchronous versions of React using the `componentWillUpdate` lifecycle. To support this, we should follow the precedent set by `getDerivedStateFromProps` and not call the call _unsafe_ legacy lifecycles `componentWillMount`, `componentWillReceiveProps`, or `componentWillUpdate` for any component that defines the new `getSnapshotBeforeUpdate` method. (This would avoid executing code twice for newer versions of React.)
+It would be possible for [react-lifecycles-compat](https://github.com/reactjs/react-lifecycles-compat) to polyfill this new method for older, synchronous versions of React using the `componentWillUpdate` lifecycle. It would require a couple of hacks though:
+* The polyfilled `componentWillUpdate` method would need to temporarily mutate instance props (`this.props` and `this.state`) before calling the new `getSnapshotFromUdate` method in order to maintain next/prev semantics.
+* The polyfill would need to mutate the component's `prototype` to decorate `componentDidUpdate` in order to add the new `snapshot` parameter. This would not work in all cases (e.g. `Object.defineProperty` syntax).
 
-A DEV warning could be added for components that define both `getSnapshotBeforeUpdate` and any of the unsafe legacy lifecycles.
+Regardless, I think it's probably reasonable to follow the precedent set by `getDerivedStateFromProps` and _not_ call the call _unsafe_ legacy lifecycles `componentWillMount`, `componentWillReceiveProps`, or `componentWillUpdate` for any component that defines the new `getSnapshotBeforeUpdate` method.
+
+A DEV warning can be added for components that define both `getSnapshotBeforeUpdate` and any of the unsafe legacy lifecycles.
 
 # Drawbacks
 
