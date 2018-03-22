@@ -4,9 +4,9 @@
 
 # Summary
 
-Add new "commit" phase lifecycle, `getSnapshotBeforeUpdate`, that gets called _before_ mutations are made. Any value returned by this lifecycle will be passed as a third parameter to `componentDidUpdate`.
+Add new "commit" phase lifecycle, `getSnapshotBeforeUpdate`, that gets called _before_ mutations are made. Any value returned by this lifecycle will be passed as the third parameter to `componentDidUpdate`.
 
-This lifecycle will be important for [async rendering](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html), where there may be delays between "render" phase lifecycles (e.g. `componentWillUpdate` and `render`) and "commit" phase lifecycles (e.g. `componentDidUpdate`).
+This lifecycle is important for [async rendering](https://reactjs.org/blog/2018/03/01/sneak-peek-beyond-react-16.html), where there may be delays between "render" phase lifecycles (e.g. `componentWillUpdate` and `render`) and "commit" phase lifecycles (e.g. `componentDidUpdate`).
 
 # Basic example
 
@@ -17,15 +17,15 @@ Unfortunately this approach **does not work with async rendering**, because ther
 The solution is to introduce a new lifecycle that gets called during the commit phase before mutations have been made to e.g. the DOM. For example:
 
 ```js
-type Snapshot = number;
+type Snapshot = number | null;
 
-class ScrollingList extends React.Component<Props, State> {
+class ScrollingList extends React.Component<Props, State, Snapshot> {
   listRef = React.createRef();
 
   getSnapshotBeforeUpdate(
     prevProps: Props,
     prevState: State
-  ): Snapshot | null {
+  ): Snapshot {
     // Are we adding new items to the list?
     // Capture the current height of the list so we can adjust scroll later.
     if (prevProps.list.length < this.props.list.length) {
@@ -38,7 +38,7 @@ class ScrollingList extends React.Component<Props, State> {
   componentDidUpdate(
     prevProps: Props,
     prevState: State,
-    snapshot: Snapshot | null
+    snapshot: Snapshot
   ) {
     // If we have a snapshot value, then we've just added new items.
     // Adjust scroll so these new items don't push the old ones out of view.
@@ -66,11 +66,25 @@ The [example above](#basic-example) describes one use case in which this could b
 
 Add a new effect type, `Snapshot`, and update `ReactFiberClassComponent` to assign this type when updating components that define the new `getSnapshotBeforeUpdate` lifecycle.
 
-During the  `commitAllHostEffects` traversal, call `getSnapshotBeforeUpdate` for any fiber tagged with the new `Snapshot` effect type. Store return value on the instance (as `__reactInternalSnapshotBeforeUpdate`) and later pass to `componentDidUpdate` from `commitLifeCycles`.
+During the  `commitAllHostEffects` traversal, call `getSnapshotBeforeUpdate` for any fiber tagged with the new `Snapshot` effect type. Store return value on the instance (as `__reactInternalSnapshotBeforeUpdate`) and later pass to `componentDidUpdate` during `commitLifeCycles`.
+
+### New DEV warnings
 
 Add DEV warnings for the following conditions:
 * Undefined return values for `getSnapshotBeforeUpdate`
-* Components that define `getSnapshotBeforeUpdate` without also defining `componentDidUpdate`
+* Components that define `getSnapshotBeforeUpdate` without also defining `componentDidUpdate
+
+### Flow
+
+Flow will also need to be updated to add a third `Snapshot` type parameter to `React.Component` to ensure consistency for the return type fo `getSnapshotBeforeUpdate` adn the new parameter passed to `componentDidUpdate`. This new type parameter will be declared like so:
+
+```js
+// If there is a State type:
+class Example extends React.Component<Props, State, Snapshot> {}
+
+// If there is no State type:
+class Example extends React.Component<Props, State = void, Snapshot> {}
+```
 
 # Drawbacks
 
@@ -82,9 +96,7 @@ A new commit-phase lifecycle is necessary. The signature does not have to match 
 
 ### Static method
 
-The most recently-added lifecycle, `getDerivedStateFromProps`, was a static method in order to prevent unsafe access of instance properties. I don't think that concern is as relevant in this case though because this lifecycle is invoked during the commit phase.
-
-A static lifecycle would also be unable to access refs on the instance, requiring them to be stored in `state`.
+The most recently-added lifecycle, `getDerivedStateFromProps`, was a static method in order to prevent unsafe access of instance properties. That concern is less relevant in this case though, because this lifecycle is called during the commit phase.
 
 ```js
 class ScrollingList extends React.Component<Props, State> {
@@ -128,11 +140,13 @@ class ScrollingList extends React.Component<Props, State> {
 }
 ```
 
+This approach was not chosen because of the added complexity of storing additional values (including refs) in `state`.
+
 ### No return value
 
 The proposed lifecycle will be the first commit phase lifecycle with a meaningful return value and the first lifecycle whose return value is passed as a parameter to another lifecycle. Likewise, the new parameter for `componentDidUpdate` will be the first passed to a lifecycle that isn't some form of `Props` or `State`. This adds some complexity to the API, since it requires a more nuanced understanding the relationship between `getSnapshotBeforeUpdate` and `componentDidUpdate`.
 
-An alternative would be to scrap the return value in favor of storing snapshot values on the instance.
+An alternative would be to scrap the return value in favor of storing snapshot values on the instance. This has the added benefit of not requiring any changes to be made to Flow.
 
 ```js
 class ScrollingList extends React.Component<Props, State> {
@@ -159,6 +173,8 @@ class ScrollingList extends React.Component<Props, State> {
   // ...
 }
 ```
+
+Ultimately, the team voted against this approach because it encourages mutations and may invite other side-effects in a lifecycle that is intended to be used for a very specific purpose.
 
 # Adoption strategy
 
