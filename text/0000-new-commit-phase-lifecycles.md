@@ -86,6 +86,12 @@ class Example extends React.Component<Props, State, Snapshot> {}
 class Example extends React.Component<Props, State = void, Snapshot> {}
 ```
 
+### Polyfill support
+
+It might be possible for [react-lifecycles-compat](https://github.com/reactjs/react-lifecycles-compat) to polyfill this new method for older, synchronous versions of React using the `componentWillUpdate` lifecycle. To support this, we should follow the precedent set by `getDerivedStateFromProps` and not call the call _unsafe_ legacy lifecycles `componentWillMount`, `componentWillReceiveProps`, or `componentWillUpdate` for any component that defines the new `getSnapshotBeforeUpdate` method. (This would avoid executing code twice for newer versions of React.)
+
+A DEV warning could be added for components that define both `getSnapshotBeforeUpdate` and any of the unsafe legacy lifecycles.
+
 # Drawbacks
 
 Each new lifecycle adds complexity and makes the component API harder for beginners to understand. Although this lifecycle _is important_, it will probably _not be used often_, and so I think the impact is minimal.
