@@ -90,7 +90,7 @@ class Example extends React.Component<Props, State = void, Snapshot> {}
 
 It would be possible for [react-lifecycles-compat](https://github.com/reactjs/react-lifecycles-compat) to polyfill this new method for older, synchronous versions of React using the `componentWillUpdate` lifecycle. It would require a couple of hacks though:
 * The polyfilled `componentWillUpdate` method would need to temporarily mutate instance props (`this.props` and `this.state`) before calling the new `getSnapshotFromUdate` method in order to maintain next/prev semantics.
-* The polyfill would need to mutate the component's `prototype` to decorate `componentDidUpdate` in order to add the new `snapshot` parameter. This would not work in all cases (e.g. `Object.defineProperty` syntax).
+* The polyfill would need to mutate the component's `prototype` to decorate `componentDidUpdate` in order to add the new `snapshot` parameter. This would not work in all cases (e.g. methods that get attached to the instance in the constructor rather than as part of the prototype).
 
 Regardless, I think it's probably reasonable to follow the precedent set by `getDerivedStateFromProps` and _not_ call the call _unsafe_ legacy lifecycles `componentWillMount`, `componentWillReceiveProps`, or `componentWillUpdate` for any component that defines the new `getSnapshotBeforeUpdate` method.
 
