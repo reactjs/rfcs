@@ -72,7 +72,7 @@ During the  `commitAllHostEffects` traversal, call `getSnapshotBeforeUpdate` for
 
 Add DEV warnings for the following conditions:
 * Undefined return values for `getSnapshotBeforeUpdate`
-* Components that define `getSnapshotBeforeUpdate` without also defining `componentDidUpdate
+* Components that define `getSnapshotBeforeUpdate` without also defining `componentDidUpdate`
 
 ### Flow
 
