@@ -240,10 +240,42 @@ More motivation can be found in past discussions on reparenting:
 - [Support for reparenting (facebook/react#3965)](https://github.com/facebook/react/issues/3965)
 - [A gist that has hosted a lot of reparenting discussion](https://gist.github.com/chenglou/34b155691a6f58091953)
 
+# Requirements
+
+There are a variety of use cases for reparenting. Some of them have certain requirements of the API that not all suggestions cover.
+
+1. It must not rely on user-provided strings.
+
+   We already use string keys for local key comparisons. This works fine for local keys, but guaranteeing the application wide uniqueness of a string should not be a requirement of using a reparent. No other React API works this way and it adds difficulty to usage of reparents within libraries.
+
+2. It must be possible to detach a tree and reuse it later.
+
+   Sometimes you want to detach a tree and hold on to it instead of just moving it around. For example, it may be beneficial to remove a modal's contents when not in use. Or the detached nature may simply be a side effect of complex application logic, perhaps involving async and nested components, which results in it being difficult to guarantee that a reparent is present somewhere in the react state tree. Thus any implementation must provide enough information for React to differentiate between when a reparent is not present in a tree but has just been detached; and when a reparent is no longer in use by its owner and should be unmounted.
+
+3. It must be possible to create reparents dynamically.
+
+   Sometimes instead of a reparent being used for a known tree that you just want to move, it is instead used for dynamic content that comes from some store/database. You need to be able to move the content generated from this from one part of the state tree to another. But any number of these may exist at once.
+
+   Thus it must not be a requirement that reparents be known ahead of time. Additionally, because reparents for dynamic content can be removed dynamically it must be possible to unmount any reparent no longer in use, without the owner of the reparent itself having to unmount.
+
+4. It must be possible to use a reparent in the render method of a component that is a descendent of the actual owner.
+
+   Special use cases the dynamic template example and common use cases like Drag & Drop often may involve moving a reparent from one React component to another React component. Thus it must be possible for the reparent's owner to be a React component higher up in the state tree that is able to pass its reparents down to children (through props or context) and have those children render the reparent.
+
+5. Requirements 2, 3, and 4 interact specially and a proper reparent implementation must satisfy all of them at the same time.
+
+   - Unmounting in React involves the calling of lifecycle methods that may involve cleanup of possible global subscriptions (event listeners, data observers, etc) which may leak if not done. As a result we cannot simply store a reference to the state tree in a reparent and let the state tree be GCd when the reparent is no longer being referenced by the code that created it. React must hold a reference to the state tree and explicitly unmount it when not in use.
+   - Reparents may be created/destroyed dynamically and be owned by a component that may never unmount. So we need to know when we can unmount a reparent, separate from just when its owner unmounts.
+   - We need detached trees, so we cannot simply unmount any reparent that is no longer present in the state tree.
+   - A reparent may be rendered in a component other than its owner. Thus we cannot simply unmount a reparent when it has not been used in the render method of its owner.
+
+   As a result, in addition to implementing the global-ishly unique key behaviour needed to move reparents any implementation also needs to provide an explicit declaration that can be used to differentiate detached from unused reparents.
+
 # Glossary
 
 - **state tree**: The state tree refers to both the tree of DOM nodes or other tree of native elements React is rendering to (for React Native and 3rd party environments) and the tree of React Components that allows React to reuse an instance of a Component on a future render.
 - **Reparent owner**: A reparent owner is the component passed to the `React.createReparent(component)` function. The owner does not have to be the one rendering the Reparent, you can pass the reparent down for a descendant to render, but it cannot be passed upwards to be rendered by a parent or cousin of the Reparent owner (notwithstanding use of Portals).
+- **global-ish key**: The global-ish key nature of reparents refers to how normally in react the string `key="..."` is only locally unique within its parent, but a reparent must be unique within any parent. Generally this would be though of as "globally unique", however because reparents have an owner they only actually need to be unique within the portion of the state tree under their owner.
 
 # Detailed design
 
