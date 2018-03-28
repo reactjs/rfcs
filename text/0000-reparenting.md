@@ -65,6 +65,128 @@ class Layout extends PureComponent {
 }
 ```
 
+## Table with movable cells
+
+Using dynamic reparents within a table to ensure that cells are not recreated from scratch when moved from one row to another.
+
+```js
+class TableWidget extends PureComponent {
+    state = {
+        table: {
+            cols: 4,
+            rows: 0,
+            cells: [],
+        },
+    };
+
+    addRow() {
+        this.setState(state => ({
+            table: update(state.table, {
+                rows: state.table.rows + 1,
+                cells: {
+                    [state.table.rows + 1]: {
+                        $set: new Array(state.table.cols).fill(null),
+                    },
+                },
+            })
+        }));
+    }
+
+    addData(row, col, data) {
+        this.setState(state => ({
+            table: update(state.table, {
+                cells: {
+                    [row]: {
+                        [col]: {
+                            $set: {
+                                id: uuid(),
+                                data,
+                            },
+                        },
+                    },
+                },
+            })
+        }));
+    }
+
+    moveData(from, to) {
+        this.setState(state => {
+            let {table} = state;
+            // Set the to cell to the from cell's data
+            table = update(table, {
+                cells: {
+                    [to.row]: {
+                        [to.col]: {
+                            $set: table.cells[from.row][from.col],
+                        },
+                    },
+                },
+            });
+            // Set the from cell to null
+            table = update(table, {
+                cells: {
+                    [from.row]: {
+                        [from.col]: {
+                            $set: null,
+                        },
+                    },
+                },
+            });
+            return {table};
+        });
+    }
+
+    removeData(row, col) {
+        this.setState(state => {
+            // Unmount the reparent so we don't leak memory
+            const cell = table.cells[from.row][from.col];
+            if ( this.cells[cell.id] ) {
+                this.cells[cell.id].unmount();
+                delete this.cells[cell.id];
+            }
+
+            // Set the cell to null
+            let {table} = state;
+            table = update(table, {
+                cells: {
+                    [row]: {
+                        [col]: {
+                            $set: null,
+                        },
+                    },
+                },
+            });
+            return {table};
+        });
+    }
+
+    // Dynamic store for reparents, the reparents are created as-needed for cells in the table
+    cells = Object.create(null);
+    getCell = (cell, row, col) => {
+        this.cells[cell.id] = this.cells[cell.id] || React.createReparent(this);
+        return this.cells[cell.id](<Cell row={row} col={col} cell={cell} />);
+    };
+
+    render() {
+        const {table} = this.props
+
+        return (
+            <table>
+                {table.cells.map((cols, row) => (
+                    <tr key={row}>
+                        {row.cols.map((cell, column) => (
+                            <td key={column}>
+                                {this.getCell(cell, row, column)}
+                            </td>
+                        ))}
+                    </tr>
+                ))}
+            </table>
+        );
+    }
+}
+```
+
 ## Dynamic template
 
 Using reparents in a dynamic template/widget structure to avoid recreating widgets from scratch when they are move from one section of the template to another.
