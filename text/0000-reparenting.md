@@ -221,6 +221,17 @@ Up till now the only way to handle reparenting has been using `ReactDOM.unstable
 
 This reparenting issue have been left alone for awhile. We have an RFC process now. An RFC for a new context API has made an unstable feature of React stable. And accepted RFCs like createRef have given suggestions on what APIs fitting of React might look like. I think now is a good time to try tackling reparenting.
 
+## Goals of reparenting
+
+1. Ensure that react instance state (`state` and `this.*`) is not destroyed when reparenting.
+2. Avoid the high cost of re-render when React could just move a component from one parent to another.
+3. Where posible, retain the state of the underlying element external to React: like video buffers, state contained in custom-element instances, 3rd party library annotations (e.g. jQuery's `data` storage), and other native state.
+
+1 and 2 have a high enough value that it's ok for 3 to not function completely, where incomplete means:
+
+- The platform is non-dom and may not actually have a dom-like concept of moving a view from one parent to another.
+- Some of the state in the native element is lost when we use appenChild like focus, scroll, playing state (see [Limitations](#Limitations)).
+
 More motivation can be found in past discussions on reparenting:
 
 - [Support for reparenting (facebook/react#3965)](https://github.com/facebook/react/issues/3965)
