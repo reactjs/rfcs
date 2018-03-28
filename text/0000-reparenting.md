@@ -11,7 +11,9 @@ The goal of this RFC is to introduce a "Reparent" API that allows portions of th
 # Basic example
 
 ## Layout
+
 Using reparents to render a page layout that can change structure between desktop and mobile without causing the page contents and sidebar to be recreated from scratch.
+
 ```js
 class Layout extends PureComponent {
     header = React.createReparent(this);
@@ -64,6 +66,7 @@ class Layout extends PureComponent {
 ```
 
 ## Dynamic template
+
 Using reparents in a dynamic template/widget structure to avoid recreating widgets from scratch when they are move from one section of the template to another.
 
 ```js
@@ -225,12 +228,12 @@ This reparenting issue have been left alone for awhile. We have an RFC process n
 
 1. Ensure that react instance state (`state` and `this.*`) is not destroyed when reparenting.
 2. Avoid the high cost of re-render when React could just move a component from one parent to another.
-3. Where posible, retain the state of the underlying element external to React: like video buffers, state contained in custom-element instances, 3rd party library annotations (e.g. jQuery's `data` storage), and other native state.
+3. Where possible, retain the state of the underlying element external to React: like video buffers, state contained in custom-element instances, 3rd party library annotations (e.g. jQuery's `data` storage), and other native state.
 
 1 and 2 have a high enough value that it's ok for 3 to not function completely, where incomplete means:
 
 - The platform is non-dom and may not actually have a dom-like concept of moving a view from one parent to another.
-- Some of the state in the native element is lost when we use appenChild like focus, scroll, playing state (see [Limitations](#Limitations)).
+- Some of the state in the native element is lost when we use appendChild like focus, scroll, playing state (see [Limitations](#Limitations)).
 
 More motivation can be found in past discussions on reparenting:
 
@@ -263,6 +266,7 @@ When React DOM intends to detach a DOM node (because the Reparent from a previou
 The fragment returned has an implicit key which is unique to the Reparent. A Reparent itself is like a key that is unique beyond just a single element's children so there is no need for the user to specify an additional key to use its contents in an array.
 
 Naively, createReparent without the reparenting and unmount behaviour behaves similar to the following implementation:
+
 ```js
 React.createReparent = function() {
     const key = generateUniqueKey();
@@ -279,6 +283,7 @@ React.createReparent = function() {
 ```
 
 And conforms to the following types/interface:
+
 ```js
 type ReparentFunction = (ReactNodeList) => ReactFragment;
 type ReparentObject = {
@@ -335,9 +340,9 @@ The createKey API could work, however it has some limitations that createReparen
 - While createKey and createReparent shares the same advantage that unmounting of its host results in unmounting of the reparentable root. contentKey does not have a secondary method of unmounting/discarding the tree. React cannot differentiate between a detached tree and a discarded/unmountable tree. As a result it cannot be used for varying numbers of reparentable roots as trees for discarded keys remain in memory as leaks.
 - createKey adds alternative behaviour using just the `key`, createReparent gives React internals more control in how it they decide to handle the link between the tree and the reparent.
 
-## DetatchedTree
+## DetachedTree
 
-If `.unmount()` proves to be too complex it may be possible to make detached trees work with createReparent, createKey, or other global key methods by using a Fragment-like `<DetatchedTree />` component which holds a reference to the detached tree in the React tree but omits it from the DOM. Then React knows it may unmount components and trees if it is not used as part of the live tree or in a DetatchedTree.
+If `.unmount()` proves to be too complex it may be possible to make detached trees work with createReparent, createKey, or other global key methods by using a Fragment-like `<DetachedTree />` component which holds a reference to the detached tree in the React tree but omits it from the DOM. Then React knows it may unmount components and trees if it is not used as part of the live tree or in a DetachedTree.
 
 ```js
 class MyComponent extends Component {
@@ -350,9 +355,9 @@ class MyComponent extends Component {
 
         return (
             <div>
-                <DetatchedTree>
+                <DetachedTree>
                     {!show && content}
-                </DetatchedTree>
+                </DetachedTree>
                 {show && content}
             </div>
         );
