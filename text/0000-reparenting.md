@@ -287,7 +287,7 @@ Some DOM nodes have quirks they exhibit when they are moved from one parent DOM 
 - `<video>`/`<audio>` elements may pause (Chrome exhibits this behaviour; IE11 only exhibits this behaviour if you `removeChild` before you `appendChild`/`insertChild`; Firefox and Safari do not exhibit this quirk)
 - `<iframe>` elements will refresh, completely losing their state. This is unavoidable. However, iframes have very limited use cases so those making use of iframes should be aware that they cannot move their iframes around unless they accept that it will refresh when they do.
 - `.swf` Flash players will reload. (*unconfirmed*)
-- The currently focused element may lose its focus if it is being moved. (*unconfirmed*)
+- The currently focused element will lose its focus if it is being moved.
 - Scrollable containers will lose their scroll position and reset to the initial scroll position when they are moved.
 
 # Drawbacks
