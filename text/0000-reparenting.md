@@ -415,3 +415,30 @@ We may need a new documentation page to explain reparenting as one was added for
   - Perhaps when hydrating the dom tree, portions of the dom tree that match up with portions of the virtual dom belonging to a reparent will be given to the Reparent to hydrate as its dom tree.
 - Should the Reparent function just accept a single children argument, or should it accept ...children rest and pass it on to createElement to behave similar to createElement.
 - If a Reparent is detached and it's DOM tree is detached from the document, should it render the children it is passed in the Reparent function; or should it save the most recent children value passed to it and wait till it is re-mounted before actually rendering those children?
+- Sometimes a pattern like this exists:
+
+  ```js
+  class Foo extends Component {
+    state = {
+      dialog: undefined,
+    };
+    setDialog = dialog => this.setState({dialog});
+    render() {
+      return (
+        <div>
+          <Bar setDialog={this.setDialog} />
+          {this.state.dialog}
+        </div>
+      );
+    }
+  }
+  class Bar extends Component {
+    componentDidMount() {
+      this.props.setDialog(<Baz />);
+    }
+    // ...
+  }
+  // ...
+  ```
+
+  If Bar were to create a reparent and use it as part of the tree passed to setDialog then technically the reparent would be used above its owner. Should we relax the wording of this RFC to permit this?
