@@ -56,7 +56,8 @@ ReactDOM.render(
     </DetachableTree>,
     container);
 
-// The state tree of the reparent is what is retained, not the contents. So if you change the contents of the DetachableTree, then components unmount as normal
+// The state tree of the reparent is what is retained, not the contents.
+// So if you change the contents of the DetachableTree, then components unmount as normal
 ReactDOM.render(
     <DetachableTree show={true}>
         <Foo key={2} />
@@ -65,7 +66,8 @@ ReactDOM.render(
 // log: Unmounted
 // log: Mounted
 
-// But if you unmount the DetachableTree the reparent will unmount and all of the normal react elements inside will also unmount.
+// But if you unmount the DetachableTree the reparent will unmount
+// and all of the normal react elements inside will also unmount.
 ReactDOM.render(
     <div />,
     container);
@@ -382,7 +384,8 @@ let templateData = {
 
 ReactDOM.render(<Template {...templateData} />, app);
 
-// Modify the template to move widget:w-1 to section s-2, it should not be necessary to re-create widget w-1 from scratch
+// Modify the template to move widget:w-1 to section s-2,
+// it should not be necessary to re-create widget w-1 from scratch
 templateData = {
     sections: [
         {
@@ -611,7 +614,8 @@ class Template extends PureComponent {
 
         // Explicitly keep all the reparents we are using
         // - Even if a reparent kept here isn't used in a TemplateComponent is is still not unmounted
-        // - If a reparent from a previous render isn't kept here, then React knows we don't have a reference to it anymore so it can be unmounted and allowed to be garbage collected
+        // - If a reparent from a previous render isn't kept here, then React knows we don't have a reference to it anymore
+        //   so it can be unmounted and allowed to be garbage collected
         for ( const id in templateWidgetReparents ) {
             templateWidgetReparents[id].keep();
         }
