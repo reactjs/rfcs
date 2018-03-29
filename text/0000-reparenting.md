@@ -455,6 +455,10 @@ There are a variety of use cases for reparenting. Some of them have certain requ
 
    As a result, in addition to implementing the global-ishly unique key behaviour needed to move reparents any implementation also needs to provide an explicit declaration that can be used to differentiate detached from unused reparents.
 
+6. It cannot require React DOM's Portals.
+
+   Portals only work in the client side DOM code. They don't work on the server, if you render something isomorphic and then put it into a portal on the client it will be recreated from scratch. And Portals are not available in non-dom environments like React Native. While native doesn't necessarily need reparenting for native views, reparenting itself is still useful as a way of keeping the state of React components without resorting to moving absolutely everything into Flux/Redux.
+
 # Glossary
 
 - **state tree**: The state tree refers to both the tree of DOM nodes or other tree of native elements React is rendering to (for React Native and 3rd party environments) and the tree of React Components that allows React to reuse an instance of a Component on a future render.
