@@ -415,7 +415,7 @@ This reparenting issue have been left alone for awhile. We have an RFC process n
 1 and 2 have a high enough value that it's ok for 3 to not function completely, where incomplete means:
 
 - The platform is non-dom and may not actually have a dom-like concept of moving a view from one parent to another.
-- Some of the state in the native element is lost when we use appendChild like focus, scroll, playing state (see [Limitations](#Limitations)).
+- Some of the state in the native element is lost when we use appendChild like focus, scroll, playing state (see [Limitations](#limitations)).
 
 More motivation can be found in past discussions on reparenting:
 
