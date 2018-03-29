@@ -10,6 +10,61 @@ The goal of this RFC is to introduce a "Reparent" API that allows portions of th
 
 # Basic example
 
+## Layout
+
+Using reparents to render a page layout that can change structure between desktop and mobile without causing the page contents and sidebar to be recreated from scratch.
+
+```js
+class Layout extends PureComponent {
+    header = React.createReparent(this);
+    content = React.createReparent(this);
+    sidebar = React.createReparent(this);
+
+    render() {
+        const {isMobile, children} = this.props;
+
+        const header = this.header(
+            <div className='header'>
+                <Logo />
+                <NavigationBar />
+            </div>
+        );
+
+        const sidebar = this.sidebar(
+            <div className='sidebar'>
+                <SidebarContent />
+            </div>
+        );
+
+        const content = this.content(
+            <Fragment>
+                {children}
+            </Fragment>
+        );
+
+        if ( isMobile ){
+            return (
+                <div>
+                    {header}
+                    {content}
+                    {sidebar}
+                </div>
+            );
+        } else {
+            return (
+                <div>
+                    {header}
+                    <div>
+                        {content}
+                        {sidebar}
+                    </div>
+                </div>
+            );
+        }
+    }
+}
+```
+
 ## Detach trees of dom nodes / components
 
 ```js
@@ -72,61 +127,6 @@ ReactDOM.render(
     <div />,
     container);
 // log: Unmounted
-```
-
-## Layout
-
-Using reparents to render a page layout that can change structure between desktop and mobile without causing the page contents and sidebar to be recreated from scratch.
-
-```js
-class Layout extends PureComponent {
-    header = React.createReparent(this);
-    content = React.createReparent(this);
-    sidebar = React.createReparent(this);
-
-    render() {
-        const {isMobile, children} = this.props;
-
-        const header = this.header(
-            <div className='header'>
-                <Logo />
-                <NavigationBar />
-            </div>
-        );
-
-        const sidebar = this.sidebar(
-            <div className='sidebar'>
-                <SidebarContent />
-            </div>
-        );
-
-        const content = this.content(
-            <Fragment>
-                {children}
-            </Fragment>
-        );
-
-        if ( isMobile ){
-            return (
-                <div>
-                    {header}
-                    {content}
-                    {sidebar}
-                </div>
-            );
-        } else {
-            return (
-                <div>
-                    {header}
-                    <div>
-                        {content}
-                        {sidebar}
-                    </div>
-                </div>
-            );
-        }
-    }
-}
 ```
 
 ## Table with movable cells
