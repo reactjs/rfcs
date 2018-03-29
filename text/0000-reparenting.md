@@ -10,6 +10,68 @@ The goal of this RFC is to introduce a "Reparent" API that allows portions of th
 
 # Basic example
 
+## Detach trees of dom nodes / components
+
+```js
+class Foo extends Component {
+    componentDidMount() {
+        console.log('Mounted');
+    }
+    componmentWillUnmount() {
+        console.log('Unmounted');
+    }
+    render() {
+        return null;
+    }
+}
+
+class DetachableTree extends Component {
+    reparent = React.createReparent(this);
+
+    render() {
+        const content = this.reparent(this.props.children);
+        return this.props.show && content;
+    }
+}
+
+ReactDOM.render(
+    <DetachableTree show={true}>
+        <Foo key={1} />
+    </DetachableTree>,
+    container);
+// log: Mounted
+
+// Children can be detached from the dom tree with `show = false`
+ReactDOM.render(
+    <DetachableTree show={false}>
+        <Foo key={1} />
+    </DetachableTree>,
+    container);
+// But they will not actually be unmounted
+
+// If you set `show = true` later, the previously rendered state tree will be re-inserted
+ReactDOM.render(
+    <DetachableTree show={true}>
+        <Foo key={1} />
+    </DetachableTree>,
+    container);
+
+// The state tree of the reparent is what is retained, not the contents. So if you change the contents of the DetachableTree, then components unmount as normal
+ReactDOM.render(
+    <DetachableTree show={true}>
+        <Foo key={2} />
+    </DetachableTree>,
+    container);
+// log: Unmounted
+// log: Mounted
+
+// But if you unmount the DetachableTree the reparent will unmount and all of the normal react elements inside will also unmount.
+ReactDOM.render(
+    <div />,
+    container);
+// log: Unmounted
+```
+
 ## Layout
 
 Using reparents to render a page layout that can change structure between desktop and mobile without causing the page contents and sidebar to be recreated from scratch.
