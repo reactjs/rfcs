@@ -102,7 +102,7 @@ class Layout extends PureComponent {
 
         const content = this.content(
             <Fragment>
-                children
+                {children}
             </Fragment>
         );
 
