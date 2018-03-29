@@ -318,8 +318,6 @@ class Template extends PureComponent {
     static getDerivedStateFromProps(nextProps, prevState) {
         if ( nextProps.sections === prevState.sections ) return;
 
-        let templateWidgetReparents = prevState.templateWidgetReparents;
-
         const widgetIds = new Set();
         nextProps.sections.forEach(section => section.widgets.forEach(widget => widgetIds.add(widget.id)));
 
@@ -335,7 +333,7 @@ class Template extends PureComponent {
         const {widgetIds} = this.state;
 
         for ( const id of widgetIds ) {
-            if ( !(id in templateWidgetReparents) ) {
+            if ( !(id in this.templateWidgetReparents) ) {
                 this.templateWidgetReparents = Object.assign(this.templateWidgetReparents, {
                     [id]: React.createReparent(this),
                 });
@@ -584,6 +582,53 @@ class MyComponent extends Component {
     }
 }
 ```
+
+## .keep()
+
+Another alternative to the imperative `.unmount()` would be to have a `.keep()` signal. Instead of explicitly unmounting a dynamic reparent, for a reparent to be retained, either the ReparentFunction must be called with contents during render or `.keep()` must be called during render. If neither of them happens React considers the reparent unused and unmounts its contents. The reparent can later be re-used, but a new state tree will be created.
+
+```js
+class Template extends PureComponent {
+    static getDerivedStateFromProps(nextProps, prevState) {
+        if ( nextProps.sections === prevState.sections ) return;
+
+        let templateWidgetReparents = Object.create(null);
+
+        nextProps.sections.forEach(section => {
+            section.widgets.forEach(widget => {
+                templateWidgetReparents[widget.id] = prevState.templateWidgetReparents[id][widget.id] || React.createReparent(this);
+            });
+        });
+
+        return {
+            templateWidgetReparents,
+        };
+    }
+
+    render() {
+        const {sections} = this.props;
+        const {templateWidgetReparents} = this.state;
+
+        // Explicitly keep all the reparents we are using
+        // - Even if a reparent kept here isn't used in a TemplateComponent is is still not unmounted
+        // - If a reparent from a previous render isn't kept here, then React knows we don't have a reference to it anymore so it can be unmounted and allowed to be garbage collected
+        for ( const id in templateWidgetReparents ) {
+            templateWidgetReparents[id].keep();
+        }
+
+        return (
+            <TemplateWidgetReparentContext.Provider value={templateWidgetReparents}>
+                {sections.map(section => {
+                    <Section {...section} key={section.id} />
+                })}
+            </TemplateWidgetReparentContext.Provider>
+        );
+    }
+}
+```
+
+- Is calling `reparent(content)`/`reparent.keep()` in a child's `render()` enough? Or do we require that the owner itself must explicitly `.keep()` all reparents it intends to pass to children?
+- Perhaps we could keep a note in the state tree that a reparent is in use by a child component when it calls `reparent(content)` or `reparent.keep(this)` (this could be optional if we are fine with implicitly detecting the instance of the currently executing `render()`, but `this` is an option if we want to avoid that (string refs all over again). This would then ensure that the simple use case of passing a reparent to a child and moving it to another component is done in a way that ensures there is always a child component noted as using the reparent. And for unreliable dynamic use and detachable use the owner can explicitly `.keep()` all the reparents that is still has a reference to.
 
 # Adoption strategy
 
