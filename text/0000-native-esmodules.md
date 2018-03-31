@@ -128,9 +128,6 @@ export const createFactory = React.createFactory;
 export const isValidElement = React.isValidElement;
 export const version = React.version;
 
-export const Component = React.Component;
-export const PureComponent = React.PureComponent;
-
 export default React;
 ```
 
