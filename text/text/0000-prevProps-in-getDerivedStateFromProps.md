@@ -4,7 +4,7 @@
 
 # Summary
 
-Not having `prevProps` in the new `getDerivedStateFromProps()` function is really inconvenient for a library I'm migrating because in `componentWillMount()` it compared a property to find out if it has changed, and only if it did then the component changed its own internal state.
+Not having `prevProps` in the new `getDerivedStateFromProps()` function is really inconvenient for a library I'm migrating because in `componentWillReceiveProps()` it compared a property to find out if it has changed, and only if it did then the component changed its own internal state.
 
 # Basic example
 
@@ -46,7 +46,7 @@ if (prevProps.localeMessages !== props.localeMessages) {
 
 # Motivation
 
-In my library `componentWillMount()` compared a property to find out if it has changed, and if it did then the component changed its own internal state. There's a suggestion to use `componentDidUpdate()` but it feels smelly because "derive state from props" is what my old `componentWillReceiveProps` really does so the name kinda fits in only if it did have `prevProps` argument.
+In my library `componentWillReceiveProps()` compared a property to find out if it has changed, and if it did then the component changed its own internal state. There's a suggestion to use `componentDidUpdate()` but it feels smelly because "derive state from props" is what my old `componentWillReceiveProps` really does so the name kinda fits in only if it did have `prevProps` argument.
 
 # Detailed design
 
