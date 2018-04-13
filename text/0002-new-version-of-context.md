@@ -256,7 +256,7 @@ passing context as an argument to that method, compare the incoming context to
 the previous context, and return true if they are different. The problem is
 that, unlike props or state, we have no type information. The type of the
 context object depends on the component's position in the React tree. You could
-perform a shallow comparion of both objects, but that only works if we assume
+perform a shallow comparison of both objects, but that only works if we assume
 the values are immutable. And if we're going to assume the values are immutable,
 React might as well do the comparison automatically.
 
