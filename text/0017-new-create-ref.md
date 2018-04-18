@@ -17,7 +17,7 @@ String refs would get deprecated in a minor release, and support for them would 
 
 # Basic example
 
-The `React.createRef()` API will create an immutable object ref (where its value is a mutable object referencing the actual ref). Accessing the ref value can be done via `ref.value`. An example of how this works is below:
+The `React.createRef()` API will create an immutable object ref (where its value is a mutable object referencing the actual ref). Accessing the ref value can be done via `ref.current`. An example of how this works is below:
 
 ```js
 class MyComponent extends React.Component {
@@ -28,7 +28,7 @@ class MyComponent extends React.Component {
   }
 
   componentDidMount() {
-    this.divRef.value.focus();
+    this.divRef.current.focus();
   }
 }
 ```
@@ -79,7 +79,7 @@ Introduces `React.createRef()`:
 
 ```js
 type RefObject<T> = {
-  value: T | null
+  current: T | null
 };
 
 interface React {
@@ -89,11 +89,11 @@ interface React {
 
 `createRef` requires a explicit type annotation to ensure type correctness.
 
-Before `componentDidMount` lifecycle `divRef.value` will be filled with element/component reference:
+Before `componentDidMount` lifecycle `divRef.current` will be filled with element/component reference:
 
 ```js
 componentDidMount() {
-  this.divRef.value instanceof HTMLDivElement === true
+  this.divRef.current instanceof HTMLDivElement === true
 }
 
 render() {
