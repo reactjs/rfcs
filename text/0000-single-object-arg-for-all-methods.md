@@ -15,7 +15,7 @@ componentDidUpdate(prevProps, prevState, snapshot) -> componentDidUpdate({prevPr
 
 # Motivation
 
-With that change, The arguments' order of the class/instance method is no longer a barrier when contributors need to change/correct the existing class/method
+With that change, The arguments' order of the class/instance methods is no longer a barrier when contributors need to change/correct the existing class/instance method
 
 # Drawbacks
 
