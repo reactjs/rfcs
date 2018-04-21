@@ -15,12 +15,12 @@ componentDidUpdate(prevProps, prevState, snapshot) -> componentDidUpdate({prevPr
 
 # Motivation
 
-With that change, The arguments' order of the class/instance methods is no longer a barrier when contributors need to change/correct the existing class/instance method
+With that change, the arguments' order of the class/instance methods is no longer a barrier when contributors need to change/correct the existing class/instance method
 
 # Drawbacks
 
-No matter how this will be a breaking change. But there is no need a transition becuase the existing application just simply wrap the arguments with `{}`.
-The destructuring-simple in http://incaseofstairs.com/six-speed/ does not show any performance issue.
+- No matter how this will be a breaking change. But there is no need a transition becuase the existing application just simply wrap the arguments with `{}`.
+- It might have performance issue but the destructuring-simple in http://incaseofstairs.com/six-speed/ does not show it.
 
 # Adoption strategy
 
