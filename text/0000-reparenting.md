@@ -202,13 +202,6 @@ class TableWidget extends PureComponent {
 
     removeData(row, col) {
         this.setState(state => {
-            // Unmount the reparent so we don't leak memory
-            const cell = table.cells[from.row][from.col];
-            if ( this.cells[cell.id] ) {
-                this.cells[cell.id].unmount();
-                delete this.cells[cell.id];
-            }
-
             // Set the cell to null
             let {table} = state;
             table = update(table, {
@@ -323,34 +316,32 @@ class Template extends PureComponent {
         const widgetIds = new Set();
         nextProps.sections.forEach(section => section.widgets.forEach(widget => widgetIds.add(widget.id)));
 
+        const templateWidgetReparents = {};
+
+        for ( const id of widgetIds ) {
+            if ( prevState.templateWidgetReparents && prevState.templateWidgetReparents[id] ) {
+                templateWidgetReparents[id] = prevState.templateWidgetReparents[id];
+            } else {
+                templateWidgetReparents[id] = React.createReparent(this);
+            }
+        }
+
         return {
-            widgetIds: widgetIds.toArray(),
+            sections: nextProps.sections,
+            templateWidgetReparents,
         };
     }
 
-    templateWidgetReparents = {};
-
     render() {
-        const {sections} = this.props;
-        const {widgetIds} = this.state;
+        const {sections, templateWidgetReparents} = this.state;
 
-        for ( const id of widgetIds ) {
-            if ( !(id in this.templateWidgetReparents) ) {
-                this.templateWidgetReparents = Object.assign(this.templateWidgetReparents, {
-                    [id]: React.createReparent(this),
-                });
-            }
-        }
-
-        for ( const id in this.templateWidgetReparents ) {
-            if ( !widgetIds.has(id) ) {
-                this.templateWidgetReparents[id].unmount();
-                this.templateWidgetReparents = omit(this.templateWidgetReparents, id);
-            }
+        // Make sure React detaches trees for reparents we are still using instead of unmounting them
+        for ( const reparent of Object.values(templateWidgetReparents) ) {
+            reparent.keep();
         }
 
         return (
-            <TemplateWidgetReparentContext.Provider value={this.templateWidgetReparents}>
+            <TemplateWidgetReparentContext.Provider value={templateWidgetReparents}>
                 {sections.map(section => {
                     <Section {...section} key={section.id} />
                 })}
