@@ -1,5 +1,5 @@
 - Start Date: 2018-05-9
-- RFC PR: 
+- RFC PR:
 - React Issue:
 
 # Summary
@@ -8,15 +8,15 @@ Give the developer a chance to `intentially` patch up the mismatches during hydr
 
 # Basic example
 
-```
+```jsx
 
 constructor(props) {
   super(props)
-  
+
   this.styles = Object.defineProperties({}, {
     'container': { get: _=> {
        return typeof window == 'undefined'
-       ? { height: 300 } 
+       ? { height: 300 }
        : { height: this.props.viewsize.height * 0.67}
     }}
   })
@@ -37,11 +37,11 @@ React expects that the rendered content is identical between the server and the 
 
 If an attribute is derived from screen size, since we don't know the real screen size in the server side, we might do a 2 pass rendering like following:
 
-```
+```jsx
 constructor(props) {
   super(props)
   this.state = { hasMounted: false }
-  
+
   this.styles = Object.defineProperties({}, {
     'container': { get: _=> {
        if (typeof window == 'undefined') return { height: 300 }
