@@ -66,7 +66,7 @@ render() {
 
 In the above code, I demonstrate that I have to intentionally render a wrong height initially in the browser so I can update it in the second run, or the DOM will keep inconsistent with the vDOM.
 
-This is because if the 2 renderings keep unchanged in vDOM, React won't update the DOM. 2 pass rendering to patch up the mismatches comes with some drawbacks:
+This is because if the 2 renderings keep unchanged in vDOM, React won't update the DOM. Two pass rendering to patch up the mismatches comes with some drawbacks:
 
 1. Introduce unnecessary 2nd rendering
 
@@ -79,7 +79,7 @@ Design a `ssrReconciliation={true}` attribute, or something like that, e.g. ssrP
 
 # Drawbacks
 
-Increased validating cost, and the developer might overuse this to prevent any mismatch.
+Increased validating cost during hydration, and the developer might overuse this to prevent any mismatch in the future.
 
 # Alternatives
 
