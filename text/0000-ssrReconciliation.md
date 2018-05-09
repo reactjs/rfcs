@@ -72,10 +72,12 @@ This is because if the 2 renderings keep unchanged in vDOM, React won't update t
 
 2. The component will do 2 pass rendering in every mounting even it is not in hydration.
 
+3. Limited to stateful component.
 
 # Detailed design
 
 Design a `ssrReconciliation={true}` attribute, or something like that, e.g. ssrPatchUp={true} for the developer to ask React to patch up if a single element's attribute or text content is unavoidably different between the server and the client during hydration.
+
 
 # Drawbacks
 
