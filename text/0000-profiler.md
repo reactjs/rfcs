@@ -70,7 +70,7 @@ The `onRender` callback is called each time a component within the `Profiler` re
 ```js
 function onRenderCallback(
   id: string,
-  phaseL "mount" | "update",
+  phase: "mount" | "update",
   actualTime: number,
   baseTime: number,
   startTime: number,
