@@ -126,4 +126,6 @@ A reactjs.org blog post would be a good initial start.
 
 # Unresolved questions
 
-How will people use this/
+How will people use this? The current proposal is kind of low level and would probably benefit from some reusable abstractions being built on top of it that e.g. aggregate/batch render timings.
+
+How will this feature integrate with React DevTools? I have some ideas but nothing concrete yet to share.
