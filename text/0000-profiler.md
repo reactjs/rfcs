@@ -117,8 +117,10 @@ This is an entirely new component. Adoption can be organic and gradual.
 
 A reactjs.org blog post would be a good initial start.
 
+Perhaps we could provide some sort of discoverability within React DevTools.
+
 # Unresolved questions
 
-How will people use this? The current proposal is kind of low level and would probably benefit from some reusable abstractions being built on top of it that e.g. aggregate/batch render timings.
-
-How will this feature integrate with React DevTools? I have some ideas but nothing concrete yet to share.
+* How will people use this? The current proposal is kind of low level and would probably benefit from some reusable abstractions being built on top of it that e.g. aggregate/batch render timings.
+* Are the proposed timing metrics sufficiently useful?
+* How will this feature integrate with React DevTools? I have some ideas but nothing concrete yet to share.
