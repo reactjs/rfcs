@@ -88,7 +88,9 @@ The `id` value of the `Profiler` tag that was measured. This value can change be
 Either the string "mount" or "update" (depending on whether this root was newly mounted or has just been updated).
 
 #### `actualTime: number`
-Time spent rendering the `Profiler` and its descendants for the current (most recent recent) update. This time tells us how well the subtree makes use of `shouldComponentUpdate` for memoization. Ideally, this time should decrease significantly after the initial mount.
+Time spent rendering the `Profiler` and its descendants for the current (most recent recent) update. This time tells us how well the subtree makes use of `shouldComponentUpdate` for memoization.
+
+Ideally, this time should decrease significantly after the initial mount. Althoguh in async mode, under certain conditions, React might render the same component more than once as part of a single commit. (In this event, the "actual" time for an update might be larger than the initial time.)
 
 #### `baseTime: number`
 Duration of the most recent `render` time for each individual component within the `Profiler` tree. This reflects a worst-case cost of rendering (e.g. the initial mount or no `shouldComponentUpdate` memoization).
