@@ -69,14 +69,14 @@ Timing measurements should also be significantly lighter weight than the current
 The `onRender` callback is called each time a component within the `Profiler` renders. It receives the following parameters:
 ```js
 function onRenderCallback(
-  id,
-  phase,
-  actualTime,
-  baseTime,
-  startTime,
-  commitTime
-) {
-  // Aggregate or log render timings
+  id: string,
+  phaseL "mount" | "update",
+  actualTime: number,
+  baseTime: number,
+  startTime: number,
+  commitTime: number
+): void {
+  // Aggregate or log render timings...
 }
 
 ```
@@ -100,13 +100,6 @@ Start time isn't just the commit time less the "actual" time, because in async r
 
 #### `commitTime: number`
 Commit time could be roughly determined using e.g. `performance.now()` within the `onRender` callback, but multiple `Profiler` components would end up with slightly different times for a single commit. Instead, an explicit time is provided (shared between all `Profiler`s in the commit) enabling them to be grouped if desirable.
-
----
-
-Also see the following implementation PRs:
-* [facebook/react/pull/12745](https://github.com/facebook/react/pull/12745): Add `Profiler` component and tests
-* [facebook/react/pull/12852](https://github.com/facebook/react/pull/12852): Add start and stop time params
-* [facebook/react/pull/12886](https://github.com/facebook/react/pull/12886): Add production + profiling bundle for ReactDOM and ReactNative
 
 # Drawbacks
 
