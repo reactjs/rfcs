@@ -60,7 +60,7 @@ Although `Profiler` is a light-weight component, it should be used only when nec
 
 # Motivation
 
-It is important that render timing metrics work properly with React's experimental async rendering mode. When asynchronously rendering, React may yield periodically so that an app remains responsive even on low-powered devices. This yielded time (when React is not running) should not be included when considering the "cost" of a render. This distinction is not possible to implement this in user space.
+It is important that render timing metrics work properly with React's experimental async rendering mode. When asynchronously rendering, React may yield periodically so that an app remains responsive even on low-powered devices. This yielded time (when React is not running) should not be included when considering the "cost" of a render. This distinction is not possible to implement in user space.
 
 Timing measurements should also be significantly lighter weight than the current User Timing API so that they can be gathered in production without negatively impacting user experience. (The User Timing API is currently disabled for production because it is slow.) In addition to a faster implementation, we can further limit the impact on existing apps by creating a new production + profiling bundle. This way, apps that don't make use of the `Profiler` component (or wish to disable it globally) will not incur any additional overhead. (The `Profiler` component will render its children in production mode but its `onRender` callback will not be called.)
 
