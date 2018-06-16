@@ -16,9 +16,9 @@ Using reparents to render a page layout that can change structure between deskto
 
 ```js
 class Layout extends PureComponent {
-    header = React.createReparent(this);
-    content = React.createReparent(this);
-    sidebar = React.createReparent(this);
+    header = React.createReparent();
+    content = React.createReparent();
+    sidebar = React.createReparent();
 
     render() {
         const {isMobile, children} = this.props;
@@ -81,7 +81,7 @@ class Foo extends Component {
 }
 
 class DetachableTree extends Component {
-    reparent = React.createReparent(this);
+    reparent = React.createReparent();
 
     render() {
         const content = this.reparent(this.props.children);
@@ -220,7 +220,7 @@ class TableWidget extends PureComponent {
     // Dynamic store for reparents, the reparents are created as-needed for cells in the table
     cells = Object.create(null);
     getCell = (cell, row, col) => {
-        this.cells[cell.id] = this.cells[cell.id] || React.createReparent(this);
+        this.cells[cell.id] = this.cells[cell.id] || React.createReparent();
         return this.cells[cell.id](<Cell row={row} col={col} cell={cell} />);
     };
 
@@ -322,7 +322,7 @@ class Template extends PureComponent {
             if ( prevState.templateWidgetReparents && prevState.templateWidgetReparents[id] ) {
                 templateWidgetReparents[id] = prevState.templateWidgetReparents[id];
             } else {
-                templateWidgetReparents[id] = React.createReparent(this);
+                templateWidgetReparents[id] = React.createReparent();
             }
         }
 
@@ -508,7 +508,7 @@ type ReparentObject = {
 type Reparent = ReparentFunction & ReparentObject;
 
 interface React {
-    createReparent(Component): Reparent;
+    createReparent(): Reparent;
 }
 ```
 
