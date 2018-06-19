@@ -4,11 +4,11 @@
 
 # Summary
 
-This RFC seeks to add the function `createSingleton` to the React namespace. This function returns a unique React component which could be used anywhere but its children would only get rendered a single time for every location the returned Singleton is used. It is very useful for declaring SVG filters/gradients and can be combined with other technologies including [Portals](https://reactjs.org/docs/portals.html) and [Fragments](https://reactjs.org/docs/fragments.html).
+This RFC seeks to add the function `createSingleton` to the React namespace. This function returns a unique React component which could be used anywhere but its children would only get rendered a single time in the DOM for every location the returned Singleton is used. It is very useful for declaring SVG filters/gradients and can be combined with other technologies including [Portals](https://reactjs.org/docs/portals.html) and [Fragments](https://reactjs.org/docs/fragments.html).
 
 # Basic example
 
-In this example, a singleton is created within `FancyEffect`, which is used throughout the application, however, only a single instance of the SVG is rendered.
+In this example, a singleton is created within `FancyEffect`, which is used throughout the application, however, only a single instance of the SVG is rendered to the DOM.
 
 ```jsx
 const FilterSingleton = React.createSingleton();
@@ -102,3 +102,7 @@ Adding it as a new page to the React documentation would be sufficient. A blog p
 # Unresolved questions
 
 Is using `forceUpdate` in the proposed implementation, or the implementation in general, work correctly? Or are there edge cases with using this technique?
+
+# Referenced issue
+
+This feature was originally suggested in [React #12744](https://github.com/facebook/react/issues/12744).
