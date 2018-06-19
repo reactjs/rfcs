@@ -102,7 +102,3 @@ Adding it as a new page to the React documentation would be sufficient. A blog p
 # Unresolved questions
 
 Is using `forceUpdate` in the proposed implementation, or the implementation in general, work correctly? Or are there edge cases with using this technique?
-
-# Referenced issue
-
-This feature was originally suggested in [React #12744](https://github.com/facebook/react/issues/12744).
