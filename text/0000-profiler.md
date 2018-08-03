@@ -6,9 +6,11 @@
 
 New React profiling component that collects timing information in order to measure the "cost" of rendering.
 
-Note that an experimental release of this component is available in version 16.4 as `React.unstable_Profiler`.
+This component will also integrate with the [experimental `interaction-tracking` API](https://github.com/facebook/react/pull/13234) so that tracked interactions can be correlated with the render(s) they cause. This enables the calculation of "wall time" (elapsed real time) from when e.g. a user clicks a form button until when the DOM is updated in response. It also enables long-running renders to be more easily attributed and reproduced.
 
-# Basic example
+Note that an experimental release of the profiler component is available in version 16.4 as `React.unstable_Profiler`. It does not yet support interactions as that package has not been released.
+
+# Usage example
 
 `Profiler` can be declared anywhere within a React tree to measure the cost of rendering that portion of the tree.
 
@@ -74,7 +76,8 @@ function onRenderCallback(
   actualDuration: number,
   baseDuration: number,
   startTime: number,
-  commitTime: number
+  commitTime: number,
+  interactions: Array<{ name: string, timestamp: number }>,
 ): void {
   // Aggregate or log render timings...
 }
@@ -85,15 +88,17 @@ function onRenderCallback(
 The `id` value of the `Profiler` tag that was measured. This value can change between renders if e.g. it is derived from `state` or `props`.
 
 #### `phase: "mount" | "update"`
-Either the string "mount" or "update" (depending on whether this root was newly mounted or has just been updated).
+Identifies whether this component has just been mounted or re-rendered due to a change in `state` or `props`.
 
 #### `actualDuration: number`
 Time spent rendering the `Profiler` and its descendants for the current (most recent recent) update. This time tells us how well the subtree makes use of `shouldComponentUpdate` for memoization.
 
-Ideally, this time should decrease significantly after the initial mount. Althoguh in async mode, under certain conditions, React might render the same component more than once as part of a single commit. (In this event, the "actual" time for an update might be larger than the initial time.)
+Ideally, this time should decrease significantly after the initial mount as many of the descendants will only need to re-render if their specific `props` change.
+
+Note that in async mode, under certain conditions, React might render the same component more than once as part of a single commit. (In this event, the "actual" time for an update might be larger than the initial time.)
 
 #### `baseDuration: number`
-Duration of the most recent `render` time for each individual component within the `Profiler` tree. This reflects a worst-case cost of rendering (e.g. the initial mount or no `shouldComponentUpdate` memoization).
+Duration of the most recent `render` time for each individual component within the `Profiler` tree. In other words, this value will only change when a component is re-rendered. It reflects a worst-case cost of rendering (e.g. the initial mount or no `shouldComponentUpdate` memoization).
 
 #### `startTime: number`
 Start time identifies when a particular commit started rendering. Although insufficient to determine the cause of the render, it can at least be used to rule out certain interactions (e.g. mouse click, Flux action). This may be helpful if you are also collecting other types of interactions and trying to correlate them with renders.
@@ -102,6 +107,11 @@ Start time isn't just the commit time less the "actual" time, because in async r
 
 #### `commitTime: number`
 Commit time could be roughly determined using e.g. `performance.now()` within the `onRender` callback, but multiple `Profiler` components would end up with slightly different times for a single commit. Instead, an explicit time is provided (shared between all `Profiler`s in the commit) enabling them to be grouped if desirable.
+
+#### `interactions: Array<{ name: string, timestamp: number }>`
+An array of interactions that were being tracked (via the `interaction-tracking` package) when this commit was initially scheduled (e.g. when `render` or `setState` were called).
+
+In the event of a cascading render (e.g. an update scheduled from `componentDidMount` or `componentDidUpdate`) React will forward these interactions along to the subsequent `onRender` calls.
 
 # Drawbacks
 
@@ -121,8 +131,7 @@ A reactjs.org blog post would be a good initial start.
 
 Perhaps we could provide some sort of discoverability within React DevTools.
 
-# Unresolved questions
+# Related proposals
 
-* How will people use this? The current proposal is kind of low level and would probably benefit from some reusable abstractions being built on top of it that e.g. aggregate/batch render timings.
-* Are the proposed timing metrics sufficiently useful?
-* How will this feature integrate with React DevTools? I have some ideas but nothing concrete yet to share.
+* [facebook/react/pull/13253](https://github.com/facebook/react/pull/13253): Integration with the proposed `interaction-tracking` package
+* [facebook/react-devtools/pull/1069](https://github.com/facebook/react-devtools/pull/1069): Integration with React DevTools
