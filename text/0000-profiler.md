@@ -6,7 +6,7 @@
 
 New React profiling component that collects timing information in order to measure the "cost" of rendering.
 
-(Note that an experimental release of this component is currently slated for 16.4 as `React.unstable_Profiler`.)
+Note that an experimental release of this component is available in version 16.4 as `React.unstable_Profiler`.
 
 # Basic example
 
