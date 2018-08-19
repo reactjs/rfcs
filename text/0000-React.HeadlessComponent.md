@@ -36,15 +36,7 @@ class CoinFlip extends React.HeadlessComponent {
    <>
      Flip Results: {state.flipResults}
      <button onClick={handleClick}>Reflip</button>
-     {isHeads ? (
-       <div>
-         <img src=”/heads.svg” alt=”Heads” />
-       </div>
-     ) : (
-       <div>
-         <img src=”/tails.svg” alt=”Tails” />
-       </div>
-     )}
+     {isHeads ? <img src=”/heads.svg” alt=”Heads” /> : <img src=”/tails.svg” alt=”Tails” />}
    </>
   )}
 </CoinFlip>
