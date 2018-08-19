@@ -4,9 +4,9 @@
 
 # Summary
 
-React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down its state (and any other class fields declared on it). 
+React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down data (and any other class fields declared on it) as a first argument, and possible its internal `state` and `setState` as a second and third argument. 
 
-Users can also implement a `children()` class method that looks like a `render()` method, but in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error, but the object itself can contain React components.
+Users can also implement a `children()` class method that looks like a `render()` method, but in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error (see errors section below), but the object itself can contain React components (aka "[render components](https://twitter.com/swyx/status/995051406636744706)", a special case of render props).
 
 This feature might only exist in dev mode, and compile to a regular component in prod.
 
@@ -52,7 +52,7 @@ the motivation could be used to develop alternative solutions. In other words,
 enumerate the constraints you are trying to solve without coupling them too
 closely to the solution you have in mind.
 
-React Components bundle reusable **behaviors** and **elements**. However, we often want to implement the two separately for reusability, and use composition to build up our user interfaces. [Function-as-children Render props](https://reactjs.org/docs/render-props.html#using-props-other-than-render) and [Headless components](https://medium.com/merrickchristensen/headless-user-interface-components-565b0c0f2e18) are increasingly popular design patterns to do this (even included in [the new Context API](https://reactjs.org/docs/context.html) and taught by [Kent C Dodds at React Raly](https://www.youtube.com/watch?v=ii-T6HrkZFM)), however because they are entirely userland design patterns, no guarantees exist to ensure any particular higher order component or render prop controller will not also render elements as well as provide behavior control.
+React Components bundle reusable **behaviors** and **elements**. However, we often want to implement the two separately for reusability, and use composition to build up our user interfaces. [Function-as-children Render props](https://reactjs.org/docs/render-props.html#using-props-other-than-render) and [Headless components](https://medium.com/merrickchristensen/headless-user-interface-components-565b0c0f2e18) are increasingly popular design patterns to do this (even included in [the new Context API](https://reactjs.org/docs/context.html) and taught by [Kent C Dodds at React Rally](https://www.youtube.com/watch?v=ii-T6HrkZFM)), however because they are entirely userland design patterns, **no guarantees exist** to ensure any particular higher order component or render prop controller will not also render elements as well as provide behavior control.
 
 **Dev Tools**: This informal nature makes it impossible to build any tooling that leverages or even encourages this pattern. For example [React Devtools currently suffer from a pollution of higher order components](https://twitter.com/brian_d_vaughn/status/1025776259056336897) and it is difficult to have a good rule to filter out elements that don't show up in the DOM. Conversely, we can also filter -for- headless components and track only their state changes given their state changes are more likely to be significant than regular React Components.
 
@@ -72,7 +72,7 @@ implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
 defined here.
 
-`React.HeadlessComponent` would be similar to `React.Component` in every way except it throws an error if `render` is implemented. In its place, it can (optionally) implement a `children` method that expects an object to be returned. This object will be spread together with its state when calling its child function.
+`React.HeadlessComponent` would be similar to `React.Component` in every way it has an optional `children` method instead of a `render`. Being headless, it will assume its child is a function and call it with its class properties and state.
 
 ```js
 class MyHOC extends React.HeadlessComponent {
@@ -98,9 +98,14 @@ class MyHOC extends React.HeadlessComponent {
 </MyHOC>
 ```
 
-Edge case: You can return conflicting names in `children()` and in the class properties, which may be undesirable, but if you think about it you just want the name from `children()` to supercede since that is the one you want to pass down.
+Edge case: You can return conflicting names in `children()` and in the class properties, which may be undesirable, but if you think about it you just want the name from `children()` to supercede since that is the one you want to pass down. We may want a warning if name conflict is detected, but personally I think it's not a big deal.
 
 If it affects production bundle size at all, React.HeadlessComponent could easily be compiled to a regular Component in production mode.
+
+**Where it throws errors**
+
+- if the child node of the HC is anything other than a function
+- if the HC implements a `render()` method
 
 # Drawbacks
 
@@ -122,6 +127,13 @@ It is a minor increase in API surface area. But it bakes in this idea.
 
 I haven't been able to think of any alternatives, this idea goes right to the heart of what a Component is, and what guarantees we can build around it to push folks down the pit of success.
 
+Regarding the naming of `children()` there are alternative suggestions from [Josh Comeau on /r/reactjs](https://www.reddit.com/r/reactjs/comments/98itgz/reactheadlesscomponent_rfc/):
+
+- `output()`
+- `renderData()`
+
+Which are also acceptable to me.
+
 # Adoption strategy
 
 > If we implement this proposal, how will existing React developers adopt it? Is
@@ -135,7 +147,11 @@ Not at all a breaking change, no coordination needed. This would be a highly des
 > What names and terminology work best for these concepts and why? How is this
 idea best presented? As a continuation of existing React patterns?
 
-well the terminology of Headless Components is well accepted and it is a formalization of existing React patterns.
+well the terminology of Headless Components is well accepted and it is a formalization of existing React patterns. I could also run with:
+
+- "Renderless Components" (more neutral naming but less fun) or 
+- "State-only Components" (not precise because you could technically make a HC that has no internal state but usually you do want it)
+- "Behavior Components" (echos the Motivation section)
 
 > Would the acceptance of this proposal mean the React documentation must be
 re-organized or altered? Does it change how React is taught to new developers
