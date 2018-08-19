@@ -4,9 +4,9 @@
 
 # Summary
 
-React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down data (and any other class fields declared on it) as a first argument, and possible its internal `state` and `setState` as a second and third argument. 
+React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down data as a first argument, and its instance as a second argument (allowing access to class fields, `state` and `setState`). 
 
-Users can also implement a `children()` class method that looks like a `render()` method, but in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error (see errors section below), but the object itself can contain React components (aka "[render components](https://twitter.com/swyx/status/995051406636744706)", a special case of render props).
+Users can optionally implement a `children()` class method instead of a `render()` method, and in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error (see errors section below), but the object itself can contain React components (aka "[render components](https://twitter.com/swyx/status/995051406636744706)", a special case of render props).
 
 This feature might only exist in dev mode, and compile to a regular component in prod.
 
@@ -32,10 +32,10 @@ class CoinFlip extends React.HeadlessComponent {
 
 // usage: note CoinFlip's `state` is the second param. `handleClick` is a class method and gets passed down too and is bound to CoinFlip's scope.
 <CoinFlip>
-  {({ handleClick, isHeads }, state) => (
+  {({ isHeads }, parent) => (
    <>
-     Flip Results: {state.flipResults}
-     <button onClick={handleClick}>Reflip</button>
+     Flip Results: {parent.state.flipResults}
+     <button onClick={parent.handleClick}>Reflip</button>
      {isHeads ? <img src=”/heads.svg” alt=”Heads” /> : <img src=”/tails.svg” alt=”Tails” />}
    </>
   )}
@@ -72,7 +72,7 @@ implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
 defined here.
 
-`React.HeadlessComponent` would be similar to `React.Component` in every way it has an optional `children` method instead of a `render`. Being headless, it will assume its child is a function and call it with its class properties and state.
+`React.HeadlessComponent` would be similar to `React.Component` in every way it has an optional `children` method instead of a `render`. Being headless, it will assume its child is a function and call it with data from running `children`, secondly its instance which provides class properties and state.
 
 ```js
 class MyHOC extends React.HeadlessComponent {
@@ -89,16 +89,15 @@ class MyHOC extends React.HeadlessComponent {
 // usage
 <MyHOC>
   {
-    ({bar, bumpFoo}, state) => <div>
+    ({bar}, {bumpFoo, state, setState}) => <div>
       <div>foo: {state.foo}</div>
       <div>bar: {bar}</div>
       <button onClick={bumpFoo}>bump foo</button>
+      <button onClick={() => setState({foo: 5})}>Reset</button>
     </div>
   }
 </MyHOC>
 ```
-
-Edge case: You can return conflicting names in `children()` and in the class properties, which may be undesirable, but if you think about it you just want the name from `children()` to supercede since that is the one you want to pass down. We may want a warning if name conflict is detected, but personally I think it's not a big deal.
 
 If it affects production bundle size at all, React.HeadlessComponent could easily be compiled to a regular Component in production mode.
 
@@ -106,6 +105,7 @@ If it affects production bundle size at all, React.HeadlessComponent could easil
 
 - if the child node of the HC is anything other than a function
 - if the HC implements a `render()` method
+- returning JSX inside `children()`
 
 # Drawbacks
 
