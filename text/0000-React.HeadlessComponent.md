@@ -4,7 +4,7 @@
 
 # Summary
 
-React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down its state (and perhaps any other class fields declared on it). 
+React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down its state (and any other class fields declared on it). 
 
 Users can also implement a `children()` class method that looks like a `render()` method, but in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error, but the object itself can contain React components.
 
@@ -136,7 +136,7 @@ I haven't been able to think of any alternatives, this idea goes right to the he
 this a breaking change? Can we write a codemod? Should we coordinate with
 other projects or libraries?
 
-Not at all a breaking change, no coordination needed.
+Not at all a breaking change, no coordination needed. This would be a highly desirable thing for library maintainers to use like `react-redux` and `styled-components`.
 
 # How we teach this
 
@@ -153,7 +153,7 @@ Nope. Just an extra section on it after React.Component.
 
 > How should this feature be taught to existing React developers?
 
-"If you are making reusable components that only control behavior, use this for better tooling support!"
+"If you are making reusable components that only control behavior, use this for better tooling support and less boilerplate!"
 
 # Unresolved questions
 
