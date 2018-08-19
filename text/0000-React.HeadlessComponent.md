@@ -106,7 +106,7 @@ class MyHOC extends React.HeadlessComponent {
 </MyHOC>
 ```
 
-Edge case: none I can think of.
+Edge case: You can return conflicting names in `children()` and in the class properties, which may be undesirable, but if you think about it you just want the name from `children()` to supercede since that is the one you want to pass down.
 
 If it affects production bundle size at all, React.HeadlessComponent could easily be compiled to a regular Component in production mode.
 
