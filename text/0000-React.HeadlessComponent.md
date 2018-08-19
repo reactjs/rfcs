@@ -164,4 +164,5 @@ TBD?
 - I briefly considered also passing down the HC's props to its children, but figured that would be redundant since those same props will be available in the outer scope anyway.
 - I honestly don't know if there are other benefits to this I haven't thought of yet. I am quite unimaginative at this sort of thing, experienced frontend infra folks would likely be able to run with this further than I can.
 - Some folks may not want children to be able to see the HC's internal `state`, I only included that as a nice-to-have since it's easy to do and will very probably save boilerplate (so you can implement a useful HeadlessComponent even without `children()`). 
-  - Personally I'm all for more freedom, and could even see my way to expose a `setState` to children by default (perhaps as a third argument) so that you can make up your own custom setState's in children.
+  - Personally I'm all for more freedom, and could even see my way to expose a `setState` to children by default (perhaps as a third argument) so that you can make up your own custom state updater's in children.
+  - More freedom = less control by the component author, but more reusability guaranteed for component users. Since the second and third arguments are optional I think I can argue for this to be an advanced "use if you know how the HC works internally" feature.
