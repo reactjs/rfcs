@@ -48,7 +48,7 @@ After working with React for a few years, dealing with refs has become an area t
 
 The ref object can be considered a sort of optional type as the current ref is optionally present.  React reference handling (particularly in the case of flow) often looks something like: `someRef.current && someRef.current.someMethod()` or `!someRef.current && doSomething()`.  This sort of code repetition is almost always a code smell.  Exposing optional type-like methods would make this pattern obsolete. 
 
-It's occasionally necessary to interact with a reference after it's rendered, but without waiting on user input.  Some examples are scrolling to elements as they're rendered, starting playback on a video, or animating components.  There are some cases where handling refs in lifecycle methods is not easy because of conditional rendering or waiting for lifecycles in other parts of the tree to complete.  A search on Introducing a callback method that is invoked when a ref is set would make this much easier.
+It's occasionally necessary to interact with a reference after it's rendered, but without waiting on user input.  Some examples are scrolling to elements as they're rendered, starting playback on a video, or animating components.  There are some cases where handling refs in lifecycle methods is not easy because of conditional rendering or waiting for lifecycles in other parts of the tree to complete.  Introducing a callback method that is invoked when a ref is set would make this much easier.
 
 A [search on Stack Overflow](https://stackoverflow.com/search?q=react+refs+undefined) shows dozens of results for people having issues with unset references.  We believe the suggested API could preempt most of them.
 
