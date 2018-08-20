@@ -58,16 +58,20 @@ Proposed new ref API:
 
 ```
 	{
-		current: ?React$Ref, 
+		current: ?React$Ref<R>, 
 		
 		// new additions 
 		
 		// optional handling
-		ifCurrent: (React$Ref) => void,
-		ifNull: () => void
+		
+		// would be immediately invoked with the ref if the ref is valid
+		ifCurrent(callback: <T>(React$Ref<R>) => T): T,
+		// would be immediately invoked if the ref is invalid
+		ifNull(callback: <T>() => T): T,
 		
 		// reference interaction callback
-		onReference: (React$Ref) => void,
+		// will be invoked whenever the ref changes or is set for the first time
+		onReference: (React$Ref<E>) => void,
 	}
 
 ```
