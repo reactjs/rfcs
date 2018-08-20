@@ -4,7 +4,9 @@
 
 # Summary
 
-React.HeadlessComponent is a new sibling to React.PureComponent that explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down data as a first argument, and its instance as a second argument (allowing access to class fields, `state` and `setState`). 
+The high level proposal is for adding a new `React.HeadlessComponent` type to React, similar to `React.PureComponent`, for the explicit purpose of tooling (and possible React optimization) to take advantage of the fact that the component will not render any elements. This is the primary reason this proposal cannot be achieved in userland.
+
+If the high level proposal is accepted, the low level proposal for `React.HeadlessComponent`'s API is that it explicitly doesn't allow `render()` to be implemented. Instead it assumes its child is a function and calls it while passing down data as a first argument, and its instance as a second argument (allowing access to class fields, `state` and `setState`). 
 
 Users can optionally implement a `children()` class method instead of a `render()` method, and in it you return an object which will then be included in the child function call. Returning JSX inside a `children()` class method will throw an error (see errors section below), but the object itself can contain React components (aka "[render components](https://twitter.com/swyx/status/995051406636744706)", a special case of render props).
 
@@ -71,6 +73,8 @@ familiar with React to understand, and for somebody familiar with the
 implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
 defined here.
+
+**This section concerns the low level API design, which is only relevant if the High level premise of this RFC is accepted.**
 
 `React.HeadlessComponent` would be similar to `React.Component` in every way it has an optional `children` method instead of a `render`. Being headless, it will assume its child is a function and call it with data from running `children`, secondly its instance which provides class properties and state.
 
