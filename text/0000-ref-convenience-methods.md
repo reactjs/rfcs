@@ -71,7 +71,7 @@ Proposed new ref API:
 		
 		// reference interaction callback
 		// will be invoked whenever the ref changes or is set for the first time
-		onReference: (React$Ref<E>) => void,
+		onReference(React$Ref<E>): void,
 	}
 
 ```
