@@ -4,7 +4,7 @@
 
 # Summary
 
-`Context.Provider` should be updated to accept a `calculateChangedBits` function as a prop, either in addition to or as a replacement of giving `calculateChangedBits` as an argument to `React.createContext`.
+`Context.Provider` should be updated to accept a `calculateChangedBits` function as a prop, in addition to the current behavior of accepting `calculateChangedBits` as an argument to `React.createContext`.
 
 # Basic example
 
@@ -77,11 +77,6 @@ Ultimately, the end result should be that it is possible to define the changed b
 
 # Detailed design
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with React to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
 
 ### Current Implementation
 
