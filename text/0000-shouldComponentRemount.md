@@ -61,7 +61,7 @@ class ImgZoomer extends Component<{ imgUrl: string }> {
 The goal is to provide a way for components to manage the relationship between entitites provided by props and
 the UI state associated with them.
 
-Example: The [You Might Not Need Derived State][ymnnds] blog post recommends a pattern
+Example: The [You Might Not Need Derived State][ymnnds-key] blog post recommends a pattern
 using an uncontrolled, stateful component with a `key` prop to reset state.
 
 One pitfall with the key approach is that the consumer of the component is responsible for picking a
