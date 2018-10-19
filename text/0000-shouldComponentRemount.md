@@ -7,7 +7,7 @@ _**Draft**_
 # Summary
 
 This is a proposal to add a new lifecycle method, `shouldComponentRemount`.
-Returning `false` from this method would be equivalent to changing the `key` prop -
+Returning `true` from this method would be equivalent to changing the `key` prop -
 it unmounts and remounts the component instead of preserving the instance.
 
 The method would receive `(nextProps)` as an argument. Alternatively it could be a static method
