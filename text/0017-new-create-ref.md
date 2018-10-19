@@ -6,7 +6,7 @@
 
 Currently there are two ref APIs in React: string refs and callback refs.
 
-String refs are considered legacy due to [numerous issues](https://github.com/facebook/react/issues/1373) in their design. [Callback refs](https://reactjs.org/docs/refs-and-the-dom.html) don't share these deficiencies and were introduced to replace string refs. However, there is more ceremony around writing them, they have some [unintuitive caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats) and can be hard to teach.
+String refs are considered legacy due to [numerous issues](https://github.com/facebook/react/issues/1373) in their design. [Callback refs](https://reactjs.org/docs/refs-and-the-dom.html) don't share these deficiencies and were introduced to replace string refs. However, there is more ceremony around writing them, they have some [unintuitive caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats-with-callback-refs) and can be hard to teach.
 
 **The goal of this RFC is to introduce a new intuitive ref API. It is very similar in its "feel" to string refs, but doesn't suffer from their problems.** It is intentionally less poweful than the callback ref API. The plan is to:
 
@@ -69,7 +69,7 @@ There are other issues with string refs in practice:
 
 ### Don't we have callback refs for this?
 
-Many people continue to favor string refs because writing callback refs requires more mental overhead (you have to think about a field *and* a function that sets it). They are especially inconvenient when you need an array of refs. Callback refs also have [unusual caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats) that are [often](https://github.com/facebook/react/issues/9328) [mistaken for a bug](https://github.com/facebook/react/issues/8619).
+Many people continue to favor string refs because writing callback refs requires more mental overhead (you have to think about a field *and* a function that sets it). They are especially inconvenient when you need an array of refs. Callback refs also have [unusual caveats](https://reactjs.org/docs/refs-and-the-dom.html#caveats-with-callback-refs) that are [often](https://github.com/facebook/react/issues/9328) [mistaken for a bug](https://github.com/facebook/react/issues/8619).
 
 Callback refs are, strictly saying, more powerful than either string refs or the proposed object refs. However, there is definitely a niche for a simpler, more convenient API for the majority of cases. There might be some small wins in performance too: commonly, ref value is assigned in a closure created in the render phase of a component. This API avoids that. Similarly, this avoids assigning to a non-existent component instance property, which also can cause deopts in JavaScript engines.
 
