@@ -1,6 +1,6 @@
 Start Date: 2018-10-19
-- RFC PR: (leave this empty)
-- React Issue: (leave this empty)
+- RFC PR: https://github.com/reactjs/rfcs/pull/65
+- React Issue: https://github.com/facebook/react/pull/13728
 
 # Summary
 
