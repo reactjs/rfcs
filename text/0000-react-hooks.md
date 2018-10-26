@@ -72,10 +72,10 @@ A non-exhaustive list of drawbacks of this Hooks design follows.
 * Introducing a new way to write components means more to learn and means confusion while both classes and functions are used.
 * The “Rules of Hooks”: in order to make Hooks work, React requires that Hooks are called unconditionally. Component authors may find it unintuitive that Hook calls can't be moved inside `if` statements, loops, and helper functions.
 * The “Rules of Hooks” can make some types of refactoring more difficult. For example, adding an early return to a component is no longer possible without moving all Hook calls to before that conditional.
-* Event handlers need to be recreated on each render in order to reference the latest copy of props and state, which reduces the effectiveness of `PureComponent` and `React.pure`.
+* Event handlers need to be recreated on each render in order to reference the latest copy of props and state, which reduces the effectiveness of `PureComponent` and `React.memo`.
 * It's possible for closures (like the ones passed to `useEffect` and `useCallback`) to capture **old versions** of props and state values. In particular, this happens if the “inputs” array is inadvertently missing one of captured variables. This can be confusing.
 * React relies on internal global state in order to determine which component is currently rendering when each Hook is called. This is “less pure” and may be unintuitive.
-* `React.pure` (as a replacement for `shouldComponentUpdate`) only has access to the old and new props; there's no easy way to skip rerendering for an inconsequential state update.
+* `React.memo` (as a replacement for `shouldComponentUpdate`) only has access to the old and new props; there's no easy way to skip rerendering for an inconsequential state update.
 * `useState` uses a tuple return value that requires typing the same name twice to declare a state field (like `const [rhinoceros, setRhinoceros] = useState(null);`), which may be cumbersome for long names.
 * `useState` uses the overloaded type `() => T | T` to support lazy initialization. But when storing a function in state (that is, when `T` is a function type) you must always use a lazy initializer `useState(() => myFunction)` because the types are indistinguishable at runtime. Similarly, the functional updater form must be used when setting state to a new function value.
 
