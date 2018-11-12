@@ -139,6 +139,11 @@ implementation to layout the data as it see fit (though the format
 should probably remain stable in a minor release, even if different
 client- and server-side versions of ReactDOM should be rare).
 
+If `hydrate` is called multiple times with a different `data` bundle
+(something that should probably not be done anyway as it's bound to
+generate a bunch of warning), a warning should be emitted since this
+is not supported (the resource will not be recreated).
+
 # Drawbacks
 
 This RFC extends the API surface of React by pushing an additional
@@ -161,7 +166,8 @@ this code gets removed in client-side builds.
 
 - Keep server data outside of React core (potentially falling back to the aforementioned userland implementation)
 - Use another name instead of `useSerializable`
-- Static `createContext` and `collectData` methods for class components
+- Static `createResource` and `collectData` methods for class components
+- Have the `createResource` function return a tuple of the resource and the `collectData` function (`[R, () => D]`) intead of using two arguments
 
 # Adoption strategy
 
@@ -195,3 +201,8 @@ This would allow some advanced caching scenarios on both the client
 and the server, especially for offline use in conjunction with shared
 workers. But just like the actual API to collect or hydrate data this
 is probably outside of the scope of this RFC.
+
+Should the resource be memoized using the `createResource` function, or
+an additional inputs array ? If so, then should the new resource be
+recreated using the old data
+(`const newResource = createResource(collectData(oldResource));`) ?
