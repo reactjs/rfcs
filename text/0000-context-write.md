@@ -23,7 +23,7 @@ function contextDidUpdate(newContext) {
 
 # Motivation
 
-### Caching external data
+## Caching external data
 
 Where should a React app store data fetched over IO?
 
@@ -37,9 +37,21 @@ One might argue our Suspense implementation is wrong and we should change it. Ho
 
 Ok, so storing in component state won't work with Suspense. Where then? React currently doesn't have a good answer to this question.
 
-Caching in a global singleton, or some other object that's not managed by React, will work up to a point. But it's tricky to do correctly in concurrent mode without inconsistencies (tearing). Even if you manage to do that, you can't take full advantage of concurrent rendering, where there may be interleaved pending updates, and persistent mutations are only permitted in the commit phase.
+### Concurrent invalidation
 
-React does provide an API that's similar to what we want: context. Context is already used to read values that semantically live outside the React tree. But many uses of context today are in fact backed by global singletons. We're missing a way to manage external state in an idiomatic way that works with concurrent rendering and Suspense.
+Caching in a global singleton, or some other object that's not managed by React, will work up to a point. The hard part is once you need to update or invalidate the cache.
+
+Today, most frameworks that bind React to an external store (e.g. React Redux, Relay) are push-based. The store is mutated **first**, then a change event **pushes** the update to the affected React components. Because rendering is synchronous, the browser is blocked from painting until all the components have finished rendering. Subsequent updates and user inputs are also blocked. Because the whole transition is uninterruptible, the UI is never in an inconsistent state. Push-based architectures are common, but the main drawback is that they rely on sequential processing of updates. Once a state transition is in progress, it must finish completely, even if a higher priority event is received in the meantime.
+
+For component state, React solves this problem using **pull**-based state transitions. When React receives an update, it does not mutate the state of the component immediately, but instead adds the update to a priority queue. Later, React will **pull** those updates off the queue as it's rendering the next screen. The state is only mutated **after** the entire screen has finished rendering. Because nothing is mutated until the end, different priority levels can render concurrently. React can start rendering at a normal priority, pause somewhere in the middle, switch to a higher priority task, then resume the original task after.
+
+That's how React concurrently transitions **component** state, but we've already discussed why component state is not ideal for caching data.
+
+What we need is a way to 1) store data outside of the component tree, 2) without creating inconsistencies in the UI (tearing), and 3) in a way that takes full advantage of React's concurrent rendering mode.
+
+The most crucial detail for acheiving 2) is **where the mutation occurs**. To avoid tearing, the store cannot be mutated until React has finished rendering.
+
+To achieve 3), pending updates must be stored in a priority queue, and React components must be able to read from that queue at different priority levels.
 
 ## Automatic dependency injection
 
