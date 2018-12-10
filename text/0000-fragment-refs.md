@@ -62,13 +62,15 @@ function Foo({children}) {
     } else {
       // mounted, reordered, or removed nodes
       for (let node of childNodes) {
-        // ...
+        // node is a DOMNode
       }
     }
   }
   return <Fragment ref={handleRef}>{children}</Fragment>;
 }
 ```
+
+The child nodes are always DOMNodes because it drills through any custom component and finds the DOM nodes. It never includes classes instances or anything using forwardRef.
 
 This avoids a number of issues with the `findDOMNode` design:
 
