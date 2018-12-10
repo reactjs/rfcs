@@ -56,12 +56,17 @@ The concrete proposal here is that we'd enable a `ref` to be passed to a `<Fragm
 
 ```js
 function Foo({children}) {
-  let fragmentRef = useRef();
-  useEffect(() => {
-    let domNodes = fragmentRef.current; // Array<DOMNode>
-    // ...
-  });
-  return <Fragment ref={fragmentRef}>{children}</Fragment>;
+  function handleRef(childNodes) {
+    if (childNodes === null) {
+      // unmounted
+    } else {
+      // mounted, reordered, or removed nodes
+      for (let node of childNodes) {
+        // ...
+      }
+    }
+  }
+  return <Fragment ref={handleRef}>{children}</Fragment>;
 }
 ```
 
