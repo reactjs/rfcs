@@ -10,7 +10,7 @@ The idea is that it is better to do before useLayoutEffect and componentDidMount
 
 However, the problem with useMutationEffect is that refs haven't been swapped yet. During initial render, you don't have access to the new element that you want to mutate. During updates, you have access to the old element but not the new one if a ref has swapped instance.
 
-Another issue with the useMutationEffect API is that normally React does something special during a newly added tree. Instead of performing mutations in the commit phase, we do all the initialization and mutation during the render phase. Only updates get applied.
+Another issue with the useMutationEffect API is that normally React does something special during a newly added tree. Instead of performing mutations in the commit phase, we do all the initialization and mutation during the render phase. Only updates get applied in the commit phase. That special case gets tricky to manage with refs and effects.
 
 Another quirk is that these can never really be renderer agnostic since the refs resolve to different things depending on where you render them. Additionally, some environments don't even have mutation APIs like React Fabric. Instead it has a clone API.
 
