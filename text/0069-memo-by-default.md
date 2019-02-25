@@ -66,7 +66,4 @@ Many other UI libraries/frameworks advertise this sort of optimization as being 
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
-
 -   Will memoization by default be slower on average than reconciliation?
