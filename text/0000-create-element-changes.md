@@ -49,7 +49,7 @@ Element creation is a hot path because it is used a lot but also because it is a
 - We don't know if the passed in props is a user created object that can be mutated so we must always clone it once.
 - `key` and `ref` gets extracted from JSX props provided so even if we didn't clone, we'd have to delete a prop, which would cause that object to become map-like.
 - `key` and `ref` can be spread in dynamically so without prohibitive analysis, we don't know if these patterns will include them `<div {...props} />`.
-- The transform relies on a the name `React` being in scope of JSX. I.e. you have to import the default. This is unfortunate as more things like Hooks are typically used as named arguments. Ideally, you wouldn't have to important anything to use JSX.
+- The transform relies on a the name `React` being in scope of JSX. I.e. you have to import the default. This is unfortunate as more things like Hooks are typically used as named arguments. Ideally, you wouldn't have to import anything to use JSX.
 
 Other than performance this is also about a long term simplification of number of concepts you have to learn to use React. In particular, `forwardRef` and `defaultProps` are no longer something special.
 
