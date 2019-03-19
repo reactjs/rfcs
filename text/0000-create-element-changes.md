@@ -71,7 +71,7 @@ Ideally the element creation should be part of the transpiler's own runtime. The
 
 It's much easier to iterate on new versions by deploying npm packages than updates to the compiler toolchain. Therefore, it might be best if the actual implementation still lives in the `react` package.
 
-Ideally you wouldn't need to put write any imports to use JSX:
+Ideally you wouldn't need to write any imports to use JSX:
 
 ```js
 function Foo() {
