@@ -54,15 +54,7 @@ export function isSyntheticEvent(value) {
 
 # Drawbacks
 
-Why should we *not* do this? Please consider:
-
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people React
-- integration of this feature with other existing and planned features
-- cost of migrating existing React applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
+- N/A ?
 
 # Alternatives
 
@@ -94,4 +86,4 @@ https://reactjs.org/docs/react-api.html#isvalidelement
 
 # Unresolved questions
 
-- N/A
+- N/A ?
