@@ -4,7 +4,7 @@
 
 # Summary
 
-A new API `React.isSyntheticEvent(value)` which returns `true` if the value is a `SyntheticEvent` or `false` if it is anything else. 
+A new API `React.isEvent(value)` which returns `true` if the value is a `SyntheticEvent` or an `Event` and returns `false` if it is anything else. 
 
 # Basic example
 
@@ -15,7 +15,7 @@ export function useFormField<T>(defaultValue: T) {
   let [value, setValue] = React.useState(defaultValue)
 
   function onChange(val: T) {
-    if (React.isSyntheticEvent(val)) {
+    if (React.isEvent(val)) {
       throw new Error("Expected `formField.onChange` to be called with a value for the form field, not an event")
     }
     setValue(val)
@@ -42,13 +42,15 @@ function isSyntheticEvent(value) {
 }
 ```
 
+However, as [pointed out by @sebmarkbage](https://github.com/reactjs/rfcs/pull/112#issuecomment-485976050), React wants users to treat SyntheticEvents and Events the same way so that React would have the option in the future to start sending regular Events.
+
 # Detailed design
 
 React should export a function that looks mostly like this:
 
 ```js
-export function isSyntheticEvent(value) {
-  return value instanceof SyntheticEvent
+export function isEvent(value) {
+  return value instanceof SyntheticEvent || value instanceof Event
 }
 ```
 
@@ -59,6 +61,8 @@ export function isSyntheticEvent(value) {
 # Alternatives
 
 - Exporting `SyntheticEvent` somewhere, so that others can brand check `instance SyntheticEvent` (this exposes more of the React API)
+- Exporting an `isSyntheticEvent` method
+
 
 # Adoption strategy
 
@@ -67,7 +71,8 @@ I'll write a prollyfill which does as much shape checking as possible, that will
 ```js
 import React from "react"
 
-export default React.isSyntheticEvent || function isSyntheticEventPolyfill(value) {
+export default React.isEvent || function isEventPolyfill(value) {
+  if (value instanceof Event) return true
   if (typeof value !== "object" || value === null) return false
   if (typeof value.bubbles !== "boolean") return false
   if (typeof value.cancellable !== "boolean") return false
@@ -76,7 +81,7 @@ export default React.isSyntheticEvent || function isSyntheticEventPolyfill(value
 }
 ```
 
-This will allow React developers to depend on the library until only versions of React that support `isSyntheticEvent` are commonplace. Allowing for a smooth transition.
+This will allow React developers to depend on the library until only versions of React that support `isEvent` are commonplace. Allowing for a smooth transition.
 
 # How we teach this
 
