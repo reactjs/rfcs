@@ -67,9 +67,9 @@ Keyboard users typically navigate between components with the tab key, which cha
 
 The [roving tab index](https://www.w3.org/TR/wai-aria-practices-1.1/#kbd_general_within) pattern is one way to solve this problem, but basically it involves each component being able to "remember" what was focused last, so that if a user tabs away from a list and then back, the list item they were on before is re-focused rather than the first item or the list itself.
 
-### Focus trapping
+### Focus isolation
 
-Focus trapping is important for modals and other popups. It prevents users from tabbing or focusing elements outside a particular region. For example, if a user tabs to the last element in a modal dialog, when they hit tab again the first element of the dialog should be focused instead of something outside. This is currently impossible to implement in a general way in React without manual DOM querying and imperative focusing.
+Focus isolation is important for modals and other popups. It prevents users from tabbing or focusing elements outside a particular region. For example, if a user tabs to the last element in a modal dialog, when they hit tab again the first element of the dialog should be focused instead of something outside. This is currently impossible to implement in a general way in React without manual DOM querying and imperative focusing.
 
 ### Restoring focus
 
@@ -95,7 +95,7 @@ function App() {
 
 The tab order in this example will be input 1, input 3, and then input 2, assuming the portal is placed after the app in the DOM. Users may expect the order to be input 1, input 2, input 3, as declared in the React tree. The current behavior is non-deterministic — it depends on the specific implementation of the Portal component (i.e. where it is placed in the DOM), which could change over time and cause the tab order to differ from what was intended. It also depends on the order portals are appended to the DOM rather than the order they are declared. These issues would be solved if the tab order in portals were based on the order in the React tree rather than the DOM tree. This would also match other existing portal behavior such as event bubbling where portals behave as if they are inline.
 
-In addition, portals make implementing focus trapping in user space difficult since it is impossible to know whether a DOM element (e.g. dialog) “contains” another element (e.g. overlay) in the original React tree since portals may actually mount that element outside the dialog DOM tree altogether.
+In addition, portals make implementing focus isolation in user space difficult since it is impossible to know whether a DOM element (e.g. dialog) “contains” another element (e.g. overlay) in the original React tree since portals may actually mount that element outside the dialog DOM tree altogether.
 
 # Detailed design
 
@@ -238,7 +238,7 @@ function List({ items }) {
 }
 ```
 
-### Focus trapping
+### Focus isolation
 
 The following implements a generic dialog component which locks focus within it while open, and automatically restores focus to the previously focused element when closed. This example would require hundreds of lines of user space code to implement properly outside of React core.
 
