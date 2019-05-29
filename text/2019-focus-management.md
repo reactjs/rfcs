@@ -16,7 +16,7 @@ import { FocusScope } from 'react-dom';
 function Dialog({ children }) {
   return (
     <Portal>
-      <FocusScope lock>
+      <FocusScope contain restoreFocus>
         <div className="dialog">
           {children}
         </div>
@@ -67,9 +67,9 @@ Keyboard users typically navigate between components with the tab key, which cha
 
 The [roving tab index](https://www.w3.org/TR/wai-aria-practices-1.1/#kbd_general_within) pattern is one way to solve this problem, but basically it involves each component being able to "remember" what was focused last, so that if a user tabs away from a list and then back, the list item they were on before is re-focused rather than the first item or the list itself.
 
-### Focus isolation
+### Focus containment
 
-Focus isolation is important for modals and other popups. It prevents users from tabbing or focusing elements outside a particular region. For example, if a user tabs to the last element in a modal dialog, when they hit tab again the first element of the dialog should be focused instead of something outside. This is currently impossible to implement in a general way in React without manual DOM querying and imperative focusing.
+Focus containment is important for modals and other popups. It prevents users from tabbing or focusing elements outside a particular region. For example, if a user tabs to the last element in a modal dialog, when they hit tab again the first element of the dialog should be focused instead of something outside. This is currently impossible to implement in a general way in React without manual DOM querying and imperative focusing.
 
 ### Restoring focus
 
@@ -95,7 +95,7 @@ function App() {
 
 The tab order in this example will be input 1, input 3, and then input 2, assuming the portal is placed after the app in the DOM. Users may expect the order to be input 1, input 2, input 3, as declared in the React tree. The current behavior is non-deterministic — it depends on the specific implementation of the Portal component (i.e. where it is placed in the DOM), which could change over time and cause the tab order to differ from what was intended. It also depends on the order portals are appended to the DOM rather than the order they are declared. These issues would be solved if the tab order in portals were based on the order in the React tree rather than the DOM tree. This would also match other existing portal behavior such as event bubbling where portals behave as if they are inline.
 
-In addition, portals make implementing focus isolation in user space difficult since it is impossible to know whether a DOM element (e.g. dialog) “contains” another element (e.g. overlay) in the original React tree since portals may actually mount that element outside the dialog DOM tree altogether.
+In addition, portals make implementing focus containment in user space difficult since it is impossible to know whether a DOM element (e.g. dialog) “contains” another element (e.g. overlay) in the original React tree since portals may actually mount that element outside the dialog DOM tree altogether.
 
 # Detailed design
 
@@ -106,7 +106,7 @@ Two public APIs in `react-dom` will be introduced in this RFC: `FocusScope` for 
 The following terms will be used throughout this RFC.
 
 - A **focusable** element is any DOM element which has a `tabIndex` property, along with a set of default elements such as `input`, `button`, etc.
-- A **tabbable** element is any DOM element which has a `tabIndex` value other than `-1`, along with a set of default elements such as `input`, `button`, etc.
+- A **tabbable** element is any DOM element which has a `tabIndex` value `>= 0`, along with a set of default elements such as `input`, `button`, etc.
 
 ## The focus tree
 
@@ -114,22 +114,21 @@ Each React root will have an internal focus tree managed by `react-dom`. At the 
 
 Focus scopes group focusable elements together. They remember the focused element within the scope, even when it is not currently focused. This allows focus to be restored to the correct child element when the scope regains focus, for example when tabbing back to a list of items, or closing a dialog.
 
-When a `FocusScope` which contains the currently focused element unmounts, the parent `FocusScope` in the focus tree regains focus. This means that the stored last focused item in that scope will be focused. For example, when clicking on a button to open a dialog, that button gets focused within its scope. When the dialog scope unmounts, focus is restored to the button.
+When a `FocusScope` which contains the currently focused element unmounts, the element that previously had focus can optionally regain focus, if the `restoreFocus` prop is set. This means that the stored last focused item in that scope will be focused. For example, when clicking on a button to open a dialog, that button gets focused within its scope. When the dialog scope unmounts, focus is restored to the button.
 
-Focus scopes can also be used to lock focus within that scope. If the `lock` prop is passed to the `FocusScope` component, then focus is locked within that scope. This prevents the user from tabbing out of that focus scope, and makes elements outside the scope unfocusable. If the user tabs to the last item in the scope, then the next tab will cycle to the first item in the scope.
+Focus scopes can also be used to contain focus within a scope. If the `contain` prop is passed to the `FocusScope` component, then focus is contained within that scope. This prevents the user from tabbing out of that focus scope. If the user tabs to the last item in the scope, then the next tab will cycle to the first item in the scope.
 
-If the `lock` prop is not passed to the `FocusScope`, or the scope is the implicit root `FocusScope`, then the user can tab in and out of the scope at will. Once focus is inside the scope, components can use the `FocusManager` API to programmatically move focus within the scope, for example in response to arrow keys or other interactions. This exact behavior is not provided by React, but APIs to perform these actions are available for component libraries to use. See below for details.
+If the `contain` prop is not passed to the `FocusScope`, or the scope is the implicit root `FocusScope`, then the user can tab in and out of the scope at will. Once focus is inside the scope, components can use the `FocusManager` API to programmatically move focus within the scope, for example in response to arrow keys or other interactions. This exact behavior is not provided by React, but APIs to perform these actions are available for component libraries to use. See below for details.
 
-Unlike the DOM, `tabIndex` values on elements are scoped within a `FocusScope`. If a specific tab order is required, `tabIndex` can be set to a positive value. This works just like the default browser behavior, except the values are scoped within the nearest `FocusScope`. This allows the tab order to be controlled within a specific component without overriding the order for the entire page.
-
-The `FocusScope` component itself also supports a `tabIndex` property, which when set to `"0"` or a positive value makes the `FocusScope` tabbable. When the `FocusScope` is tabbed to, it automatically focuses the previously focused child, or if it has never been focused before, the first focusable child. This is useful for components like lists, where only the last focused list item should be tabbable, but the rest should be focusable. See the “arrow key navigation” section under motivation above, and the example below for more details.
+The `autoFocus` prop can also be passed to a `FocusScope`, which automatically focuses the first focusable element within that scope on mount.
 
 The following is the complete interface for the `FocusScope` component.
 
 ```jsx
 type FocusScopeProps = {
-  lock?: boolean,
-  tabIndex?: number
+  contain?: boolean,
+  restoreFocus?: boolean,
+  autoFocus?: boolean
 };
 
 interface FocusScope extends React.Component<FocusScopeProps> {}
@@ -167,33 +166,21 @@ interface FocusManager {
 }
 ```
 
-How the next, previous, first, and last elements are computed depends on the focus tree, and the currently focused element. In general, the list of candidates includes all elements within the currently focused scope, and for tab stops, all parent scopes until a locked scope or the root is reached. If no scope currently has focus, then the first or last element of the root scope receives focus according to the called method.
+How the next, previous, first, and last elements are computed depends on the focus tree, and the currently focused element. In general, the list of candidates includes all elements within the currently focused scope, and for tab stops, all parent scopes until a scope with containment enabled or the root is reached. If no scope currently has focus, then the first or last element of the root scope receives focus according to the called method.
 
 One obvious missing method in this interface is a method to focus a specific element. That case is already well covered by refs. There is no other good way to refer to a specific React element in a component in order to focus it.
 
 ## Implementation
 
-There are several ways that tab handling could be implemented internally in `react-dom`. The obvious way is for `react-dom` to take over handling of the tab key for the page in order to use the order defined in the React tree rather than the DOM tree. However, recreating browser behavior will cause problems. The tab key is not the only way that focus can be moved. Assistive technology like screen readers also look at DOM order when determining how to move focus. Without some way of exposing the tab order computed by React to the actual DOM, screen readers will rely on the same incorrect tab order as today.
+This RFC can be implemented in `react-dom` by handling the Tab key using a global keyboard event handler. If the target of the event is within the `FocusScope`, the original event is canceled and the next element in the tab sequence computed from the React tree is focused programmatically. When the `contain` prop is enabled, upon reaching the last tabbable element in the scope, the focus wraps around to the first tabbable element in the scope. When the `contain` prop is not enabled, focus is allowed to continue to the next `FocusScope` in the tree.
 
-Another way for `react-dom` to implement this is by computing the [tabIndex](https://developer.mozilla.org/en-US/docs/Web/HTML/Global_attributes/tabindex) property for each tabbable element. `tabIndex` allows for positive values along with the more common `"0"`  and `"-1"`, which control the exact tab order that will be followed when using the tab key and screen readers. The example given in the motivation section above could be “fixed” by adding specific `tabIndex` values to each of the `input` elements, so that the tab order is input 1, input 2, input 3.
+When the Shift key is held when pressing the Tab key, focus moves in the opposite direction. When the `contain` prop is enabled, and focus reaches the first tabbable element in the scope, focus wraps to the last tabbable element in the scope. Since some browsers have additional focusing behavior that users expect, if any other modifier keys are held (e.g. Alt, Ctrl, etc.), then React should do nothing and leave the event for the browser to handle.
 
-```jsx
-function App() {
-  return (
-    <div>
-      <input placeholder="input 1" tabIndex="1" />
-      <Portal>
-        <input placeholder="input 2" tabIndex="2" />
-      </Portal>
-      <input placeholder="input 3" tabIndex="3" />
-    </div>
-  );
-}
-```
+While handling the Tab key may not cover all possible cases across all browsers and platforms, it is the only reliable way to implement this behavior without relying on features like positive `tabIndex` (which can cause other accessibility problems) or additional "sentinel" DOM nodes (which can affect e.g. CSS selectors). If a platform implements focusing behavior that does not fire Tab key events, then the behavior would be exactly as it is today - following DOM order rather than React tree order. Additional support for these platforms could be added to React in the future as well if they are deemed important enough to support.
 
-This is very bug prone to implement manually in a reusable component since the sequence is global to the page. However, since `react-dom` has a view of the whole world, it could compute the desired tab order for elements based on the internal focus tree, and generate `tabIndex` values for each focusable element automatically. Elements outside of a locked `FocusScope` would get `tabIndex="-1"` so that they could not be tabbed to. This would solve the tab ordering and locking issues while not reimplementing any browser behavior and still working correctly with screen readers.
+When the `restoreFocus` prop is enabled, the last focused element is stored by React when the `FocusScope` mounts. When the `FocusScope` unmounts, focus is restored to that element. If the element is no longer in the DOM, then focus is restored to the body (the default browser behavior).
 
-This implementation could be controversial, as positive `tabIndex` values are generally strongly discouraged. Some tooling [has rules](https://dequeuniversity.com/rules/axe/1.1/tabindex) to discourage developers from doing this, which would fail for React apps that utilize this. It could also break the tab order for pages where React is embedded and does not control the whole page. This could be solved by only assigning positive `tabIndex` values while focus is inside the React root, and also only when the order in the React tree would differ from the default DOM order due to portals. Alternative implementation strategies could also be considered, but it may be challenging to implement correctly without duplicating lots of default browser behavior and while continuing to work properly for screen readers.
+The `FocusManager` API could be implemented using the same internals as `FocusScope`. Since it is a singleton, it first finds the currently focused `FocusScope`, and applies all actions to that scope. For example, the `focusNextTabStop` function would follow the same steps above as if a user pressed the Tab key.
 
 ## Examples
 
@@ -201,7 +188,7 @@ The following are examples that solve the initially discussed challenges, using 
 
 ### Refs everywhere
 
-While this challenge is not completely eliminated since refs may still be necessary to focus specific elements, there should be fewer refs than before since many things can be accomplished with the `FocusManager` and `FocusScope` APIs instead.
+While this challenge is not completely eliminated since refs may still be necessary to focus specific elements, there should be fewer refs and manual DOM querying than before since many things can be accomplished with the `FocusManager` and `FocusScope` APIs instead.
 
 ### Global focus state
 
@@ -209,7 +196,9 @@ This issue is solved by the `FocusScope` API, which remembers focused elements w
 
 ### Arrow key navigation
 
-The following example shows how a keyboard accessible list component might be implemented. It uses a `FocusScope` to group the elements together. The `FocusScope` has `tabIndex="0"` so it is tabbable. The `li` elements have `tabIndex="-1"` so they are focusable but not tabbable. When the `FocusScope` is tabbed to, it automatically focuses the first list item. When the arrow keys are pressed, the `FocusManager` API is used to move focus to the previous or next focusable item in the list. If the tab key is pressed, the list loses focus. When tabbing back to the list, the `FocusScope` automatically restores focus to the list item that had focus last.
+The following example shows how a keyboard accessible list component might be implemented. It uses a `FocusScope` to group the elements together. When the arrow keys are pressed, the `FocusManager` API is used to move focus to the previous or next focusable item in the list. The roving tab index pattern is implemented to ensure that only one item is tabbable at a time. Initially, all `li` elements have `tabIndex="0"` to make them tabbable. On focus, the last focused item is stored in local component state. This causes the `tabIndex` of the last focused element to become "0" and all others to become "-1". If the tab key is pressed, the list item loses focus. When tabbing back to the list, focus is restored to the item with "tabIndex="0" by the browser.
+
+This example is similar to how an accessible list would be implemented today, but avoids refs and manual querying of the DOM to move focus on keyboard events.
 
 ```jsx
 import {FocusScope, FocusManager} from 'react-dom';
@@ -226,11 +215,22 @@ function List({ items }) {
     }
   };
 
+  let [lastFocusedItem, setLastFocusedItem] = useState(null);
+  let onFocus = (item) => {
+    setLastFocusedItem(item);
+  };
+
   return (
-    <FocusScope tabIndex="0">
-      <ul onKeyDown={onKeyDown}>
+    <FocusScope>
+      <ul role="listbox" onKeyDown={onKeyDown}>
         {items.map((item, index) => (
-          <li key={index} tabIndex="-1">{item}</li>
+          <li
+            role="option"
+            key={index}
+            tabIndex={!lastFocusedItem || lastFocusedItem === item ? 0 : -1}
+            onFocus={() => onFocus(item)}>
+            {item}
+          </li>
         ))}
       </ul>
     </FocusScope>
@@ -238,15 +238,15 @@ function List({ items }) {
 }
 ```
 
-### Focus isolation
+### Focus containment
 
-The following implements a generic dialog component which locks focus within it while open, and automatically restores focus to the previously focused element when closed. This example would require hundreds of lines of user space code to implement properly outside of React core.
+The following implements a generic dialog component which contains focus within it while open, and automatically restores focus to the previously focused element when closed. This example would require hundreds of lines of user space code to implement properly outside of React core.
 
 ```jsx
 function Dialog({ children }) {
   return (
     <Portal>
-      <FocusScope lock>
+      <FocusScope contain restoreFocus>
         <div className="dialog">
           {children}
         </div>
@@ -258,7 +258,7 @@ function Dialog({ children }) {
 
 ### Restoring focus
 
-Building on the previous example, this example shows how one might open a dialog. When the `FocusScope` within the dialog unmounts as the dialog closes, focus is automatically restored to the last focused item in the parent scope, in this case the button.
+Building on the previous example, this example shows how one might open a dialog. Since the `restoreFocus` prop is passed, when the `FocusScope` within the dialog unmounts as the dialog closes, focus is automatically restored to the last focused item in the parent scope, in this case the button.
 
 ```jsx
 function App() {
@@ -281,7 +281,7 @@ function App() {
 
 ### Portals
 
-The original portals example would have the correct behavior without code changes. The input within the portal would have a `tabIndex` set on it while focus is inside the React root such that it appears in the tab order based on the React tree rather than the DOM tree.
+The original portals example would have the correct behavior without code changes. React would handle the Tab key such that it appears in the tab order based on the React tree rather than the DOM tree.
 
 # Drawbacks
 
