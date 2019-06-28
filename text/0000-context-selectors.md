@@ -80,12 +80,12 @@ Implement a new function `selectFromContext`. This function will parallel `readC
 ## Modify context dependency checking (ReactFiberNewContexts)
 Today if a context dependency has an intersecting `observedBits & changedBits` the fiber is marked for an update. This logic will be modified as such
 
-1. Continue to check `observedBit & changedBits`
-  1. If observed update, check if context dependency has a selector
-    1. If no selector, schedule update
-    1. If selector is found, call it with the current context value
-      1. If the selection is new, schedule update
-      1. If the selection is the same as the previous selection, continue context dependency search
+1. Continue to check `observedBit & changedBits`  
+   1. If observed update, check if context dependency has a selector  
+      1. If no selector, schedule update
+      1. If selector is found, call it with the current context value
+         1. If the selection is new, schedule update
+         1. If the selection is the same as the previous selection, continue context dependency search
 
 ## Implement `useContextSelector` hook (ReactFiberHooks)
 Implement a new hook `useContextSelector` of type `(ReactContext<T>, T => S) => S`
