@@ -108,7 +108,7 @@ Start time isn't just the commit time less the "actual" time, because in async r
 #### `commitTime: number`
 Commit time could be roughly determined using e.g. `performance.now()` within the `onRender` callback, but multiple `Profiler` components would end up with slightly different times for a single commit. Instead, an explicit time is provided (shared between all `Profiler`s in the commit) enabling them to be grouped if desirable.
 
-#### `interactions: Array<{ name: string, timestamp: number }>`
+#### `interactions: Set<{ name: string, timestamp: number }>`
 Set of interactions that were being tracked (via the `interaction-tracking` package) when this commit was initially scheduled (e.g. when `render` or `setState` were called).
 
 In the event of a cascading render (e.g. an update scheduled from an effect or `componentDidMount`/`componentDidUpdate`) React will forward these interactions along to the subsequent `onRender` calls.
