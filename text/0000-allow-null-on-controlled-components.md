@@ -107,5 +107,5 @@ If the design choice is made where `value={null}` is always treated as string:
 If the design choice is `value` for controlled and `defaultValue` for uncontrolled: 
 * What should be done in the case `value=undefined`? (throw a warning or an error, do nothing)
 
-For the alternitive design choice of `forceControlled` attribute:
+For the alternative design choice of `forceControlled` attribute:
 * What is the impact if this choice is made?
