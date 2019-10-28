@@ -28,7 +28,32 @@ const MyErrorBoundary = React.errorBoundary((props, error, stack) => {
 });
 ```
 
-In class components, having a static method to derive state is in line with the overall design (all logical segments are controlled by lifecycle methods). However, in function components, the idea of "lifecycle" methods do not exist. So, in my opinion, there is no need to update the component state because the control flow is leaner in function components. Currently, I think keeping it simple as above makes the code much easier to understand. 
+In class components, having a static method to derive state is in line with the overall design (all logical segments are controlled by lifecycle methods). However, in function components, the idea of "lifecycle" methods do not exist. So, in my opinion, there is no need to update the component state because the control flow is leaner in function components. Currently, I think keeping it simple as above makes the code much easier to understand.
+
+Additionally, because the error boundary does not perform anything else, one can easily set state with the error:
+
+```jsx
+const MyErrorBoundary = React.errorBoundary((props, error, stack) => {
+    const [errorState, setErrorState] = useState(error);
+    useEffect(() => {
+        setErrorState(errorState);
+    }, [error]);
+
+    // This code segment is equivalent to `componentDidCatch`
+    useEffect(() => {
+        if (error !== null) {
+            logErrorToBackend(error, stack);
+        }
+    }, [error]); // dependency is important here to not sent the information on every render
+
+    // No need to derive state from error anymore. Just use the error value to do whatever you want
+    if (error) {
+        return <ErrorBox error={error} />
+    }
+
+    return props.children;
+});
+```
 
 # Motivation
 
@@ -76,13 +101,19 @@ This API will need to be added to the "Error Boundaries" page.
 
 From personal perspective, I learn about new changes by looking into Blog Post, then reading about it in the docs. So, for me this type of learning works the best. However, since existing developers are already familiar with Error Boundaries, they do not need to learn a new concept; just the new API / implementation detail.
 
-# Unresolved questions
+# Hooks for Error Boundaries (Added after initial commit)
 
-I am thinking that, maybe adding an additinal custom hook for `componentDidCatch` can be a useful utility to have:
+In order to simplify state derivation and effect calling for error boundaries, two additioanl hooks can be provided with the library:
 
-```
+```jsx
 const MyErrorBoundary = React.errorBoundary((props, error, stack) => {
-    useErrorCatcher((error, stack) => {
+    // returns error object
+    const [errorState, setErrorState] = useDerivedStateFromError(error);
+
+    // Or, use a custom function to create a different state based on error
+    const [hasError, setHasError] = useDerivedStateFromError(error, error => error !== null); 
+
+    useEffectForError((error, stack) => {
         logErrorToBackend(error, stack);
     }, error, stack)
 
@@ -90,4 +121,26 @@ const MyErrorBoundary = React.errorBoundary((props, error, stack) => {
 });
 ```
 
-This is just a simple utility that performs the operation when error changes. Otherwise, the same logic can be written using `useEffect`.
+# Other Concerns
+
+I am not sure what to get from the argument of `errorBoundary`: `errorInfo` that is used by `ReactFiberThrow` or `error` and `stack` objects?
+
+Additionally, the reason why I am adding `React.errorBoundary` HOC is to do minor changes to the existing data structures and implementation details. However, if existing data structures can be altered (e.g if we add "error" and "errorBoundary" objects to Fiber object), we can get rid of the HOC and let "error hooks" flag the Fiber to accept error boundaries. Then, use the flagged objects to identify error boundaries and update the "error" object; so that, hooks can use the values for future usage. In that case, usage will become even simpler:
+
+```jsx
+const MyErrorBoundary = props => {
+    // returns error object or null
+    const [error, setError] = useDerivedStateFromError();
+
+    // Or, use a custom function to create a different state based on error
+    const [hasError, setHasError] = useDerivedStateFromError(error => error !== null); 
+
+    useEffectForError((error, stack) => {
+        logErrorToBackend(error, stack);
+    });
+
+   // ... rest of the code
+});
+```
+
+To be honest, I am not sure how far implementation can be changed to support this type of behavior. So, that's why I added it under "Other Concerns." It is an altenate approach with a simpler interface but it requires extending the Fiber object. I added this behavior after investigating Fiber object and seeing that this object stores flags for side effects, memoized state etc. So, it might be okay to store error object within the fiber.
