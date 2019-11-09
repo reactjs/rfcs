@@ -81,9 +81,10 @@ import { useState, useEffect } from 'react';
 
 export function createSharedState(defaultValue) {
   const listeners = [];
+  let backupValue = defaultValue;
 
   return () => {
-    const [value, setValue] = useState(defaultValue);
+    const [value, setValue] = useState(backupValue);
 
     useEffect(() => {
       listeners.push(setValue);
@@ -95,6 +96,7 @@ export function createSharedState(defaultValue) {
     }, []);
 
     useEffect(() => {
+      backupValue = value;
       listeners.forEach(listener => listener !== setValue && listener(value));
     }, [value]);
 
