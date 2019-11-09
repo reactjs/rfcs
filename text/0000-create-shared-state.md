@@ -14,7 +14,7 @@ I suggest having an API such as this:
 ```jsx
 import { createSharedState } from 'react';
 
-export const useTheme = createSharedState('light');
+const useTheme = createSharedState('light');
 
 function App {
   return (
