@@ -74,7 +74,7 @@ In React community many projects are already created with very similar idea:
 
 # Detailed design
 
-The design could be very easy. This is naive implementation based on public React API.
+The design could be very simple. This is naive implementation based on public React API.
 
 ```jsx
 import { useState, useEffect } from 'react';
@@ -86,10 +86,6 @@ export function createSharedState(defaultValue) {
     const [value, setValue] = useState(defaultValue);
 
     useEffect(() => {
-      listeners.forEach(listener => listener !== setValue && listener(value));
-    }, [value]);
-
-    useEffect(() => {
       listeners.push(setValue);
 
       return () => {
@@ -97,6 +93,10 @@ export function createSharedState(defaultValue) {
         listeners.splice(index, 1);
       };
     }, []);
+
+    useEffect(() => {
+      listeners.forEach(listener => listener !== setValue && listener(value));
+    }, [value]);
 
     return [value, setValue];
   };
@@ -122,6 +122,6 @@ Also I recommend it's adoption in the tutorial and mentioning in Context API pag
 
 # Unresolved questions
 
-Is this function covers all use cases of Context API?
-Can we easily migrate from Context API in every case? (not considering class based components)
-How can we implement this with internal React API?
+- Is this function covers all use cases of Context API?
+- Can we easily migrate from Context API in every case? (not considering class based components)
+- How can we implement this with internal React API?
