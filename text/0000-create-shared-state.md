@@ -12,7 +12,7 @@ I suggest to `useState` hook with shared state across the application.
 I suggest having an API such as this:
 
 ```jsx
-import { createSharedState } from "react-create-shared-state";
+import { createSharedState } from 'react';
 
 export const useTheme = createSharedState('light');
 
