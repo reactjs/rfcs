@@ -4,8 +4,11 @@
 
 # Summary
 
-I would like to take a step forward with idea behind hooks by replacing the Context API with custom hooks.
-I suggest creation of hooks very similar to `useState` but with shared state across the application.
+I would like to take a step forward with idea behind hooks by providing a solution similar to Context API but more inline with hooks direction. 🤗
+`createSharedState` would create a hook very similar to `useState` but with shared state across the application.
+
+## Side-by-side comparison with Context API
+![image](https://user-images.githubusercontent.com/3163392/68534701-aedc9e00-0337-11ea-89c3-7eed540f23cd.png)
 
 # Basic example
 
