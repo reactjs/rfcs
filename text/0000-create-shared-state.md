@@ -57,11 +57,6 @@ For full working example please check https://codesandbox.io/s/react-create-shar
 
 # Motivation
 
-Even though the solution can easily created in user-land my motivation is the following to add it to core API:
-- Most of developers would not know about it's existence if it's not mentioned in React documentation. Usually training sessions, blogs post about React are based on that React core API documentation and tutorial
-- If we agree this solution will replace the Context API at some point it make sense to have it in same place as Context API
-- The code is very small and simple. It will not increase the bundle size much
-
 `createSharedState` results with a cleaner codebase with easily reusable shared state. It solves the following concerns with current Context API:  
 - Developer need to think where to place the `Provider` component in the tree structure.
 - There is a possibility for placing it in wrong place which will result in errors or performance issues.
@@ -79,6 +74,10 @@ In React community many projects are already created with very similar idea:
 - https://github.com/paul-phan/global-state-hook
 - https://github.com/donavon/use-persisted-state
 
+Even though the solution can easily created in user-land my motivation is the following to add it to core API:
+- Most of developers would not know about it's existence if it's not mentioned in React documentation. Usually training sessions, blogs post about React are based on that React core API documentation and tutorial
+- If we agree this solution will replace the Context API at some point it make sense to have it in same place as Context API
+- The code is very small and simple. It will not increase the bundle size much
 
 # Detailed design
 
