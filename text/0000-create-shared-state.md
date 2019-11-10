@@ -4,8 +4,7 @@
 
 # Summary
 
-I would like to take a step forward with idea behind hooks by providing a solution similar to Context API but more inline with hooks direction. 🤗
-`createSharedState` would create a hook very similar to `useState` but with shared state across the application.
+I would like to add a single function which allows sharing data between components with hooks. This could be used instead of Context API when scoping or cascading to single component structure branch is not needed. In many cases this leads to more simple implementation compared to using Context API. `createSharedState` creates a hook very similar to useState but with sync state across hook instances. Setting a value in one component will result re-rendering every component which uses the same hook. The state is preserved even if all hooks become unmounted.
 
 ## Side-by-side comparison with Context API
 ![image](https://user-images.githubusercontent.com/3163392/68534701-aedc9e00-0337-11ea-89c3-7eed540f23cd.png)
@@ -57,13 +56,7 @@ For full working example please check https://codesandbox.io/s/react-create-shar
 
 # Motivation
 
-`createSharedState` results with a cleaner codebase with easily reusable shared state. It solves the following concerns with current Context API:  
-- Developer need to think where to place the `Provider` component in the tree structure.
-- There is a possibility for placing it in wrong place which will result in errors or performance issues.
-- Sometimes the DOM structure need to be restructured because of it.
-- Sharing context between two unrelated deeply nested components may require placing `Provider` in the root component which will result in unnecessary rerenders of the whole application.
-- Often many providers are nested which makes the code hard to read.
-- Testing a component which depends on context is harder due to necessary wrapping with required providers.
+`createSharedState` results with a cleaner codebase with easily reusable shared state. Using this function will eliminated not necessary re-renders caused by top-level `Provider` in case of syncing data between nested components on different branches of component tree.
 
 In React community many projects are already created with very similar idea:
 - https://github.com/pie6k/hooksy
@@ -76,7 +69,6 @@ In React community many projects are already created with very similar idea:
 
 Even though the solution can easily created in user-land my motivation is the following to add it to core API:
 - Most of developers would not know about it's existence if it's not mentioned in React documentation. Usually training sessions, blogs post about React are based on that React core API documentation and tutorial
-- If we agree this solution will replace the Context API at some point it make sense to have it in same place as Context API
 - The code is very small and simple. It will not increase the bundle size much
 
 # Detailed design
@@ -127,6 +119,4 @@ Also I recommend it's adoption in the tutorial and mentioning in Context API pag
 
 # Unresolved questions
 
-- Is this function covers all use cases of Context API?
-- Can we easily migrate from Context API in every case? (not considering class based components)
 - How can we implement this with internal React API?
