@@ -67,7 +67,7 @@ In React community many projects are already created with very similar idea:
 - https://github.com/paul-phan/global-state-hook
 - https://github.com/donavon/use-persisted-state
 
-Even though the solution can easily created in user-land my motivation is the following to add it to core API:
+Even though the solution can be easily created in user-land my motivation is the following to add it to core API:
 - Most of developers would not know about it's existence if it's not mentioned in React documentation. Usually training sessions, blogs post about React are based on that React core API documentation and tutorial
 - The code is very small and simple. It will not increase the bundle size much
 
