@@ -4,7 +4,7 @@
 
 # Summary
 
-I would like to add a single function which allows sharing data between components with hooks. This could be used instead of Context API when scoping or cascading to single component structure branch is not needed. In many cases this leads to more simple implementation compared to using Context API. `createSharedState` creates a hook very similar to useState but with sync state across hook instances. Setting a value in one component will result re-rendering every component which uses the same hook. The state is preserved even if all hooks become unmounted.
+I would like to add a single function which allows sharing data between components with hooks. This could be used instead of Context API when scoping or cascading to single component structure branch is not needed. In many cases this leads to more simple implementation compared to using Context API. `createSharedState` creates a hook very similar to `useState` but with sync state across hook instances. Setting a value in one component will result re-rendering every component which uses the same hook. The state is preserved even if all hooks become unmounted.
 
 ![image](https://user-images.githubusercontent.com/3163392/68551190-7fe32c80-040a-11ea-935c-e390f1121a24.png)
 
