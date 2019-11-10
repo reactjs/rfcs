@@ -87,19 +87,15 @@ The design could be very simple. This is naive implementation based on public Re
 import { useState, useEffect } from 'react';
 
 export function createSharedState(defaultValue) {
-  const listeners = [];
+  const listeners = new Set();
   let backupValue = defaultValue;
 
   return () => {
     const [value, setValue] = useState(backupValue);
 
     useEffect(() => {
-      listeners.push(setValue);
-
-      return () => {
-        const index = listeners.findIndex(listener => listener === setValue);
-        listeners.splice(index, 1);
-      };
+      listeners.add(setValue);
+      return () => listeners.delete(setValue);
     }, []);
 
     useEffect(() => {
