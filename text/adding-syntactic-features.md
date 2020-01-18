@@ -224,10 +224,9 @@ Currently `<Component attribute>` is equivalent to `<Component attribute={true} 
 - Instead of introducing new syntax, improve developer experience by leveraging Babel macros. We shall use the following macros: 
 `state` - state macro
 `$` - general memoizing macro 
-`_` - shorthand JSX macro
 
 ```jsx
-import {state, $, _} from "react/macros"
+import {state, $} from "react/macros"
 
 const CompleteAndShare = ({contactsCompletedStats, contacts}) => {
 	const tasks = state(initialTasks)
@@ -243,16 +242,16 @@ const CompleteAndShare = ({contactsCompletedStats, contacts}) => {
 
 
 	const shareCompletedTasks = $( (contactId) => API.shareCompleted(contactId, completedTasks) )
-
-	return _(
+	
+	return (
 		<>
 			<h1>Complete and share</h1>
+			<ControlPanel shareCompletedTasks={shareCompletedTasks} contacts={contacts} />
 
-			<ContactStats contactsCompletedTasks />
-			<ControlPanel shareCompletedTasks contacts />
-
-			<SelfStats completedTasks />
-			<TaskList tasks toggleCompleted editSubTask />
+			<ContactStats contactsCompletedTasks={contactsCompletedTasks} />
+			<SelfStats completedTasks={completedTasks} />
+			
+			<TaskList tasks={tasks} toggleCompleted={toggleCompleted} editSubTask={editSubTask} />
 		</>
 	)
 })
