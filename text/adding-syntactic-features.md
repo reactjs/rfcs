@@ -215,34 +215,34 @@ Currently `<Component attribute>` is equivalent to `<Component attribute={true} 
 - Any change to the syntax of a language initially fragments the community to a certain degree. Early adopters might use the new syntax and initially not be understood by more traditional developers. 
 -  Currently "JSX is an XML-like syntax extension to ECMAScript". It is used to template HTML in JS. While JSX is associated with React, it is independent to React and is used elsewhere. The current suggestions is beyond the scope of JSX, and will require distinct file extension. 
 - Is it a breaking change? Not necessarily. Typescript added new syntactic features that do not exist in Javascript. So did JSX. However, JS code is syntactically valid in JSX and Typescript. The challenge is to add syntactic features, yet for current JSX syntax to be valid in the new syntax. 
+- A new syntax won't be supported initially by external tools, and type systems. 
 
 # Alternatives
 - Suggested declarations use a different pattern than JS (`M:` compared to `const`, `let`, and `function`). The different pattern indicates that the suggested declarations are not exactly JS. An alternative would be to use declarations which are more aligned with JS declarations, such as `memo` and `state`. 
 - To signal shorthand attribute assignment, instead of `#`, consider @GnsP [suggestion](https://github.com/facebook/jsx/pull/121#issuecomment-528987940) for the `&` operator. 
 
 ## Babel Macros
-- Instead of introducing new syntax, improve developer experience by leveraging Babel macros. We shall use the following macros: 
-`state` - state macro
-`$` - general memoizing macro 
+solution might not come from new syntax, but from existing syntax - from JS to JS transformations. Specifically, developer experience could be improved by leveraging Babel macros. An overall approach can yield most of the benefits presented in this RFC, with a minimal cost. 
+1. One memoizing macro - It will simplify memoization in React, and will appropriately transform into React.memo, useMemo or useCallback, and pass dependencies. (named `$` in the example below)
+2. A macro which simplifies state management. (named `useStateM` in the example below)
 
 ```jsx
-import {state, $} from "react/macros"
+import {useStateM, $} from "react/macros"
 
 const CompleteAndShare = ({contactsCompletedStats, contacts}) => {
-	const tasks = state(initialTasks)
+	const [tasks, setTasks] = useStateM(initialTasks)
 
-	const toggleCompleted = $( (id) => tasks[id].completed = !tasks[id].completed )
+	const toggleCompleted = $( (id) => setTasks(tasks[id].completed = !tasks[id].completed ) )
 	
-	const editSubTask = $( (taskId, subTaskId, newText) => tasks[taskId][subTaskId].text = newText )
+	const editSubTask = $( (taskId, subTaskId, newText) => setTasks(tasks[taskId][subTaskId].text = newText ))
 
 	const completedTasks = $( tasks.reduce(
 		(accum, task) => accum+task.completed,
 		0
 	))
 
-
 	const shareCompletedTasks = $( (contactId) => API.shareCompleted(contactId, completedTasks) )
-	
+
 	return (
 		<>
 			<h1>Complete and share</h1>
