@@ -70,3 +70,8 @@ Both new `Profiler` callback props will be optional. Existing callsites will con
 # How we teach this
 
 I will write a React block post (or similar) with examples of how to use the new APIs and what they mean.
+
+# Unresolved questions
+
+* Will the proposed implementation be able to handle cascading updates with renders and commits?
+* Is it okay to not report time spent in clenaup functions for certain unmount scenarios?
