@@ -8,14 +8,14 @@ This proposal adds two new callback props to `<Profiler>` components: `onCommit`
 
 # Basic example
 
-```js
+```jsx
 <Profiler
   id="Navigation"
   onRender={recordRenderDurations}
   onCommit={recordLayoutEffectDurations}
   onPostCommit={recordEffectDurations}
 >
-  <!-- Components being profiled -->
+  {/* Components being profiled */}
 </Profiler>
 ```
 
