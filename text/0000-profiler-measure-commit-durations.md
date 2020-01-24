@@ -116,5 +116,5 @@ I will write a React block post (or similar) with examples of how to use the new
 
 # Unresolved questions
 
-* Will the proposed implementation be able to handle cascading updates with renders and commits?
-* Is it okay to not report time spent in clenaup functions for certain unmount scenarios?
+* It would be very difficult to report time spent in cleanup functions for passive effects in certain umount cases (with nested Profilers) given the current unmount implementation. We plan to refactor this code as part of the concurrent mode release. The question here is: is it okay to land an initial version of this API that does not handle this case (and fix it as part of the refactor)?
+* Should we add interaction tracing support to these new methods? Tracing already adds a lot of complexity and (arguably) little value.
