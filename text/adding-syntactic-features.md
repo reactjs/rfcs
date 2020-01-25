@@ -3,7 +3,9 @@
 - React Issue: (leave this empty)
 
 # Summary
-Adding syntactic features to improve developer experience. 
+Adding compilation solutions to improve developer experience. The RFC considers the following:
+- Adding new syntactic features
+- As an alternative, leveraging Babble Macros.
 
 # Motivation
 React is well known (and rightly so) for enabling declarative UI programming. However, certain aspects of programming in modern React require technical, verbose, and in certain cases trivial code. Such is the case when trying to update a nested state value immutably, or when passing dependencies to hooks.
@@ -90,7 +92,6 @@ export default React.memo(CompleteAndShare)
 Below is the same functionality, relying on syntax-compilation to solve the challenges mentioned above. We shall use the following syntax for: 
 `S:` - Declaration of a state entity 
 `M:` - Declaration of a memoized entity
-`#` - Shorthand attribute assignment to a child element. (similar to ES6 Object shorthand property names).
 
 ```jsx
 M: CompleteAndShare = ({contactsCompletedStats, contacts}) => {
@@ -111,12 +112,12 @@ M: CompleteAndShare = ({contactsCompletedStats, contacts}) => {
 	return (
 		<>
 			<h1>Complete and share</h1>
+			<ControlPanel shareCompletedTasks={shareCompletedTasks} contacts={contacts} />
 
-			<ContactStats #contactsCompletedTasks />
-			<ControlPanel #shareCompletedTasks #contacts />
-
-			<SelfStats #completedTasks />
-			<TaskList #tasks #toggleCompleted #editSubTask />
+			<ContactStats contactsCompletedTasks={contactsCompletedTasks} />
+			<SelfStats completedTasks={completedTasks} />
+			
+			<TaskList tasks={tasks} toggleCompleted={toggleCompleted} editSubTask={editSubTask} />
 		</>
 	)
 }
@@ -124,7 +125,7 @@ M: CompleteAndShare = ({contactsCompletedStats, contacts}) => {
 export default CompleteAndShare
 ```
 
-In terms of characters it is more than 40% shorter, but more important, it includes less implementation details, and is easier to write, read and understand. 
+It is significantly shorter, but more important, it includes less implementation details, and is easier to write, read and understand. 
 
 # Detailed design
 
@@ -193,23 +194,6 @@ M: editSubTask = (taskId, subTaskId, newText) => setTasks( Immer.produce(
 ))
 ```
 
-## Shorthand attribute assignment 
-(Related discussions and PRs: https://github.com/facebook/jsx/issues/23, https://github.com/facebook/jsx/pull/118, https://github.com/facebook/jsx/pull/121).
-
-Code reuse in React is achieved via component reuse. Moving from: 
-```jsx
-<FancyButton handler={handler} mode={mode} size={size} text={text} />
-```
-to 
-```jsx
-<FancyButton #handler #mode #size #text />
-```
-means that it is now easier to use FancyButton. Shorthand attribute assignment can make components more reusable (In the sense that it is easier to reuse the component than recreate it's functionality). 
-
-Currently `<Component attribute>` is equivalent to `<Component attribute={true} />`. Changing it to mean `<Component attribute={attribute} />` will be a major breaking change since this syntax is being used to specify modes of child elements. The community offered a few alternatives, but so far none has been accepted. One popular suggestion was to use `<Component {attribute}>`, another was to use `<Component [attribute]>`. The major criticism/reservation was that this syntax did not coherently fit current JSX or JS syntax. 
-
-`#` can not be used in an identifier, and isn't an operator. Therefore it will not conflict with current use. 
-
 # Drawbacks
 
 - Any change to the syntax of a language initially fragments the community to a certain degree. Early adopters might use the new syntax and initially not be understood by more traditional developers. 
@@ -219,7 +203,6 @@ Currently `<Component attribute>` is equivalent to `<Component attribute={true} 
 
 # Alternatives
 - Suggested declarations use a different pattern than JS (`M:` compared to `const`, `let`, and `function`). The different pattern indicates that the suggested declarations are not exactly JS. An alternative would be to use declarations which are more aligned with JS declarations, such as `memo` and `state`. 
-- To signal shorthand attribute assignment, instead of `#`, consider @GnsP [suggestion](https://github.com/facebook/jsx/pull/121#issuecomment-528987940) for the `&` operator. 
 
 ## Babel Macros
 solution might not come from new syntax, but from existing syntax - from JS to JS transformations. Specifically, developer experience could be improved by leveraging Babel macros. An overall approach can yield most of the benefits presented in this RFC, with a minimal cost. 
