@@ -318,7 +318,7 @@ React may render a new subtree that reads from a source that was also used to re
   - Version should change whenever any part of the source is mutated.
   - Version does not have to be a number or even a single attribute.
     - It can be a serialized form of the data, so long as it is stable and unique. (For example, reading query parameters might treat the entire URL string as the version.)
-    - It can be the state itself, if the value is mutable (e.g. a Redux store is mutable, but its state is immutable).
+    - It can be the state itself, if the value is immutable (e.g. a Redux store is mutable, but its state is immutable).
 
 # Alternatives
 
