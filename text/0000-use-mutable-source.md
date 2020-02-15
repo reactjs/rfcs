@@ -16,64 +16,27 @@ This hook is designed to support a variety of mutable sources. Below are a few e
 
 ```js
 // May be created in module scope, like context:
-const reduxSource = createMutableSource(store, {
+const reduxSource = createMutableSource(
+  store,
   // Because the state is immutable, it can be used as the "version".
-  getVersion: () => reduxStore.getState()
-});
+  () => reduxStore.getState()
+);
+
+// Redux state is already immutable, so it can be returned as-is.
+// Like a Redux selector, this method could also return a filtered/derived value.
+//
+// Because this method doesn't require access to props,
+// it can be declared in module scope to be shared between components.
+const getSnapshot = store => store.getState();
+
+// Redux subscribe method already returns an unsubscribe handler.
+//
+// Because this method doesn't require access to props,
+// it can be declared in module scope to be shared between components.
+const subscribe = (store, callback) => store.subscribe(callback);
 
 function Example() {
-  const config = useMemo(
-    () => ({
-      // Redux state is already immutable, so it can be returned as-is.
-      // Like a Redux selector, this method could also return a filtered/derived value.
-      getSnapshot: store => store.getState(),
-
-      // Redux subscribe method already returns an unsubscribe handler.
-      subscribe: (store, callback) => store.subscribe(callback)
-    }),
-    [reduxSource]
-  );
-
-  const state = useMutableSource(reduxSource, config);
-
-  // ...
-}
-```
-
-### Event dispatchers
-
-Given a data source that dispatches change events, `useMutableSource()` can be used to safely consume some part of that data:
-
-```js
-// May be created in module scope, like context:
-const userDataSource = createMutableSource(store, {
-  getVersion: () => store.version
-});
-
-function Example() {
-  const config = useMemo(
-    () => ({
-      // The underlying source object ("store" in this case)
-      // will be passed to the config methods:
-      getSnapshot: store => store.friends.map(friend => friend.id),
-
-      // This method can subscribe to root level change events,
-      // or more snapshot-specific events.
-      // In this case, since Example is only reading the "friends" value,
-      // we only have to subscribe to a change in that value
-      // (e.g. a "friends" event)
-      subscribe: (store, callback) => {
-        store.addEventListener("friends", callback);
-        return () => store.removeEventListener("friends", callback);
-      }
-    }),
-
-    // If e.g. props or state were used in the selector snapshot function,
-    // they would also be specified in the dependency array.
-    [userDataSource]
-  );
-
-  const friendIDs = useMutableSource(userDataSource, config);
+  const state = useMutableSource(reduxSource, getSnapshot, subscribe);
 
   // ...
 }
@@ -92,22 +55,72 @@ const locationSource = createMutableSource(window, {
   getVersion: () => window.location.href
 });
 
-function Example() {
-  const config = useMemo(
-    () => ({
-      getSnapshot: window => win.location.pathname,
-      subscribe: (window, callback) => {
-        window.addEventListener("popstate", callback);
-        return () => window.removeEventListener("popstate", callback);
-      }
-    }),
-    [locationSource]
-  );
+// Because this method doesn't require access to props,
+// it can be declared in module scope to be shared between components.
+const getSnapshot = window => win.location.pathname;
 
-  const pathName = useMutableSource(locationSource, config);
+// This method can subscribe to root level change events,
+// or more snapshot-specific events.
+// In this case, since Example is only reading the "friends" value,
+// we only have to subscribe to a change in that value
+// (e.g. a "friends" event)
+//
+// Because this method doesn't require access to props,
+// it can be declared in module scope to be shared between components.
+const subscribe = (window, callback) => {
+  window.addEventListener("popstate", callback);
+  return () => window.removeEventListener("popstate", callback);
+};
+
+function Example() {
+  const pathName = useMutableSource(locationSource, getSnapshot, subscribe);
 
   // ...
 }
+```
+
+### Selectors that use props
+
+Sometimes a state value is derived using component `props`. In this case, `useCallback` should be used to keep the snapshot and subscribe functions stable.
+
+```js
+// May be created in module scope, like context:
+const userDataSource = createMutableSource(store, {
+  getVersion: () => data.version
+});
+
+// This method can subscribe to root level change events,
+// or more snapshot-specific events.
+// In this case, since Example is only reading the "friends" value,
+// we only have to subscribe to a change in that value
+// (e.g. a "friends" event)
+//
+// Because this method doesn't require access to props,
+// it can be declared in module scope to be shared between components.
+const subscribe = (data, callback) => {
+  data.addEventListener("friends", callback);
+  return () => data.removeEventListener("friends", callback);
+};
+
+function Example({ onlyShowFamily }) {
+  // Because the snapshot depends on props, it has to be created inline.
+  // useCallback() memoizes the function though,
+  // which lets useMutableSource() know when it's safe to reuse a snapshot value.
+  const getSnapshot = useCallback(
+    data =>
+      data.friends
+        .filter(
+          friend => !onlyShowFamily || friend.relationshipType === "family"
+        )
+        .friends.map(friend => friend.id),
+    [onlyShowFamily]
+  );
+
+  const friendIDs = useMutableSource(userDataSource, getSnapshot, subscribe);
+
+  // ...
+}
+
 ```
 
 ### Observables
@@ -172,19 +185,15 @@ type MutableSource<Source> = {|
 
 function createMutableSource<Source>(
   source: Source,
-  config: {|
-    getVersion: () => $NonMaybeType<mixed>
-  |}
+  getVersion: () => $NonMaybeType<mixed>
 ): MutableSource<Source> {
   // ...
 }
 
 function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
-  config: {|
-    getSnapshot: (source: Source) => Snapshot,
-    subscribe: (source: Source, callback: Function) => () => void
-  |}
+  getSnapshot: (source: Source) => Snapshot,
+  subscribe: (source: Source, callback: Function) => () => void
 ): Snapshot {
   // ...
 }
