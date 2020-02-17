@@ -57,7 +57,7 @@ const locationSource = createMutableSource(window, {
 
 // Because this method doesn't require access to props,
 // it can be declared in module scope to be shared between components.
-const getSnapshot = window => win.location.pathname;
+const getSnapshot = window => window.location.pathname;
 
 // This method can subscribe to root level change events,
 // or more snapshot-specific events.
