@@ -24,7 +24,7 @@ Resolve `<ControlPanel>` as `<ControlPanel.default>`.
 
 # Motivation
 
-A [common](https://kentcdodds.com/blog/compound-components-with-react-hooks) way of exporting interlinked React Components is to use a [Compound Component pattern](https://egghead.io/lessons/react-write-compound-components):
+A [common](https://kentcdodds.com/blog/compound-components-with-react-hooks) way of exporting interlinked React Components is to use a [Compound Component pattern](https://egghead.io/lessons/react-write-compound-components) with [dot](https://www.jakewiesler.com/blog/compound-component-basics/) [notation](https://medium.com/risan/react-component-with-dot-notation-7a9853dbf33b):
 
 ```jsx
 const ControlPanel = ({children}) => <div>
@@ -81,9 +81,9 @@ export default = () => <ControlPanel>
 
 ```
 
-This doesn't use the dot syntax often used for compound components, and so the relationship between these components is not immediately apparent.
+This doesn't use the dot notation often used for compound components, and so the relationship between these components is not immediately apparent.
 
-So the motivation here is to find a way to use the dot syntax, while still keeping the benefits of tree shaking.
+So the motivation here is to find a way to use the dot notation, while still keeping the benefits of tree shaking.
 
 Two options would be:
 
