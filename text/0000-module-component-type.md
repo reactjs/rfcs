@@ -151,4 +151,5 @@ No
 
 # Unresolved questions
 
-Whether to execute during transpilation or at runtime.
+- Whether to execute during transpilation or at runtime.
+- If this is done at runtime, and the entire Module is passed to `React.createElement`, would tree shaking still be able to remove unused exports?
