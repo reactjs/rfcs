@@ -13,42 +13,42 @@ If `MyComponent` is an ES Module, then `<MyComponent>` should behave the same as
 In the following code:
 
 ```jsx
-import * as Tabs from './tabs';
+import * as ControlPanel from './control-panel';
 
-export default = () => <Tabs>
-    <Tabs.Tab />
-</Tabs>
+export default = () => <ControlPanel>
+    <ControlPanel.Button />
+</ControlPanel>
 ```
 
-Resolve `<Tabs>` as `<Tabs.default>`.
+Resolve `<ControlPanel>` as `<ControlPanel.default>`.
 
 # Motivation
 
 A [common](https://kentcdodds.com/blog/compound-components-with-react-hooks) way of exporting interlinked React Components is to use a [Compound Component pattern](https://egghead.io/lessons/react-write-compound-components):
 
 ```jsx
-const Tabs = ({children}) => <div>
+const ControlPanel = ({children}) => <div>
     { children }
 </div>;
 
-const Tab = ({children}) => <div>
+const Button = ({children}) => <div>
     { children }
 </div>;
 
-Tabs.Tab = Tab;
+ControlPanel.Button = Button;
 
-export default Tab;
+export default ControlPanel;
 ```
 
 This results in a syntax that clearly shows the relationship between the two components:
 
 ```jsx
-import Tabs from './tabs';
+import ControlPanel from './control-panel';
 
-export default = () => <Tabs>
-    <Tabs.Tab />
-    <Tabs.Tab />
-</Tabs>;
+export default = () => <ControlPanel>
+    <ControlPanel.Button />
+    <ControlPanel.Button />
+</ControlPanel>;
 ```
 
 Unfortunately, if a compound component contains several optional child components, this technique does not benefit from tree shaking.
@@ -57,43 +57,59 @@ This can be resolved as follows:
 
 ```jsx
 
-const Tabs = ({children}) => <div>
+const ControlPanel = ({children}) => <div>
     { children }
 </div>
 
-const Tab = ({children}) => <div>
+const Button = ({children}) => <div>
     { children }
 </div>;
 
-export { Tabs, Tab };
-export default Tab;
+export { ControlPanel, Button };
+export default ControlPanel;
 ```
 
 But the code utilising this code must look as follows:
 
 ```jsx
-import * as Tabs from './tabs';
+import ControlPanel, { Button } from './control-panel';
 
-export default = () => <Tabs.Tabs>
-    <Tabs.Tab />
-    <Tabs.Tab />
-</Tabs.Tabs>;
+export default = () => <ControlPanel>
+    <Button />
+    <Button />
+</ControlPanel>;
+
+```
+
+This doesn't use the dot syntax often used for compound components, and so the relationship between these components is not immediately apparent.
+
+So the motivation here is to find a way to use the dot syntax, while still keeping the benefits of tree shaking.
+
+Two options would be:
+
+```jsx
+import * as ControlPanel from './control-panel';
+
+export default = () => <ControlPanel.ControlPanel>
+    <ControlPanel.Button />
+    <ControlPanel.Button />
+</ControlPanel.ControlPanel>;
 ```
 
 or
 
 ```jsx
-import * as Tabs from './tabs';
+import * as ControlPanel from './control-panel';
 
-export default = () => <Tabs.default>
-    <Tabs.Tab />
-    <Tabs.Tab />
-</Tabs.default>;
+export default = () => <ControlPanel.default>
+    <ControlPanel.Button />
+    <ControlPanel.Button />
+</ControlPanel.default>;
 ```
 
-The addition of `.Tabs`/`.default` complicates the code, especially when dealing with larger component names.
+The addition of `.ControlPanel`/`.default` complicates the code, especially when dealing with larger component names.
 
-On the other hand, having `<Tabs>` resolve to `<Tabs.default>` would be a cleaner syntax, but this would require a change to JSX transpilation or React runtime.
+On the other hand, having `<ControlPanel>` resolve to `<ControlPanel.default>` would be a cleaner syntax, but this would require a change to JSX transpilation or React runtime.
 
 # Detailed design
 
@@ -147,7 +163,6 @@ re-organized or altered?*
 *Does it change how React is taught to new developers at any level?*
 
 No
-
 
 # Unresolved questions
 
