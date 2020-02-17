@@ -4,7 +4,9 @@
 
 # Summary
 
-If `MyComponent` is an esModule, then resolve `<MyComponent>` as `React.createElement(MyComponent.default)`.
+If `MyComponent` is an ES Module, then `<MyComponent>` should behave the same as `<MyComponent.default>`
+
+(e.g. transpile to `React.createElement(MyComponent.default)`).
 
 # Basic example
 
@@ -18,11 +20,11 @@ export default = () => <Tabs>
 </Tabs>
 ```
 
-Resolve `<Tabs>` as `React.createElement(Tabs.default)`
+Resolve `<Tabs>` as `<Tabs.default>`.
 
 # Motivation
 
-A common way of exporting interlinked React Components is to use a Compound Component pattern:
+A [common](https://kentcdodds.com/blog/compound-components-with-react-hooks) way of exporting interlinked React Components is to use a [Compound Component pattern](https://egghead.io/lessons/react-write-compound-components):
 
 ```jsx
 const Tabs = ({children}) => <div>
@@ -78,9 +80,20 @@ export default = () => <Tabs.Tabs>
 </Tabs.Tabs>;
 ```
 
-The addition of `.Tabs` complicates the code, especially when dealing with larger component names.
+or
 
-On the other hand, `<Tabs>` should suffice, but this would require a change to JSX transpilation or React runtime.
+```jsx
+import * as Tabs from './tabs';
+
+export default = () => <Tabs.default>
+    <Tabs.Tab />
+    <Tabs.Tab />
+</Tabs.default>;
+```
+
+The addition of `.Tabs`/`.default` complicates the code, especially when dealing with larger component names.
+
+On the other hand, having `<Tabs>` resolve to `<Tabs.default>` would be a cleaner syntax, but this would require a change to JSX transpilation or React runtime.
 
 # Detailed design
 
@@ -89,6 +102,10 @@ I see 2 possible routes, though am still assessing them:
 ## Change to babel-plugin-react-jsx
 
 If we can statically analyse `MyComponent` and identify it is an es module, then it may be possible to do this during transpilation.
+
+Need to consider whether we could always assess this during transpilation, or whether a 'works in some cases' approach is acceptable.
+
+e.g. if someone passes a Module through to a higher order component.
 
 ## Handle at runtime
 
@@ -101,6 +118,8 @@ e.g. in `packages/react-reconciler/src/ReactFiber.js`, after case statements but
           }
 ```
 
+TBC what method could be used to reliably detect an ES Module, that still works after transpilation to a commonjs Module.
+
 # Drawbacks
 
 - Handling at runtime may cause issues in transpiled code, when trying to detect whether a component passed in was originally an esModule.
@@ -108,26 +127,28 @@ e.g. in `packages/react-reconciler/src/ReactFiber.js`, after case statements but
 
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+As the main motivation is to be able to use clean syntax for Compound Components and still get the benefits of tree shaking, an alternative may be to find another way of defining a compound component, or to make improvements to tree shaking.
 
 # Adoption strategy
 
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+- add a Compound Components section to 'Advanced Guides' in React documentation.
+- not a breaking change (tbc, depends on implementation, may be issues with HOCs or external functions checking if an object is a valid React component, that would reject a Module)
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing React patterns?
+*What names and terminology work best for these concepts and why? How is this
+idea best presented? As a continuation of existing React patterns?*
+*How should this feature be taught to existing React developers?*
 
-Would the acceptance of this proposal mean the React documentation must be
-re-organized or altered? Does it change how React is taught to new developers
-at any level?
+Add a Compound Components section to 'Advanced Guides' in React documentation, that covers the existing premise plus tree shaking considerations.
 
-How should this feature be taught to existing React developers?
+*Would the acceptance of this proposal mean the React documentation must be
+re-organized or altered?*
+*Does it change how React is taught to new developers at any level?*
+
+No
+
 
 # Unresolved questions
 
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+Whether to execute during transpilation or at runtime.
