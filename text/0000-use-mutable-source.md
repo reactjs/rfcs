@@ -10,38 +10,6 @@
 
 This hook is designed to support a variety of mutable sources. Below are a few example cases.
 
-### Redux stores
-
-`useMutableSource()` can be used with Redux stores:
-
-```js
-// May be created in module scope, like context:
-const reduxSource = createMutableSource(
-  store,
-  // Because the state is immutable, it can be used as the "version".
-  () => reduxStore.getState()
-);
-
-// Redux state is already immutable, so it can be returned as-is.
-// Like a Redux selector, this method could also return a filtered/derived value.
-//
-// Because this method doesn't require access to props,
-// it can be declared in module scope to be shared between components.
-const getSnapshot = store => store.getState();
-
-// Redux subscribe method already returns an unsubscribe handler.
-//
-// Because this method doesn't require access to props,
-// it can be declared in module scope to be shared between components.
-const subscribe = (store, callback) => store.subscribe(callback);
-
-function Example() {
-  const state = useMutableSource(reduxSource, getSnapshot, subscribe);
-
-  // ...
-}
-```
-
 ### Browser APIs
 
 `useMutableSource()` can also read from non traditional sources, e.g. the shared Location object, so long as they can be subscribed to and have a "version".
@@ -67,9 +35,12 @@ const getSnapshot = window => window.location.pathname;
 //
 // Because this method doesn't require access to props,
 // it can be declared in module scope to be shared between components.
-const subscribe = (window, callback) => {
-  window.addEventListener("popstate", callback);
-  return () => window.removeEventListener("popstate", callback);
+const subscribe = (window, handleChange) => {
+  const onPopState = () => {
+    handleChange(window.location.pathname);
+  };
+  window.addEventListener("popstate", onPopState);
+  return () => window.removeEventListener("popstate", onPopState);
 };
 
 function Example() {
@@ -89,19 +60,6 @@ const userDataSource = createMutableSource(store, {
   getVersion: () => data.version
 });
 
-// This method can subscribe to root level change events,
-// or more snapshot-specific events.
-// In this case, since Example is only reading the "friends" value,
-// we only have to subscribe to a change in that value
-// (e.g. a "friends" event)
-//
-// Because this method doesn't require access to props,
-// it can be declared in module scope to be shared between components.
-const subscribe = (data, callback) => {
-  data.addEventListener("friends", callback);
-  return () => data.removeEventListener("friends", callback);
-};
-
 function Example({ onlyShowFamily }) {
   // Because the snapshot depends on props, it has to be created inline.
   // useCallback() memoizes the function though,
@@ -116,11 +74,88 @@ function Example({ onlyShowFamily }) {
     [onlyShowFamily]
   );
 
+  // This method can subscribe to root level change events,
+  // or more snapshot-specific events.
+  // In this case, since Example is only reading the "friends" value,
+  // we only have to subscribe to a change in that value
+  // (e.g. a "friends" event)
+  //
+  // Because the selector depends on props,
+  // the subscribe function needs to be defined inline as well.
+  const subscribe = useCallback(
+    (data, handleChange) => {
+      const onFriends = () => handleChange(getSnapshot(data));
+      data.addEventListener("friends", onFriends);
+      return () => data.removeEventListener("friends", onFriends);
+    },
+    [getSnapshot]
+  );
+
   const friendIDs = useMutableSource(userDataSource, getSnapshot, subscribe);
 
   // ...
 }
+```
 
+### Redux stores
+
+Redux users would likely never use the `useMutableSource` hook directly. They would use a hook provided by Redux that uses `useMutableSource` internally.
+
+##### Mock Redux implementation
+```js
+// Somewhere, the Redux store needs to be wrapped in a mutable source object...
+const mutableSource = createMutableSource(
+  reduxStore,
+  // Because the state is immutable, it can be used as the "version".
+  () => reduxStore.getState()
+);
+
+// It would probably be shared via the Context API...
+const MutableSourceContext = createContext(mutableSource);
+
+// Oversimplified example of how Redux could use the mutable source hook:
+function useSelector(selector) {
+  const mutableSource = useContext(MutableSourceContext);
+
+  const getSnapshot = useCallback(
+    store => selector(store.getState()),
+    [selector]
+  );
+
+  const subscribe = useCallback(
+    (store, handleChange) => {
+      return store.subscribe(() => {
+        // The store changed, so let's get an updated snapshot.
+        const newSnapshot = getSnapshot(store);
+
+        // Tell React what the snapshot value is after the most recent store update.
+        // If it has not changed, React will not schedule any render work.
+        handleChange(newSnapshot);
+      });
+    },
+    [getSnapshot]
+  );
+
+  return useMutableSource(mutableSource, getSnapshot, subscribe);
+}
+```
+
+#### Example user component code
+
+```js
+import { useSelector } from "react-redux";
+
+function Example() {
+  // The user-provided selector should be memoized with useCallback.
+  // This will prevent unnecessary re-subscriptions each update.
+  // This selector can also use e.g. props values if needed.
+  const memoizedSelector = useCallback(state => state.users, []);
+  
+  // The Redux hook will connect user code to useMutableSource.
+  const users = useSelector(memoizedSelector);
+
+  // ...
+}
 ```
 
 ### Observables
@@ -193,7 +228,10 @@ function createMutableSource<Source>(
 function useMutableSource<Source, Snapshot>(
   source: MutableSource<Source>,
   getSnapshot: (source: Source) => Snapshot,
-  subscribe: (source: Source, callback: Function) => () => void
+  subscribe: (
+    source: Source,
+    handleChange: (snapshot: Snapshot) => void
+  ) => () => void
 ): Snapshot {
   // ...
 }
@@ -210,7 +248,11 @@ Mutable source requires tracking two pieces of info at the module level:
 
 #### Version number
 
-Tracking a source's version allows us to avoid tearing during a mount (before our component has subscribed to the source). Whenever a mounting component reads from a mutable source, this number should be checked to ensure that either (1) this is the first mounting component to read from the source during the current render or (2) the version number has not changed since the last read. A changed version number indicates a change in the underlying store data, which may result in a tear.
+Tracking a source's version allows us to avoid tearing when reading from a source that a component has not yet subscribed to.
+
+In this case, the version should be checked to ensure that either:
+1. This is the first mounting component to read from the source during the current render, or
+2. The version number has not changed since the last read. (A changed version number indicates a change in the underlying store data, which may result in a tear.)
 
 Like Context, this hook should support multiple concurrent renderers (e.g. ReactDOM and ReactART, React Native and React Fabric). To support this, we will track two work-in-progress versions (one for a "primary" renderer and one for a "secondary" renderer).
 
@@ -225,7 +267,9 @@ This value should be reset either when a renderer starts a new batch of work or 
 
 #### Pending update expiration times
 
-Tracking pending update times enables already mounted components to safely reuse cached snapshot values without tearing in order to support higher priority updates. During an update, if the current render’s expiration time is **≤** the stored expiration time for a source, it is safe to read new values from the source. Otherwise a cached snapshot value should be used temporarily<sup>1</sup>.
+Tracking pending updates per source enables newly-mounting components to read without potentially conflicting with components that read from the same source during a previous render.
+
+During an update, if the current render’s expiration time is **≤** the stored expiration time for a source, it is safe to read new values from the source. Otherwise a cached snapshot value should be used temporarily<sup>1</sup>.
 
 When a root is committed, all pending expiration times that are **≤** the committed time can be discarded for that root.
 
@@ -253,64 +297,43 @@ Although useful for updates, pending update expiration times are not sufficient 
 
 The `useMutableSource()` hook’s memoizedState will need to track the following values:
 
-- The user-provided config object (with getter functions).
+- The user-provided `getSnapshot` and `subscribe` functions.
 - The latest (cached) snapshot value.
 - The mutable source itself (in order to detect if a new source is provided).
-- A destroy function (to unsubscribe from a source)
+- The (user-returned) unsubscribe function
 
 ### Scenarios to handle
 
-#### Initial mount (before subscription)
+#### Reading from a source before subscribing
 
-When a component reads from a mutable source that it has not yet subscribed to<sup>1</sup>, React first checks to see if there are any pending updates for the source already scheduled on the current root.
+When a component reads from a mutable source that it has not yet subscribed to<sup>1</sup>, React first checks the version number to see if anything else has read from this source during the current render.
 
-- ✗ If there is a pending update and the current expiration time is **>** the pending time, the read is **not safe**.
-  - Throw and restart the render.
-- If there are no pending updates, or if the current expiration time is **≤** the pending time, has the component already subscribed to this source?
-  - ✓ If yes, the read is **safe**.
+- If there is a recorded version number (i.e. this is not the first read) does it match the source's current version?
+  - ✓ If both versions match, the read is **safe**.
     - Store the snapshot value on `memoizedState`.
-  - If no, the the read **may be safe**.
+  - ✗ If the version has changed, the read is **not safe**.
+    - Throw and restart the render.
 
-For components that have not yet subscribed to their source, React reads the version of the source and compares it to the tracked work-in-progress version numbers.
+If there is no version number, the the read **may be safe**. We'll need to next check pending updates for the source to determine this.
 
-- ✓ If there is no recorded version, this is the first time the source has been used. The read is **safe**.
-  - Record the current version number (on the root) for later reads during mount.
+- ✓ If there are no pending updates the read is **safe**.
   - Store the snapshot value on `memoizedState`.
-- ✓ If the recorded version matches the store version used previously, the read is **safe**.
+  - Store the version number for subsequent reads during this render.
+- ✓ If the current expiration time is **≤** the pending time, the read is **safe**.
   - Store the snapshot value on `memoizedState`.
-- ✗ If the recorded version is different, the read is **not safe**.
+  - Store the version number for subsequent reads during this render.
+- ✗ If the current expiration time is **>** the pending time, the read is **not safe**.
   - Throw and restart the render.
 
-¹ This case could occur during a mount or an update (if a new mutable source was read from for the first time).
+<sup>1</sup> This case could occur during a mount or an update (if a new mutable source was read from for the first time).
 
-#### Mutation
-
-React will subscribe to sources after commit so that it can schedule updates in response to mutations. When a mutation occurs<sup>1</sup>, React will calculate an expiration time for processing the change, and will:
-
-- Schedule an update for that expiration time.
-- Update a root level entry for this source to specify the next scheduled expiration time.
-  - This enables us to avoid tearing within the root during subsequent renders.
-
-¹ Component subscriptions may only subscribe to parts of the external source they care about. Updates will only be scheduled for component’s whose subscriptions fire.
-
-#### Update (after subscription)
+#### Reading from a source after subscription
 
 React will eventually re-render when a source is mutated, but it may also re-render for other reasons. Even in the event of a mutation, React may need to render a higher priority update before processing the mutation. In that case, it’s important that components do not read from a changed source since it may cause tearing.
 
-In order to process updates safely, React will track pending root level expiration times per source.
+In the event the a component renders again without its subscription firing (or as part of a high priority update that does not include the subscription change) it will typically be able to re-use the cached snapshot.
 
-- ✓ If the current render’s expiration time is **≤** the stored expiration time for a source, it is **safe** to read.
-  - Store an updated snapshot value on `memoizedState`.
-- If the current render expiration time is **>** than the root priority for a source, consider the config object.
-  - ✓ If the config object has not changed, we can re-use the **cached snapshot value**.<sup>1</sup>
-  - ✗ If the config object has changed, the **cached snapshot is stale**.
-    - Throw and restart the render.
-
-¹ React will later re-render with new data, but it’s okay to use a cached value if the memoized config has not changed- because if the inputs haven’t changed, the output will not have changed.
-
-#### React render new subtree
-
-React may render a new subtree that reads from a source that was also used to render an existing part of the tree. The rules for this scenario is the same as the initial mount case described above.
+The one case where this will not be possible is when the `getSnapshot` function has changed. Snapshot selectors that are dependent on `props` (or other component `state`) may change even if the underlying source has not changed. In that case, the cached snapshot is not safe to reuse, and `useMutableSource` will have to throw and restart the render.
 
 # Design constraints
 
