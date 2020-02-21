@@ -30,9 +30,6 @@ const getSnapshot = window => window.location.pathname;
 
 // This method can subscribe to root level change events,
 // or more snapshot-specific events.
-// In this case, since Example is only reading the "friends" value,
-// we only have to subscribe to a change in that value
-// (e.g. a "friends" event)
 //
 // Because this method doesn't require access to props,
 // it can be declared in module scope to be shared between components.
@@ -79,7 +76,7 @@ function Example({ onlyShowFamily }) {
         .filter(
           friend => !onlyShowFamily || friend.relationshipType === "family"
         )
-        .friends.map(friend => friend.id),
+        .map(friend => friend.id),
     [onlyShowFamily]
   );
 
