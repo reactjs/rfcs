@@ -4,23 +4,11 @@
 
 # Summary
 
-This RFC proposes a change to the fiber work implementation to defer creating
-work-in-progress fibers until and unless it is certain we need to. It builds on
-ideas initially outlined in #118 and #119 where context propagation was done
-lazily. This general idea is extended to all kinds of work and is summarized as
-follows.
+This RFC proposes a change to the fiber work implementation to defer creating workInProgress fibers until and unless it is certain we need to. It builds on ideas initially outlined in #118 and #119 where context propagation was done lazily. This general idea is extended to all kinds of work and is summarized as follows.
 
-When we can bail out of updating a given component but need to go deeper into
-The fiber tree to potentially do additional updates we no longer create a workInProgress
-fiber but instead start work on the current fiber in "speculative mode". If a
-deeper updates all bail out then we can completely avoid a large amount of work React
-previously had to do. If a deeper update results in a meaningful change
-(new children, or new effects) we reify the workInProgress fibers that would have
-been created and continue work normally.
+When we can bail out of updating a given component but need to go deeper into the fiber tree to potentially do additional updates we no longer create a workInProgress fiber but instead start work on the current fiber in "speculative mode". If a deeper updates all bail out then we can completely avoid a large amount of work React previously had to do. If a deeper update results in a meaningful change (new children, or new effects) we reify the workInProgress fibers that would have been created and continue work normally.
 
-This update will make bailouts less expensive which means more work can be done
-during the work step of the fiber itself without paying a high cost. Here are
-some things that this might enable
+This update will make bailouts less expensive which means more work can be done during the work step of the fiber itself without paying a high cost. Here are some things that this might enable
 
 * context selectors: only update a component when the used part of a context value changes
 * useReducer bailouts: only do a single reducer call even if the reducer function changes before
@@ -55,8 +43,7 @@ notice the reducer is not memoized and not static. it will have a different iden
 
 if `additional` is zero and we `dispatch(1)` then reducer will return `previousValue + 1` and work will be scheduled.
 
-when the component renders the reducer identity is different (because `additional` could have changed) so we need to
-recompute the new state.
+when the component renders the reducer identity is different (because `additional` could have changed) so we need to recompute the new state.
 
 With speculative work we would not actually eagerly compute the state in an attempt to bail out. work would be scheduled and when this fiber began the render the bailout would occur. but only if props did not change. this way we guarantee we only ever run the reducer once per update and we do it with the latest version of the reducer function.
 
