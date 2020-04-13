@@ -102,7 +102,7 @@ suspense source code, but it would seem to break the api (?).
 
 This proposal works by adding a new prop to React's suspense called 'Wrapper'. This wrapper
 essentially accomplishes what was outlined in Proposal 1 but is rendered as part of the
-Suspense api. It also provides the "isWaiting" state as a prop to the fallback and children
+suspense api. It also provides the "isWaiting" state as a prop to the fallback and children
 components so that those components can access those states if needed for any other transition
 tooling.
 
@@ -111,14 +111,13 @@ import ReactDOM from "react-dom";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ----- SUSPENSE COMPONENTS ----- //
-
 // This isn't how concurrent mode works, just some pseudo code
 const ConcurrentMode = ({ children, isWaiting }) => React.cloneElement(children, { isWaiting });
 
 // Some pseudo code simulating Suspense
 const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : children;
 
+// Proposed Suspense api
 const ProposedSuspense = ({ children, fallback, isWaiting, Wrapper }) => {
   if (Wrapper) {
     return (
@@ -134,22 +133,7 @@ const ProposedSuspense = ({ children, fallback, isWaiting, Wrapper }) => {
     : React.cloneElement(children, { isWaiting });
 };
 
-// ----- ANIMATION FOR COMPONENTS ----- //
-
-const animationConfig = {
-  initial: {
-    opacity: 0
-  },
-  enter: {
-    opacity: 1,
-    transition: { duration: 2.5 }
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 2.5 }
-  }
-};
-
+// Provides Animations
 const AnimationWrapper = ({ isWaiting, children }) => (
   <AnimatePresence exitBeforeEnter>
     <motion.div
@@ -164,8 +148,7 @@ const AnimationWrapper = ({ isWaiting, children }) => (
   </AnimatePresence>
 );
 
-// ----- FINAL EXAMPLES ----- //
-
+// Pseudo code for how suspense currently is implemented
 const SuspenseWithCurrentApi = () => (
   <ConcurrentMode>
     <Suspense fallback={<h2>fallback component</h2>}>
@@ -174,6 +157,7 @@ const SuspenseWithCurrentApi = () => (
   </ConcurrentMode>
 );
 
+// Pseudo code for how suspense would be implemented via proposal
 const SuspenseWithProposal = () => (
   <ConcurrentMode>
     <ProposedSuspense
@@ -191,118 +175,6 @@ The downsides to this proposal is that before, the suspense component was a rath
 straightforward api; by now extending that api to support some sort of wrapper component or hoc,
 this might increase the learning curve (but possibly for only those looking this kind of solution -
 this may not need to be part of the introductory suspense docs)
-
-**Full CodeSandbox code:**
-```jsx
-import ReactDOM from "react-dom";
-import React from "react";
-import { motion, AnimatePresence } from "framer-motion";
-import "./index.css";
-
-// ----- SUSPENSE COMPONENTS ----- //
-
-// This isn't how concurrent mode works, just some pseudo code
-const ConcurrentMode = ({ children, isWaiting }) =>
-  React.cloneElement(children, { isWaiting });
-
-// Some pseudo code simulating Suspense
-const Suspense = ({ children, fallback, isWaiting }) =>
-  isWaiting ? fallback : children;
-
-const ProposedSuspense = ({ children, fallback, isWaiting, Wrapper }) => {
-  if (Wrapper) {
-    return (
-      <Wrapper isWaiting={isWaiting}>
-        {isWaiting
-          ? React.cloneElement(fallback, { isWaiting })
-          : React.cloneElement(children, { isWaiting })}
-      </Wrapper>
-    );
-  }
-  return isWaiting
-    ? React.cloneElement(fallback, { isWaiting })
-    : React.cloneElement(children, { isWaiting });
-};
-
-// ----- FALLBACK & CHILDREN COMPONENTS ----- //
-
-const FallbackComponent = () => <div className="fallback-component" />;
-
-const ChildrenComponent = () => (
-  <div className="child-component">Child Component</div>
-);
-
-// ----- ANIMATION FOR COMPONENTS ----- //
-
-const animationConfig = {
-  initial: {
-    opacity: 0
-  },
-  enter: {
-    opacity: 1,
-    transition: { duration: 2.5 }
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 2.5 }
-  }
-};
-
-const AnimationWrapper = ({ isWaiting, children }) => (
-  <AnimatePresence exitBeforeEnter>
-    <motion.div
-      animate="enter"
-      exit="exit"
-      initial="initial"
-      key={isWaiting}
-      variants={animationConfig}
-    >
-      {React.cloneElement(children, { isWaiting })}
-    </motion.div>
-  </AnimatePresence>
-);
-
-// ----- SUSPENSE EXAMPLES ----- //
-
-const SuspenseWithCurrentApi = ({ isWaiting }) => (
-  <ConcurrentMode isWaiting={isWaiting}>
-    <Suspense fallback={<FallbackComponent />}>
-      <ChildrenComponent />
-    </Suspense>
-  </ConcurrentMode>
-);
-
-const SuspenseWithProposal = ({ isWaiting }) => (
-  <ConcurrentMode isWaiting={isWaiting}>
-    <ProposedSuspense
-      fallback={<FallbackComponent />}
-      Wrapper={AnimationWrapper}
-    >
-      <ChildrenComponent />
-    </ProposedSuspense>
-  </ConcurrentMode>
-);
-
-// ----- FINAL COMPONENT ----- //
-
-const App = () => {
-  const [isWaiting, setIsWaiting] = React.useState(true);
-  return (
-    <div>
-      <h2>Controls:</h2>
-      <button onClick={() => setIsWaiting(!isWaiting)}>
-        {isWaiting ? 'Turn off "Waiting"' : 'Turn on "Waiting"'}
-      </button>
-      <h2>Suspense with current api:</h2>
-      <SuspenseWithCurrentApi isWaiting={isWaiting} />
-      <h2>Suspense with proposed enhancements:</h2>
-      <SuspenseWithProposal isWaiting={isWaiting} />
-    </div>
-  );
-};
-
-ReactDOM.render(<App />, document.getElementById("root"));
-```
 
 # Drawbacks
 
