@@ -24,54 +24,427 @@ communicating to it when the fallback component is getting mounted or not.
 * **Why is this being proposed?:** React suspense's fallback component currently will unmount
 immediately after suspense is done 'waiting'. Having one component unmount and another completely
 different component mount directly in its place without any transition effects creates the
-appearance of an primitive ui.
+appearance of a primitive ui.
 
-* **What use cases does it support? What is the expected outcome?:**
-  - If a developer can create a transition from when the fallback component unmounts and when the
-   suspense's child component mounts ...
+* **What use cases does it support? What is the expected outcome?:** If a developer can create a
+ transition between the fallback component unmounting and suspense's child component mounting,
+this will create a more smoother ui.
 
 # Detailed design
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with React to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
+### Assumptions
+
+In this design proposal, I am assuming that React's `suspense` receives a boolean that tells it when
+to render the fallback component and when to render the children. Without being that familiar
+with the suspense source code, I have created a pseudo example, where `isWaiting` refers to if
+the Suspense component is "waiting".
+
+```jsx
+const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : children;
+```
+
+### Proposal 1
+
+**[Codesandbox](https://codesandbox.io/s/suspense-rfc-v1-zic4k?file=/index.js)**
+
+This proposal works by wrapping the React's suspense with a parent component that provides
+transition effects. In order for this to be accomplished, this parent component needs to be aware
+of the "isWaiting" state:
+
+```jsx
+import ReactDOM from "react-dom";
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// ----- SUSPENSE COMPONENTS ----- //
+
+// This isn't how concurrent mode works, just some pseudo code
+const ConcurrentMode = ({ children, isWaiting }) => React.cloneElement(children, { isWaiting });
+
+// Some pseudo code simulating Suspense
+const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : children;
+
+// ----- ANIMATION FOR COMPONENTS ----- //
+
+const animationConfig = {
+  initial: {
+    opacity: 0
+  },
+  enter: {
+    opacity: 1,
+    transition: { duration: 4.0 }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 4.0 }
+  }
+};
+
+const AnimationWrapper = ({ isWaiting, children }) => (
+  <AnimatePresence exitBeforeEnter>
+    <motion.div
+      animate="enter"
+      exit="exit"
+      initial="initial"
+      key={isWaiting}
+      variants={animationConfig}
+    >
+      {React.cloneElement(children, { isWaiting })}
+    </motion.div>
+  </AnimatePresence>
+);
+
+// ----- FINAL COMPONENT ----- //
+
+const App = () => (
+  <ConcurrentMode>
+    <AnimationWrapper>
+      <Suspense fallback={<FallbackComponent />}>
+        <ChildrenComponent />
+      </Suspense>
+    </AnimationWrapper>
+  </ConcurrentMode>
+);
+
+export default App;
+```
+
+*Drawbacks:*
+The downside of this is that the parent component, in the example above, `AnimationWrapper`,
+needs to be aware of the "isWaiting" state *in addition* to React's suspense component. I'm
+currently not sure sure how easy this would be to accomplish given I am not as familiar with the
+suspense source code, but it would seem to break the api (?).
+
+**Full codesandbox code:**
+```jsx
+import ReactDOM from "react-dom";
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import "./index.css";
+
+// ----- SUSPENSE COMPONENTS ----- //
+
+// This isn't how concurrent mode works, just some pseudo code
+const ConcurrentMode = ({ children, isWaiting }) =>
+  React.cloneElement(children, { isWaiting });
+
+// Some pseudo code simulating Suspense
+const Suspense = ({ children, fallback, isWaiting }) =>
+  isWaiting ? fallback : children;
+
+// ----- FALLBACK & CHILDREN COMPONENTS ----- //
+
+const FallbackComponent = () => <div className="fallback-component" />;
+
+const ChildrenComponent = () => (
+  <div className="child-component">Child Component</div>
+);
+
+// ----- ANIMATION FOR COMPONENTS ----- //
+
+const animationConfig = {
+  initial: {
+    opacity: 0
+  },
+  enter: {
+    opacity: 1,
+    transition: { duration: 4.0 }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 4.0 }
+  }
+};
+
+const AnimationWrapper = ({ isWaiting, children }) => (
+  <AnimatePresence exitBeforeEnter>
+    <motion.div
+      animate="enter"
+      exit="exit"
+      initial="initial"
+      key={isWaiting}
+      variants={animationConfig}
+    >
+      {React.cloneElement(children, { isWaiting })}
+    </motion.div>
+  </AnimatePresence>
+);
+
+// ----- SUSPENSE EXAMPLES ----- //
+
+const SuspenseWithCurrentApi = ({ isWaiting }) => (
+  <ConcurrentMode isWaiting={isWaiting}>
+    <Suspense fallback={<FallbackComponent />}>
+      <ChildrenComponent />
+    </Suspense>
+  </ConcurrentMode>
+);
+
+const SuspenseWithProposal = ({ isWaiting }) => (
+  <ConcurrentMode isWaiting={isWaiting}>
+    <AnimationWrapper>
+      <Suspense fallback={<FallbackComponent />}>
+        <ChildrenComponent />
+      </Suspense>
+    </AnimationWrapper>
+  </ConcurrentMode>
+);
+
+// ----- FINAL COMPONENT ----- //
+
+const App = () => {
+  const [isWaiting, setIsWaiting] = React.useState(true);
+  return (
+    <div>
+      <h2>Controls:</h2>
+      <button onClick={() => setIsWaiting(!isWaiting)}>
+        {isWaiting ? 'Turn off "Waiting"' : 'Turn on "Waiting"'}
+      </button>
+      <h2>Suspense with current api:</h2>
+      <SuspenseWithCurrentApi isWaiting={isWaiting} />
+      <h2>Suspense with proposed enhancements:</h2>
+      <SuspenseWithProposal isWaiting={isWaiting} />
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
+
+### Proposal 2 - recommended
+
+**[Codesandbox](https://codesandbox.io/s/suspense-rfc-v2-jlzur?file=/index.js)**
+
+This proposal works by adding a new prop to React's suspense called 'Wrapper'. This wrapper
+essentially accomplishes what was outlined in Proposal 1 but is rendered as part of the
+Suspense api. It also provides the "isWaiting" state as a prop to the fallback and children
+components so that those components can access those states if needed for any other transition
+tooling.
+
+```jsx
+import ReactDOM from "react-dom";
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+
+// ----- SUSPENSE COMPONENTS ----- //
+
+// This isn't how concurrent mode works, just some pseudo code
+const ConcurrentMode = ({ children, isWaiting }) => React.cloneElement(children, { isWaiting });
+
+// Some pseudo code simulating Suspense
+const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : children;
+
+const ProposedSuspense = ({ children, fallback, isWaiting, Wrapper }) => {
+  if (Wrapper) {
+    return (
+      <Wrapper isWaiting={isWaiting}>
+        {isWaiting
+          ? React.cloneElement(fallback, { isWaiting })
+          : React.cloneElement(children, { isWaiting })}
+      </Wrapper>
+    );
+  }
+  return isWaiting
+    ? React.cloneElement(fallback, { isWaiting })
+    : React.cloneElement(children, { isWaiting });
+};
+
+// ----- ANIMATION FOR COMPONENTS ----- //
+
+const animationConfig = {
+  initial: {
+    opacity: 0
+  },
+  enter: {
+    opacity: 1,
+    transition: { duration: 3.0 }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 3.0 }
+  }
+};
+
+const AnimationWrapper = ({ isWaiting, children }) => (
+  <AnimatePresence exitBeforeEnter>
+    <motion.div
+      animate="enter"
+      exit="exit"
+      initial="initial"
+      key={isWaiting}
+      variants={animationConfig}
+    >
+      {React.cloneElement(children, { isWaiting })}
+    </motion.div>
+  </AnimatePresence>
+);
+
+// ----- FINAL EXAMPLES ----- //
+
+const SuspenseWithCurrentApi = () => (
+  <ConcurrentMode>
+    <Suspense fallback={<h2>fallback component</h2>}>
+      <h2>child component</h2>
+    </Suspense>
+  </ConcurrentMode>
+);
+
+const SuspenseWithProposal = () => (
+  <ConcurrentMode>
+    <ProposedSuspense
+      fallback={<h2>fallback component<h2/>}
+      Wrapper={AnimationWrapper}
+    >
+      <h2>child component</h2>
+    </ProposedSuspense>
+  </ConcurrentMode>
+);
+```
+
+*Drawbacks:*
+The downsides to this proposal is that before, the suspense component was a rather
+straightforward api; by now extending that api to support some sort of wrapper component or hoc,
+this might increase the learning curve (but possibly for only those looking this kind of solution -
+this may not need to be part of the introductory suspense docs)
+
+**Full codesandbox code:**
+```jsx
+import ReactDOM from "react-dom";
+import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import "./index.css";
+
+// ----- SUSPENSE COMPONENTS ----- //
+
+// This isn't how concurrent mode works, just some pseudo code
+const ConcurrentMode = ({ children, isWaiting }) =>
+  React.cloneElement(children, { isWaiting });
+
+// Some pseudo code simulating Suspense
+const Suspense = ({ children, fallback, isWaiting }) =>
+  isWaiting ? fallback : children;
+
+const ProposedSuspense = ({ children, fallback, isWaiting, Wrapper }) => {
+  if (Wrapper) {
+    return (
+      <Wrapper isWaiting={isWaiting}>
+        {isWaiting
+          ? React.cloneElement(fallback, { isWaiting })
+          : React.cloneElement(children, { isWaiting })}
+      </Wrapper>
+    );
+  }
+  return isWaiting
+    ? React.cloneElement(fallback, { isWaiting })
+    : React.cloneElement(children, { isWaiting });
+};
+
+// ----- FALLBACK & CHILDREN COMPONENTS ----- //
+
+const FallbackComponent = () => <div className="fallback-component" />;
+
+const ChildrenComponent = () => (
+  <div className="child-component">Child Component</div>
+);
+
+// ----- ANIMATION FOR COMPONENTS ----- //
+
+const animationConfig = {
+  initial: {
+    opacity: 0
+  },
+  enter: {
+    opacity: 1,
+    transition: { duration: 3.0 }
+  },
+  exit: {
+    opacity: 0,
+    transition: { duration: 3.0 }
+  }
+};
+
+const AnimationWrapper = ({ isWaiting, children }) => (
+  <AnimatePresence exitBeforeEnter>
+    <motion.div
+      animate="enter"
+      exit="exit"
+      initial="initial"
+      key={isWaiting}
+      variants={animationConfig}
+    >
+      {React.cloneElement(children, { isWaiting })}
+    </motion.div>
+  </AnimatePresence>
+);
+
+// ----- SUSPENSE EXAMPLES ----- //
+
+const SuspenseWithCurrentApi = ({ isWaiting }) => (
+  <ConcurrentMode isWaiting={isWaiting}>
+    <Suspense fallback={<FallbackComponent />}>
+      <ChildrenComponent />
+    </Suspense>
+  </ConcurrentMode>
+);
+
+const SuspenseWithProposal = ({ isWaiting }) => (
+  <ConcurrentMode isWaiting={isWaiting}>
+    <ProposedSuspense
+      fallback={<FallbackComponent />}
+      Wrapper={AnimationWrapper}
+    >
+      <ChildrenComponent />
+    </ProposedSuspense>
+  </ConcurrentMode>
+);
+
+// ----- FINAL COMPONENT ----- //
+
+const App = () => {
+  const [isWaiting, setIsWaiting] = React.useState(true);
+  return (
+    <div>
+      <h2>Controls:</h2>
+      <button onClick={() => setIsWaiting(!isWaiting)}>
+        {isWaiting ? 'Turn off "Waiting"' : 'Turn on "Waiting"'}
+      </button>
+      <h2>Suspense with current api:</h2>
+      <SuspenseWithCurrentApi isWaiting={isWaiting} />
+      <h2>Suspense with proposed enhancements:</h2>
+      <SuspenseWithProposal isWaiting={isWaiting} />
+    </div>
+  );
+};
+
+ReactDOM.render(<App />, document.getElementById("root"));
+```
 
 # Drawbacks
 
-Why should we *not* do this? Please consider:
+Drawbacks have been detailed above. In addition to increasing the suspense code size, complexity,
+and documentation required, those not inherently looking for this solution (adding transition
+effects to suspense) might not immediately understand how to implement the api if not documented
+well. Ideally, this request should not cause any breaking changes.
 
-- implementation cost, both in term of code size and complexity
-- whether the proposed feature can be implemented in user space
-- the impact on teaching people React
-- integration of this feature with other existing and planned features
-- cost of migrating existing React applications (is it a breaking change?)
-
-There are tradeoffs to choosing any path. Attempt to identify them here.
+Also, when documenting examples, the docs might have to use another library such as Framer Motion,
+React Spring, React Transition Group, etc to exemplify how these transitions would work. This may be
+less than ideal since these apis (as every api) are always changing, and the docs might have to
+keep track with the api from time to time. If needed, hopefully a library can be picked with an
+easy to understand mental model that can be ok if it gets locked to a certain api version.
 
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
+Two designs have been proposed, but by no means are these the only possible mental models that
+allow for transitions for suspense.
 
 # Adoption strategy
 
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
+If accepted, this should use an adoption strategy similar to react hooks given that it should
+not break any current implementations of suspense and should ideally be part of some sort of
+initial experimental roll out.
 
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing React patterns?
-
-Would the acceptance of this proposal mean the React documentation must be
-re-organized or altered? Does it change how React is taught to new developers
-at any level?
-
-How should this feature be taught to existing React developers?
-
-# Unresolved questions
-
-Optional, but suggested for first drafts. What parts of the design are still
-TBD?
+Some additional documentation to [suspense](https://reactjs.org/docs/concurrent-mode-suspense.html)
+with some sort of header like "Adding transition effects to Suspense". It may be required to use
+a third party library to document this example with some explicit transition effects.
