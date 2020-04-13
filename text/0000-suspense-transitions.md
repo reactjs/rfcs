@@ -170,7 +170,7 @@ const SuspenseWithProposal = () => (
 );
 ```
 
-*Drawbacks:*
+**Drawbacks:**
 The downsides to this proposal is that before, the suspense component was a rather
 straightforward api; by now extending that api to support some sort of wrapper component or hoc,
 this might increase the learning curve (but possibly for only those looking this kind of solution -
