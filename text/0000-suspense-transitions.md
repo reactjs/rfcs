@@ -5,7 +5,7 @@
 # Summary
 
 The React suspense fallback component mounts immediately when "waiting" begins and immediately
-unmounts when "waiting" is complete. This creates a flashing effect of the the fallback suspense
+unmounts when "waiting" is complete. This creates a flashing effect of the fallback suspense
 component.
 
 React animation libraries have solved this issue of components unmounting without any graceful
@@ -16,13 +16,13 @@ that then tells the api to unmount the component with a graceful transition anim
 Transition Group](http://reactcommunity.org/react-transition-group/transition-group).
 
 Unfortunately, none of these graceful transitions / apis can be used by a fallback suspense
-component because, currently, React suspense does not provide a prop to the fallback component
-communicating to it when the fallback component is getting mounted or not.
+component because, currently, React suspense does not communicate when it is "waiting" and when
+it is done "waiting".
 
 # Motivation
 
 * **Why is this being proposed?:** React suspense's fallback component currently will unmount
-immediately after suspense is done 'waiting'. Having one component unmount and another completely
+immediately after suspense is done "waiting". Having one component unmount and another completely
 different component mount directly in its place without any transition effects creates the
 appearance of a primitive ui.
 
@@ -35,7 +35,7 @@ this will create a more smoother ui.
 ### Assumptions
 
 In this design proposal, I am assuming that React's `suspense` receives a boolean that tells it when
-to render the fallback component and when to render the children. Without being that familiar
+to render the fallback component and when to render the children. Without being familiar
 with the suspense source code, I have created a pseudo example, where `isWaiting` refers to if
 the Suspense component is "waiting".
 
@@ -45,9 +45,9 @@ const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : c
 
 ### Proposal 1
 
-**[Codesandbox](https://codesandbox.io/s/suspense-rfc-v1-zic4k?file=/index.js)**
+**[CodeSandbox](https://codesandbox.io/s/suspense-rfc-v1-zic4k?file=/index.js)**
 
-This proposal works by wrapping the React's suspense with a parent component that provides
+This proposal works by wrapping React's suspense with a parent component that provides
 transition effects. In order for this to be accomplished, this parent component needs to be aware
 of the "isWaiting" state:
 
@@ -56,29 +56,11 @@ import ReactDOM from "react-dom";
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
-// ----- SUSPENSE COMPONENTS ----- //
-
 // This isn't how concurrent mode works, just some pseudo code
 const ConcurrentMode = ({ children, isWaiting }) => React.cloneElement(children, { isWaiting });
 
 // Some pseudo code simulating Suspense
 const Suspense = ({ children, fallback, isWaiting }) => isWaiting ? fallback : children;
-
-// ----- ANIMATION FOR COMPONENTS ----- //
-
-const animationConfig = {
-  initial: {
-    opacity: 0
-  },
-  enter: {
-    opacity: 1,
-    transition: { duration: 4.0 }
-  },
-  exit: {
-    opacity: 0,
-    transition: { duration: 4.0 }
-  }
-};
 
 const AnimationWrapper = ({ isWaiting, children }) => (
   <AnimatePresence exitBeforeEnter>
@@ -87,14 +69,12 @@ const AnimationWrapper = ({ isWaiting, children }) => (
       exit="exit"
       initial="initial"
       key={isWaiting}
-      variants={animationConfig}
+      variants={...}
     >
       {React.cloneElement(children, { isWaiting })}
     </motion.div>
   </AnimatePresence>
 );
-
-// ----- FINAL COMPONENT ----- //
 
 const App = () => (
   <ConcurrentMode>
@@ -115,7 +95,7 @@ needs to be aware of the "isWaiting" state *in addition* to React's suspense com
 currently not sure sure how easy this would be to accomplish given I am not as familiar with the
 suspense source code, but it would seem to break the api (?).
 
-**Full codesandbox code:**
+**Full CodeSandbox code:**
 ```jsx
 import ReactDOM from "react-dom";
 import React from "react";
@@ -148,11 +128,11 @@ const animationConfig = {
   },
   enter: {
     opacity: 1,
-    transition: { duration: 4.0 }
+    transition: { duration: 2.5 }
   },
   exit: {
     opacity: 0,
-    transition: { duration: 4.0 }
+    transition: { duration: 2.5 }
   }
 };
 
@@ -213,7 +193,7 @@ ReactDOM.render(<App />, document.getElementById("root"));
 
 ### Proposal 2 - recommended
 
-**[Codesandbox](https://codesandbox.io/s/suspense-rfc-v2-jlzur?file=/index.js)**
+**[CodeSandbox](https://codesandbox.io/s/suspense-rfc-v2-jlzur?file=/index.js)**
 
 This proposal works by adding a new prop to React's suspense called 'Wrapper'. This wrapper
 essentially accomplishes what was outlined in Proposal 1 but is rendered as part of the
@@ -257,11 +237,11 @@ const animationConfig = {
   },
   enter: {
     opacity: 1,
-    transition: { duration: 3.0 }
+    transition: { duration: 2.5 }
   },
   exit: {
     opacity: 0,
-    transition: { duration: 3.0 }
+    transition: { duration: 2.5 }
   }
 };
 
@@ -307,7 +287,7 @@ straightforward api; by now extending that api to support some sort of wrapper c
 this might increase the learning curve (but possibly for only those looking this kind of solution -
 this may not need to be part of the introductory suspense docs)
 
-**Full codesandbox code:**
+**Full CodeSandbox code:**
 ```jsx
 import ReactDOM from "react-dom";
 import React from "react";
@@ -355,11 +335,11 @@ const animationConfig = {
   },
   enter: {
     opacity: 1,
-    transition: { duration: 3.0 }
+    transition: { duration: 2.5 }
   },
   exit: {
     opacity: 0,
-    transition: { duration: 3.0 }
+    transition: { duration: 2.5 }
   }
 };
 
