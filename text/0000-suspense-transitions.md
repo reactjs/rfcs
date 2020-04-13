@@ -192,7 +192,9 @@ easy to understand mental model that can be ok if it gets locked to a certain ap
 # Alternatives
 
 Two designs have been proposed, but by no means are these the only possible mental models that
-allow for transitions for suspense.
+allow for transitions to be provided from suspense. I think what is most critical is that the
+fallback and children components are drilled the necessary props to also know when suspense
+is "waiting" and when it is not "waiting".
 
 # Adoption strategy
 
