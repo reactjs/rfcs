@@ -196,6 +196,7 @@ It is a primitive interface for passing CSS to React to integrate with component
 
 # Unresolved questions
 
+- Unique identification of the primitive e.g. `{'@@css': string}` or `{[React.cssSymbol]: string}`
 - Specific algorithm for unique class names generation
 - Composition
 - Overrides
