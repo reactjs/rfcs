@@ -21,6 +21,7 @@ While there are many options for authoring CSS, it is super tiresome to convince
 - Lists - inline styles have no way to be reused across list elements, where typically styles are repeated.
 - Support the full CSS spec. Inline styles are limited to [CSSStyleDeclaration](https://developer.mozilla.org/en-US/docs/Web/API/CSSStyleDeclaration) and we need to support the full spec on the web.
 - Adhere to React's component model and the upcoming Suspense architecture.
+- Publishing of components including CSS to a registy like NPM
 
 ### Non-goals
 
