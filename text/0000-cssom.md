@@ -41,9 +41,20 @@ While there are many options for authoring CSS, it is super tiresome to convince
 import { css } from "react-cssom";
 const buttonStyle = css`
   color: red;
-`; // {css: '.css-0 { color: red; }'}
+`; // { css: ".css-0 { color: red; }", className: "css-0" };
 
 render(<button style={buttonStyle}>x</button>);
+```
+
+Renders to:
+
+```html
+<style>
+  .css-0 {
+    color: red;
+  }
+</style>
+<button class="css-0">x</button>
 ```
 
 ### Using style prop for both inline and CSSOM styles
@@ -106,6 +117,7 @@ export default {
   button: {
     css: ".button-some-suffix {\n  color: red;\n}",
     id: "/src/button.css:-css",
+    className: "button-some-suffix",
   },
 };
 ```
@@ -116,6 +128,15 @@ and
 // button.js
 import styles from "./button.css";
 render(<button style={styles.button}>Hi</button>);
+```
+
+and render to:
+
+```html
+<style>
+  .button-some-suffix {\n  color: red;\n}
+</style>
+<button class="css-0">x</button>
 ```
 
 Optionally many other compiler-based things can be enabled:
@@ -143,7 +164,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
-}); // {container: {css: ".r-d23pfw {flex: 1; justify-content: center; align-items: center;"}}
+}); // {container: {css: ".r-d23pfw {flex: 1; justify-content: center; align-items: center;", className: "r-d23pfw"}}
 render(
   <View style={styles.container}>
     <Text>Hi</Text>
