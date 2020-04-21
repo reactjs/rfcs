@@ -14,6 +14,7 @@ While there are many options for authoring CSS, it is super tiresome to convince
 
 ### Goals
 
+- CSS scoping (unique selector)
 - High-performance rendering of static styles via CSSOM.
 - CSS Rules can be reused across components.
 - Components have no additional overhead for styling.
@@ -57,12 +58,71 @@ That being said using a new prop like `css` is also an option:
 render(<button css={buttonStyle}>x</button>);
 ```
 
-### Babel plugin
+### A new primitive
 
-Babel plugin can be optional and can enable advanced features like:
+Once style or css prop accepts an object that contains CSS, we are essentially creating a new primitive. This primitive can be passed arround, reused, overriden and React will know what to do with it. This opens a number of new doors in the future.
+
+### Compile target
+
+This new primitive can be targeted by compilers (babel plugins and co.). In the simplest scenario it will work without any compilation steps. With compilation it would be possible to compile for example CSS modules into something that React can take and render.
+
+Example of CSS modules being rendered by the new primitive:
+
+```js
+import styles from "./button.css";
+render(<button className={styles.button}>Hi</button>);
+```
+
+What happens right now with CSS loader:
+
+```js
+// button.js
+import styles from "./button.css";
+render(<button className={styles.button}>Hi</button>);
+```
+
+Compiles `button.css` to:
+
+```js
+// button.css
+const createStyleNode = (id, content) => {
+  const style = document.createElement("style");
+  style.id = id;
+  style.textContent = content;
+  document.head.appendChild(style);
+};
+
+createStyleNode(
+  "/src/button.css:-css",
+  ".button-some-suffix {\n  color: red;\n}"
+);
+```
+
+Instead, it could compile to something like this:
+
+```js
+// button.css
+export default {
+  button: {
+    css: ".button-some-suffix {\n  color: red;\n}",
+    id: "/src/button.css:-css",
+  },
+};
+```
+
+and
+
+```js
+// button.js
+import styles from "./button.css";
+render(<button style={styles.button}>Hi</button>);
+```
+
+Optionally many other compiler-based things can be enabled:
 
 - vendor prefixing
-- optimizations
+- optimizations for compression
+- linting
 - other preprocessing options e.g. using PostCSS
 
 After babel plugin the call into `css` tag function can be removed and the result of the above example can be compiled to:
@@ -70,6 +130,25 @@ After babel plugin the call into `css` tag function can be removed and the resul
 ```js
 const buttonStyle = { css: ".css-0 { color: red; }" };
 render(<button style={buttonStyle}>x</button>);
+```
+
+### Object based styles syntax
+
+It is still possible to use object based syntax like in [JSS](https://github.com/cssinjs/jss/blob/master/docs/jss-syntax.md) or [React Native](https://reactnative.dev/docs/stylesheet). It is possible because in the end it's still going to be a CSS string which can be passed to React:
+
+```js
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+}); // {container: {css: ".r-d23pfw {flex: 1; justify-content: center; align-items: center;"}}
+render(
+  <View style={styles.container}>
+    <Text>Hi</Text>
+  </View>
+);
 ```
 
 # Drawbacks
@@ -96,7 +175,7 @@ It is a primitive interface for passing CSS to React to integrate with component
 
 # Unresolved questions
 
-- Unique class names generation algorithm
+- Specific algorithm for unique class names generation
 - Composition
 - Overrides
 - Dynamic or state-based styling
