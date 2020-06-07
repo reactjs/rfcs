@@ -112,7 +112,7 @@ The main idea - a programming entity (game unit, button) is composed of 2 classe
 In document by link below  I described only the second approach, because I did not work with ECS.
 In addition the second approach can be implemented in user space.
 
-[Part 2 (implementation description)](https://github.com/sergeysibara/entity-component-behaviour-approach-in-react/blob/master/IMPLEMENTATION-DESCRIPTION.md)
+[Part 2 (implementation description)](0000-entity-component-behaviour-approach-implementation-description.md)
 
 # Drawbacks
 
