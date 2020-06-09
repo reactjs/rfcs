@@ -267,7 +267,6 @@ createContainerComponent("ConcreteComponent", {
      initData: { // any custom data that will passed to init method of a behaviour.
        name: “MyBehaviourName”, // name for this behaviour. (optional)
        defaultState: {}, // data that will passed in defaultState of Behaviour. (optional)
-       wrapRenderData: wrapperFunction; // (optional)
        //any custom data
      }
    },
