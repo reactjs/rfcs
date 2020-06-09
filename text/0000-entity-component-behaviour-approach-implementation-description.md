@@ -3,7 +3,8 @@ I do not propose a concrete implementation. You can to implement it using object
 Here is a description of my implementation with using class-based React API.
  
 Link to my implementation with examples using the Entity Component-Behaviour approach:   
-https://codesandbox.io/s/entity-component-behaviour-approach-in-react-zo2yy
+https://codesandbox.io/s/entity-component-behaviour-approach-in-react-zo2yy   
+[Github: source code](https://github.com/sergeysibara/entity-component-behaviour-approach-in-react/tree/master/example)
  
 **All code of implementation is inside the `core` folder.**   
 **Other folders contain only examples.**

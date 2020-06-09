@@ -5,12 +5,13 @@
 # Summary
 
 The terminology used in the document:
-- Logical block - a separated object or function  (for example: mixin, HOC, React hook) for component code reuse.
-- Behaviour - my variant of logical block.
-- Programming entity - for example: class instance, React component, logical block.
-- ECS - Entity Component System pattern in game programming.
-- Entity Component-Behaviour (non official name, this name used only in the document) - variation of ECS where a custom logic is written in a logical block (Component-Behaviour) of Entity, but not in the System. 
-- Entity (in ECS and Entity Component-Behaviour approaches) - container for logical blocks.      
+- `Logical block` - a separated object or function  (for example: mixin, HOC, React hook) for component code reuse.
+- `Behaviour` - my variant of logical block.
+- `Programming entity` - for example: class instance, React component, logical block.
+- `ECS` - Entity Component System pattern in game programming.
+- `Entity Component-Behaviour` (non official name, this name used only in the document) - variation of ECS where a custom logic is written in a logical block (Component-Behaviour) of Entity, but not in the System.   
+In web terminology naming `Component Behaviour`  will be more correct. In the future I plan to rename `Entity Component-Behaviour` to `Component Behaviour`. 
+- `Entity` (in ECS and Entity Component-Behaviour approaches) - container for logical blocks.      
 
 **Here are some related suggestions:**   
 **1. Make component a configurable container without hardcoded render function and hardcoded custom logic.**   
@@ -124,7 +125,7 @@ It's can be implemented in user space (with worse performance).
 - **the impact on teaching people React**   
 At the moment it is difficult for me to answer to it.
 - **integration of this feature with other existing and planned features**   
-Depends on the chosen implementation. At the initial stage, it is better to implement with using the existing API or with small changes in existing API. Preferably in a separated library (if to implement with using the existing API like my solution).   
+Depends on the chosen implementation. At initial stage, it is better to implement with using the existing API or with small changes in existing API. Preferably in a separated library (if to implement with using the existing API like my implementation).   
 - **cost of migrating existing React applications (is it a breaking change?)**   
 Like react hooks. It is a not breaking change.
 
@@ -148,6 +149,7 @@ For  “Add ability adding and removing logical blocks in components (at least b
 # Adoption strategy
 Depends on the chosen implementation.
 If you choose the full implementation I think adoption strategy would be like introduction to hooks.
+At initial stage, it is better to implement with using the existing API in a separated library (like my implementation).
 
 # How we teach this
 - **Would the acceptance of this proposal mean the React documentation must be re-organized or altered?**  
