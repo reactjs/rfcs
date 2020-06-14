@@ -3,7 +3,6 @@
 - React Issue: (leave this empty)
 
 # Summary
-
 The terminology used in the document:
 - `Logical block` - a separated object or function  (for example: mixin, HOC, React hook) for component code reuse.
 - `Behaviour` - my variant of logical block.
@@ -20,7 +19,6 @@ In web terminology naming `Component Behaviour`  will be more correct. In the fu
 I think that is it mistake for complex components  and 3rd-party components to write logic and jsx code in a component body. More flexible way - a component is only a container for objects with logic. In the **Detailed design** section I provided my examples for react and links from game programming area, where like approaches is actively used about 20 years. I did examples using class-based components. Partially it can be applied to functional components.
 
 # Basic example
-
 Below are several possible implementations:   
 1.1. 
 ```jsx
@@ -50,11 +48,13 @@ can be implemented variant with creating class-based component:
 const CounterComponent = createContainer(‘CounterComponent’, configObject);  
 ```
 
-2 Variant with hooks (theoretical). Only for my second suggestion and partially for first suggestion.
-A few limitations and possibilities will be added to react components and hooks:
-   - component can use only custom hooks and jsx code; 
-   - only custom hooks can use any hooks;
-   - custom hooks can add or remove another custom hooks; 
+2 Variant with hooks (theoretical).   
+To add ```addHook```, ```removeHook``` functions.   
+To add a few limitations and possibilities to react components and hooks:
+   - component can use only custom hooks and jsx code.    
+   Or to add ```useBehaviours``` hook:   
+    ```useBehaviours([Behaviour1, Behaviour2], props)```  
+   - only custom hooks can use any hooks; 
 
 # Motivation
 The main motivations:
@@ -116,7 +116,6 @@ In addition the second approach can be implemented in user space.
 [Part 2 (implementation description)](0000-entity-component-behaviour-approach-implementation-description.md)
 
 # Drawbacks
-
 - **implementation cost, both in term of code size and complexity**   
 My implementation has code size about 300 rows for unoptimized implementation in user space for class-based components.   
 I can not estimate the complexity of implementation in the react core. I think this is equivalent to implementation of react.Component class with lifecycle and state.
@@ -137,14 +136,6 @@ Like react hooks. It is a not breaking change.
 - (in my implementation) Another structure of component.
 
 # Alternatives
-For  “Add ability adding and removing logical blocks in components (at least before component creating)”:
-1. To add ```addHook```, ```removeHook``` functions.
-2. To add a few limitations and possibilities to react components and hooks:
-   - component can use only custom hooks.  
-   Or to add ```useBehaviours``` hook:   
-    ```useBehaviours([Behaviour1, Behaviour2], props)```  
-   - only custom hooks can use any hooks; 
-   - custom hooks can add or remove another custom hooks. 
 
 # Adoption strategy
 Depends on the chosen implementation.
@@ -161,4 +152,3 @@ Like custom react hooks
 
 # Unresolved questions
 I have provided only general conception with class-based examples. 
-
