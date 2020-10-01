@@ -192,7 +192,7 @@ We should mimic the exact same performance optimizations of Mobx- For every comp
 # Drawbacks
 
 * The API is a bit magical, but it's the same magic of Hooks (keeping track of the currently rendered component);
-* The community is just starting to get used to the hooks API, and then this API is will make some of the features of hooks to become useless.
+* The community is just starting to get used to the hooks API, and this API will again change some of the most basic concepts of React - the state. I don't think that this drawback should stop us from moving forward though, unifying the way we are using state should be one of React's top priorities.
 This is not the ideal way of moving forward, but I really think that this step is needed in order to clean some of the problems of hooks, and the lack of global state solutions.
 
 # Adoption strategy
