@@ -30,12 +30,10 @@ As you can see, `React.GlobalState` returns the actions object, this way, the on
 
 # Motivation
 
-Currently, there are 2 ways to define local state (this.state for classes and useState for function components), there are two different API's for creating 
-and consuming contextual state (React.Context), depending on if you are using hooks or class components, and there is no way for creating a global state.
+Currently, there are 2 ways to define local state (this.state for classes and useState for function components), there are two different API's for creating and consuming contextual state (React.Context), depending on if you are using hooks or class components, and **there is no way for creating a global state**.
 
-If you are using React Native with a native navigation solution, the only way to share state between screens is by using a 3rd party library solution for creating a global state (aka store), because different screens don't 
-share the same React root. Instead of suggesting a new API for creating a global state with React, I think we can unify the way we are creating a state, 
-thus addressing the problem of creating global state and solving some of the problems that hooks introduced to the framework, all of this by keeping the API 
+If you are using React Native with a native navigation solution, **the only way to share state between screens is by using a 3rd party library** solution for creating a global state (aka store), because different screens don't 
+share the same React root. Instead of suggesting a new API for creating a global state with React, I think we can unify the way we are creating a state, thus addressing the problem of creating global state and solving some of the problems that hooks introduced to the framework, all of this by keeping the API 
 small and concise.
 
 # Detailed design
@@ -102,7 +100,7 @@ Foo will immediately re-render and will present danny also.
 
 inside some contextual store:
 ```javascript
-//indise someContext.js
+//inside someContext.js
 import React from 'react';
 export const someContext = React.Context({name: 'bob'}, (state) => ({
     getName: () => state.name,
@@ -116,7 +114,7 @@ function ProfileCard() {
      return (
         <View>
            <p>{someContext.getName()}</p>
-           <div onClick={() => store.setName('alice')}></div>
+           <div onClick={() => someContext.setName('alice')}></div>
         </View> 
       );
 }
@@ -199,7 +197,7 @@ This is not the ideal way of moving forward, but I really think that this step i
 
 # Adoption strategy
 
-This proposal should be fully backward compatible, and user could gradually opt in by converting existing states to the unified syntax.
+This proposal should be fully backward compatible and it will be completely up to the users if they want to start using the unified syntax.
 
 
 # Unresolved questions
