@@ -24,6 +24,11 @@ const someState = React.GlobalState({count: 0}, (state) => ({
 console.log(someState.getCount()); // prints 0;
 someState.increaseCount();
 console.log(someState.getCount()); // prints 1;
+
+//every component that will make use of this state, will be re-rendered on every change in the state:
+function Bar() {
+     return <p>{someState.getCount()}</p>; //will always display the correct value
+}
 ```
 
 As you can see, when you create a state, you get back the actions object (bound to that state), this way the only way to interact with the state is by using the actions.
@@ -32,7 +37,7 @@ As you can see, when you create a state, you get back the actions object (bound 
 
 Hooks came to solve the problem of sharing stateful logic (local state) and they have greatly improved the usability of contextual state (useContext), **but we still face the problem of sharing global state**, and things are starting to get messy- there are now two different ways to define local state (this.state for and useState), two different API's for creating and consuming contextual state (React.Context) depending on if you are using hooks or class components, and if you need a global state you must use a 3rd party library and learn another API.
 
-If you are using React Native with a native navigation solution, **the only way to share state between screens is by using a 3rd party library** solution for creating a global state (aka store), because different screens don't share the same React root. Instead of suggesting a new API for creating a global state with React, I think we can unify the way we are creating a state, thus addressing the problem of creating global state **and** solving some of the problems that hooks introduced to the framework, all of this by keeping the API small and concise.
+If you are using React Native with a native navigation solution, **the only way to share state between screens is by using a 3rd party library** for creating a global state (aka store), because different screens don't share the same React root. Instead of suggesting a new API for creating a global state with React, I think we can unify the way we are creating states, thus addressing the problem of creating global state **and** solving some of the problems that hooks introduced to the framework, all of this by keeping the API small and concise.
 
 # Detailed design
 
