@@ -38,7 +38,7 @@ useEffect(() => {
 
 # Motivation
 
-Thanks to `react-hooks/exhaustive-deps` lint rule the dependencies of hooks are commonly managed automatcally and we are warned when we are missing a dependency that would cause an effect to not run when conditions change.
+Thanks to the `react-hooks/exhaustive-deps` lint rule the dependencies of hooks are commonly managed automatcally and we are warned when we are missing a dependency that would cause an effect to not run when conditions change.
 
 However occasionally there are circumstances where the referential equality checks used in deps do not match the conditions we actually want effects to be re-run on change of.
 
@@ -97,13 +97,19 @@ function useDependencyDeclaration(value, deps) {
 # Alternatives
 
 1.
-  The current status quo is still functional. Developers are able to disable lint rules when they need to declare explitict dependencies. And they can still manually define refs.
+   The current status quo is still functional. Developers are able to disable lint rules when they need to declare explitict dependencies. And they can still manually define refs.
 
-  However I think it is preferential to be able to declare deps without disabling linting rules. And it should be easier to manage these types of refs when needed.
+   However I think it is preferential to be able to declare deps without disabling linting rules. And it should be easier to manage these types of refs when needed.
 2.
-  Some of this could be done as part of react by making the `deps` array "smarter" allowing it to be passed special values that explicitly declare change conditions. But this implementation would probably be more complex than it should be.
+   Some of this could be done as part of react by making the `deps` array "smarter" allowing it to be passed special values that explicitly declare change conditions. But this implementation would probably be more complex than it should be.
 3.
-  Explicit dependencies could also be implemented by standardizing a series of special comments that declare explicit alterations to the dependency list. Which the lint rule could use to still run while avoiding altering deps arrays in ways that would change the intended result.
+   Explicit dependencies could also be implemented by standardizing a series of special comments that declare explicit alterations to the dependency list. Which the lint rule could use to still run while avoiding altering deps arrays in ways that would change the intended result.
+4.
+   The issue of needing to use something other than referential equality for a value could also be solved by proving a hook that would memoize a single value based on an equality function instead of a deps array. e.g.
+
+   ```js
+   options = useEquality(options, deepEquals);
+   ```
 
 # Adoption strategy
 
