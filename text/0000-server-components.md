@@ -1,7 +1,7 @@
-# RFC: Server Components
+# RFC: React Server Components
 
 * Start Date: 2020-12-21
-* RFC PR: https://github.com/reactjs/rfcs/pull/<number>
+* RFC PR: https://github.com/reactjs/rfcs/pull/188
 * React Issue: (leave this empty)
 
 > ⚠️ **NOTE: We strongly recommend [watching our talk introducing Server Components](https://reactjs.org/server-components) before reading this RFC.**
@@ -390,10 +390,11 @@ A canonical example of a shared component is something like a Markdown renderer.
 
 ### Naming Convention for Server/Client Components
 
-> NOTE: **This approach is not final**. We intend to open a separate RFC to solicit feedback from the community about these conventions. We recognize that this choice could have ramifications on the JS ecosystem and we would like to avoid any unintended negative consequences.
-
+> NOTE: **This approach is not final**. Please [see our related RFC to provide feedback about these conventions](https://github.com/reactjs/rfcs/pull/189). We recognize that this choice could have ramifications on the JS ecosystem and we would like to avoid any unintended negative consequences.
 
 Bundlers, linters, and other tools need a way to distinguish between server and Client Components. We are currently using the naming convention of `.server.js` for Server Components and `.client.js` for Client Components, with all other `.js` files considered shared code. In addition, we are exploring some additional conventions for package.json exports to allow different versions of a single package to be used depending on whether the consumer is a server or Client Component. 
+
+See [the related RFC](https://github.com/reactjs/rfcs/pull/189) to provide feedback.
 
 ### Open Areas of Research
 
