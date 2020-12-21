@@ -199,7 +199,7 @@ function Photo(props) {
   if (FeatureFlags.useNewPhotoRenderer) {
     return <NewPhotoRenderer {...props} />; 
   } else {
-    return <PhotoRenderer {...props} />;
+    return <OldPhotoRenderer {...props} />;
   }
 }
 ```
@@ -222,7 +222,7 @@ function Photo(props) {
   if (FeatureFlags.useNewPhotoRenderer) {
     return <NewPhotoRenderer {...props} />;
   } else {
-    return <PhotoRenderer {...props} />;
+    return <OldPhotoRenderer {...props} />;
   }
 }
 ```
@@ -288,8 +288,8 @@ function Note({id}) {
 // NoteWithMarkdown.server.js
 // ...imports...
 
-function NoteWithMarkdown({text}) {
-  const html = sanitizeHtml(marked(text));
+function NoteWithMarkdown({note}) {
+  const html = sanitizeHtml(marked(note.text));
   return <div ... />;
 }
 
@@ -364,7 +364,7 @@ The main new concept introduced in this proposal is **Server Components**. In co
 * **Client Components:** These are standard React components, so all the rules you’re used to apply. The main new rules to consider are what they can’t do with respect to Server Components. Client Components:
     * ❌ *May not* import Server Components or call server hooks/utilities, because those only work on the server.
         * However, a Server Component *may* pass another Server Component as a child to a Client Component: `<ClientTabBar><ServerTabContent /></ClientTabBar>`. From the Client Component’s perspective, its child will be an already rendered tree, such as the `ServerTabContent` output. This means that Server and Client components can be nested and interleaved in the tree at any level.
-    * ❌ *May not* user server-only data sources.
+    * ❌ *May not* use server-only data sources.
     * ✅ *May* use state.
     * ✅ *May* use effects.
     * ✅ *May* use browser-only APIs.
@@ -448,7 +448,7 @@ Sebastian Markbage came up with the initial design for Server Components and dev
 
 ### **Does this replace SSR?** 
 
-No, they’re complementary. SSR is primarily a technique to quickly display a non-interactive version of *client* components. You still need to pay the cost of downloading, parsing, and executing those Client Components after the initial HMTL is loaded. 
+No, they’re complementary. SSR is primarily a technique to quickly display a non-interactive version of *client* components. You still need to pay the cost of downloading, parsing, and executing those Client Components after the initial HTML is loaded. 
 
 You can combine Server Components and SSR, where Server Components render first, with Client Components rendering into HTML for fast non-interactive display while they are hydrated. When combined in this way you still get fast startup, but you also dramatically reduce the amount of JS that needs to be downloaded on the client.
 
@@ -544,9 +544,11 @@ Concurrent Mode is a set of optimizations across React and also integrates with 
 
 We don’t know yet. It’s an active area of research. There is a missing feature similar to Context for Server Context that we need to build into React first. 
 
-### Why don’t use just use async/await?
+### Why not use async/await?
 
-We’d still need a layer on top, for example, to deduplicate fetches between components within a single request. This is why there are wrappers around async APIs. You will be able to write your own. We also want to avoid delays in the case that data is synchronously available -- note that async/await uses Promises and incurs an extra tick in these cases.
+The React IO libraries used in the demo and RFC follow the conventions we've discussed previously for writing Suspense-compatible data-fetching APIs. Suspense-compatible APIs return data synchronously when it is already available, throw if there is an error, or "suspend" to indicate to React that they are unable to return a value. The mechanism for Suspending is to throw a Promise value. React uses resolution of the promise to know when the API may be ready to provide a value (or that it has failed) and to schedule an attempt to render the component again.
+
+One new consideration in the design of Suspense from this proposal is that we would like to use a consistent API for accessing data across Server Components, Client Components, and Shared Components. Overall, though, the design of Suspense is outside the scope of this RFC. We agree that we should document this design clearly and will prioritize doing so in the new year.
 
 ### Are Server Components refetched whenever their props change?
 
@@ -582,9 +584,14 @@ Our server isn’t stateful. The tradeoff is we refetch more coarsely.
 
 See [Drawbacks](#drawbacks)
 
+
 ### Why not Rx?
 
 Among other things, Rx is a great solution for managing streams of data. We expect that framework authors may find that Rx is a good fit for implementing a transport layer to receive the stream of rendered UI chunks that React creates on the server and stream them to the client.
+
+### What about XSS?
+
+The streaming protocol used to encode Server Component output encodes user-provided input to prevent XSS attacks.
 
 ### Happy Holidays!
 
