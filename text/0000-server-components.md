@@ -14,7 +14,7 @@
     * [Zero-Bundle-Size Components](#zero-bundle-size-components)
     * [Full Access to the Backend](#full-access-to-the-backend)
     * [Automatic Code Splitting](#automatic-code-splitting)
-    * [No Waterfalls](#no-waterfalls)
+    * [No Client-Server Waterfalls](#no-client-server-waterfalls)
     * [Avoiding the Abstraction Tax](#avoiding-the-abstraction-tax)
     * [Distinct Challenges, Unified Solution](#distinct-challenges-unified-solution)
 * [Detailed Design](#detailed-design)
@@ -227,7 +227,7 @@ function Photo(props) {
 }
 ```
 
-### No Waterfalls
+### No Client-Server Waterfalls
 
 A common cause of poor performance occurs when applications make sequential requests to fetch data. For example, one pattern for data fetching is to initially render a placeholder and then fetch data in a `useEffect()` hook:
 
@@ -267,6 +267,8 @@ function Note(props) {
   return (/* render note here... */);
 }
 ```
+
+Waterfalls are still not ideal on the server, so we will provide an API to preload data requests as an optimization. However, since client-server waterfalls are particularly bad for performance, we find not having to worry about them an important benefit.
 
 ### Avoiding the Abstraction Tax
 
