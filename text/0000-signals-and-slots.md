@@ -4,17 +4,18 @@
 
 # Summary
 
-This proposal introduces the concept of signals and slots used in Qt to
-React.
+This proposal introduces the concept of signals and slots to React.
 
-Signals and slots would be extremely useful for React.
-It will solve the ongoing problem of child-to-child communication and will
-also lead to less tightly-coupled components.
+Signals and slots are used in the Qt C++ framework to implement the observer
+pattern without needing any boilerplate code. It enables components to be
+completely decoupled from the internal state or interface of other components.
+Adding this to React will also decouple components from their parent component
+while also isolating the internal state of each component.
 
 # Basic example
 
 ```js
-import { useRef, useSignal, connect } from 'react';
+import React, { useSignal, useSlot } from 'react';
 import PropTypes from 'prop-types';
 
 function Button ({ name }) {
@@ -23,7 +24,7 @@ function Button ({ name }) {
     const onClick = () => emit(`Hello, ${name}!`);
 
     return (
-        <button onClick={onclick}>{name}</button>
+        <button onClick={onClick}>{name}</button>
     );
 }
 
@@ -42,14 +43,12 @@ Banner.propTypes = {
 };
 
 function App () {
-    const buttonRef = useRef(null);
-    const bannerRef = useRef(null);
-    connect(buttonRef, 'clicked', bannerRef, 'message');
+    const message = useSlot('clicked');
     
     return (
         <>
-            <Banner ref={bannerRef} />
-            <Button ref={buttonRef} name="World" />
+            <Banner message={message} />
+            <Button name="World" />
         </>
     );
 }
@@ -57,75 +56,76 @@ function App () {
 
 # Motivation
 
-Child-to-child communication is notoriously difficult in React, but it's also
-inherent to React. It should be solvable using React, not something that forces
-developers to rely on external libraries. Signals and slots could solve the
-problem of child-to-child communication in a natural, React-like way.
+Modifying the state of another component in React inherently leads to tightly
+coupled components. The most widespread practice today is to use `useState()` or
+`useReduce()` and then pass both the values and the callbacks to modify those
+values to a child component.
 
-Because the signals and slots API is implemented using React Hooks, it shares
-the same benefits of being **completely optional** and
-**100% backwards-compatible**.
+That exposes the internal state of each component, and it leads to all
+components being dependent on each other's interface. Change even one parameter
+name, and the whole thing can fall apart.
+
+Signals and slots can solve the problem of tightly coupled components in a
+natural, React-like way.
+
+Because the signals and slots API is implemented using React Hooks, it is
+completely optional and backward-compatible.
 
 # Detailed design
 
 The signals and slots concept in Qt has been one of the most successful in the
 history of software engineering. It's typesafe, decoupled, extensible, and
-*fun*! It enables components to communicate with their parents and siblings,
-without being tightly coupled to either.
+*fun*! It enables components to communicate with their parents and siblings
+without being tightly coupled to each other.
 
 In Qt, slots are methods defined in a C++ class, and signals are functions
-defined in a class but are implemented by a preproccessor, not the developer.
-At first glance, it might seem like adapting that to React would require a lot
-of extra code since React components are just functions.
-But React components already have a mechanism for slots: JSX props.
-Instead of slots being functions as they are in Qt, slots are parameters.
+defined in a class but are implemented by a preprocessor, not the developer.
+The React implementation differs from the Qt framework in that it connects
+children to parents instead of child-to-child.
 
-The `connect` syntax is really where things get difficult.
-The syntax Qt uses is something like
-`connect(MyTimer, QTimer::fired, MyWindow, WindowClass::update)`. Obviously
-that can't be directly ported to React.
+This design decision was made because, unlike C++, React does not provide
+an easy way of keeping track of an individual instance of a child component.
+Fortunately, React does provide an easy way of providing the exact same thing:
+JSX props.
 
-The primary reason for requiring any signals or slots to be defined at
-compile-time is because they have to be implemented using Qt's
-meta-object preprocessor and compiler.
-In React, specifying signals and slots as string names means that all
-components continue to work as-is without breaking anything.
-It also has the benefit of backwards compatibility: New components that emit
-signals can be connected to components that haven't been updated in years.
+A parent can connect to a signal and then pass the value as a prop to any
+child component. That enables defacto child-to-child communication without
+any extra boilerplate code needed.
 
 In this proposal:  
 *Signals* are events that are defined by React components using the `useSignal`
 hook.  
-*Slots* are React props that have been *connected* to a signal using the
-`connect` hook.
+Slots are values assigned by listening for a signal using the `useSlot` hook.
 
-Above all, I wish to stress: **Signals and Slots is not for state-management.
+Above all, I wish to stress: **Signals and Slots is not for state management.
 It is for inter-component communication.**
 
 # Drawbacks
 
-Most of the drawbacks of React Hooks also apply to here.
+Most of the drawbacks of React Hooks also apply here.
 A non-exhaustive list of drawbacks specific to this proposal include:
 
 - May require considerable changes to the internals of React.
 - Might be difficult to implement a proof-of-concept outside of React.
-- `connect()` might need to be implemented by the renderer (ReactDOM) rather
-  than React itself.
-- If documentation is unclear it could easily lead to confusion about how this
+- If documentation is unclear, it could lead to confusion about how this
   is used and what to use it for.
-- Additional prop-types are needed for signals in order to guarentee type safety.
-- The current design uses strings as params for `connect()`, which makes
+- Additional prop-types are needed for signals in order to guarantee type safety.
+- The current design uses strings as params for `useSlot()`, which makes
   type-checking with TypeScript/Flow much more difficult.
-- The same end result (albiet at a cost) could be achieved with existing
+- The same end result (albeit at a cost) could be achieved with existing
   userspace state-management libraries (Redux) or global event emitters.
 - Signals and slots is not suitable for sending large amounts of data or a
   large number of items.
-- The current `useRef` syntax may cause unexpected behavior because refs
-  are mutable.
+- If multiple children emit the same signal name, the parent component has no
+  way of knowing which child emitted it.
 
 # Alternatives
 
 A number of alternate syntaxes were considered.
+
+The most recent proposal used child-to-child connections but required the use
+of refs to keep track of each individual child. That was discarded for being
+too complex and difficult to understand.
 
 One alternative considered was:
 ```js
@@ -133,22 +133,16 @@ const [ signal, slot ] = connect('clicked', 'message')
 <Button signal={signal} />
 <Banner slot={slot} />
 ```
-Problem with that approach is that it doesn't connect components, and
-requires more thorough changes to the internals of React.
-It also sacrifices typesafety and comes at a cost of being much more verbose.
+The problem with that approach is that it doesn't connect components, and
+requires many more changes to the internals of React.
+It also sacrifices type-safety and comes at the cost of being much more verbose.
 I also considered having slot types be specified separate from regular
 propTypes (`Banner.slots = { message: ... }`), but I realized that was
 redundant and lead to duplication of information.
 
 My original proposal used referencing `const MyButton = Button` to connect
-components. That has been removed because the internals of React make the
+components. That has been removed because the internals of React makes the
 intended behavior impossible.
-
-I originally planned to have a `useSlot()` hook, but decided that went against
-the concept of signals and slots. The whole purpose is to send messages between
-components, not synchronize state. Besides, that means that only new components
-would be able to benefit from the signals and slots API. The current syntax
-proposal enables signals to be connected even to old components.
 
 Current solutions to the problem of inter-component communication may use:
 * Callbacks-as-params
@@ -172,24 +166,24 @@ connector.
 
 The beauty of this is that nothing breaks even if a signal or a slot is not
 implemented.
-Remove the `useSignal` code from Button or the `message` prop from Banner, and
-both will continue to work just fine.
+Remove the `useSignal` code from Button or the `useSlot` value from App, and
+although the behavior will not be as desired, all components will continue
+to work.
 
 Once implemented, developers can start adopting it at their own pace.
-Library maintainers can add it to their packages without breaking anything, and
-then just simply list the signals emitted in the documentation.
+Library maintainers can add it to their packages without breaking anything and
+then just list the signals emitted in the documentation.
 Developers can then start using those signals at their own leisure.
 
 Signals can immediately be added to any React component without change.
 Developers can then start migrating away from any state-management solutions
-because existing param names can continue to be used as-is,
-or new params can be added as needed.
+by capturing signals using `useSlot()` and passing the value to a component.
 
 # How we teach this
 
 This should be thought of as the natural evolution of functional-style React.
-Slots are just regular props for a React component, and signals are just
-events/messages defined by a React component.
+Slots are just regular values that can be passed to a React component, and
+signals are just events/messages defined by a React component.
 
 All existing React concepts still apply, just like all other React Hooks.
 No major changes to the React documentation are needed, and learning how to
@@ -197,22 +191,22 @@ use it is completely optional for new developers.
 For existing developers, instead of defining *how* components should
 communicate, they now define *what* components are communicating to each other.
 
+Another benefit is that this proposal could lead to better documentation for
+library maintainers. JSX props should be documented like input parameters
+in a procedural language, and signals can be documented as being output
+parameters.
+
 # Unresolved questions
 
-How to avoid undesired connections (i.e. you have two Banner components but you
-only want one connected to 'clicked').
-My above proposal uses the ref property defined by `useRef()`.
-This might cause problems because refs are mutable.
+How to handle multiple components emitting the same signal name.
+If a parent has two components that emit the same signal (e.x. CancelButton
+and SubmitButton both emit "clicked"), then parents have no way of knowing
+which child emitted it.
 
 How to handle type-safety in Flow and TypeScript.
-The fact that signals are defined using a React Hook, and the connection syntax
-uses strings to specify signal and slot names much static type-checking much
-more difficult.
-
-Related to that is the `Component.signals = {...}` syntax.
-Although React might still be able to use this information to enable internal
-type-safety, if type-checking cannot be implemented in Flow or TypeScript this
-might be removed.
+Slots should be easy enough to add type-safety to. But signals are much more
+difficult. Connecting the `Component.signals = {...}` props to `useSlot()`
+could pose several problems.
 
 If you have an alternative syntax for the signals and slots concept, feel free
 to discuss it.
