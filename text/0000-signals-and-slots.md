@@ -15,40 +15,38 @@ while also isolating the internal state of each component.
 # Basic example
 
 ```js
-import React, { useSignal, useSlot } from 'react';
+import React, { useSignal, useSlot, useState } from 'react';
 import PropTypes from 'prop-types';
 
-function Button ({ name }) {
-    const emit = useSignal('clicked');
-    
-    const onClick = () => emit(`Hello, ${name}!`);
-
-    return (
-        <button onClick={onClick}>{name}</button>
-    );
+function TextInput () {
+    const [ value, setValue ] = useState('');
+    const emit = useSignal('updated');
+    const onChange = (e) => {
+        setValue(e.target.value);
+        emit(e.target.value);
+    };
+    return <input value={value} onChange={onChange}
 }
 
-Button.signals = {
-    clicked: PropTypes.string
+TextInput.signals = {
+    updated: PropTypes.string
 };
 
-function Banner ({ message }) {
-    return (
-        <h1>{message}</h1>
-    );
+function Banner({ name }) {
+    return <h1>Hello, {name}!</h1>;
 }
 
 Banner.propTypes = {
-    message: PropTypes.string
+    name: PropTypes.string
 };
 
 function App () {
-    const message = useSlot('clicked');
+    const name = useSlot('updated');
     
     return (
         <>
-            <Banner message={message} />
-            <Button name="World" />
+            <Banner name={name} />
+            <TextInput />
         </>
     );
 }
