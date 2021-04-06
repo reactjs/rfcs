@@ -25,7 +25,7 @@ function TextInput () {
         setValue(e.target.value);
         emit(e.target.value);
     };
-    return <input value={value} onChange={onChange}
+    return <input value={value} onChange={onChange} />
 }
 
 TextInput.signals = {
