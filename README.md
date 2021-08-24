@@ -47,7 +47,7 @@ Some changes do not require an RFC:
 
 ## What to expect
 
-It is very hard to write an RFC that would get accepted. Nevertheless, this shouldn't
+It is hard to write an RFC that would get accepted. Nevertheless, this shouldn't
 discourage you from writing one.
 
 React has a very limited API surface area, and each feature needs to work seamlessly with all other features.
