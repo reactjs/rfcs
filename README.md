@@ -75,8 +75,9 @@ We don't always review community RFCs timely, but whenever we start work on a re
 the RFCs in that area, and review the use cases and concerns that the community members have posted.
 When you send an RFC, your primary goal should not be necessarily to get it merged into React as is,
 but to generate a rich discussion with the community members. If your proposal later becomes accepted,
-that's great, but even if it doesn't, it won't be in vain if the resulting discussion informs the next
-proposal in the same problem space, whether it comes from the community or from the React Team.
+that's great. But even if it doesn't, it won't be in vain. The resulting discussion often informs the next
+proposal in the same problem space, whether it comes from the community or from the React Team. Many library
+authors are reading the discussions, so RFCs often lead to community experimentation and userland solutions.
 
 We apply the same level of rigour both to React Team RFCs and Community RFCs. The primary difference
 between them is in the design phase: React Team RFCs tend to be submitted at the end of the design
