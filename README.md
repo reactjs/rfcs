@@ -1,4 +1,3 @@
-
 # React RFCs
 
 Many changes, including bug fixes and documentation improvements can be
