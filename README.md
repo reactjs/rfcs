@@ -173,4 +173,4 @@ React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC pr
 [Rust RFC process]: https://github.com/rust-lang/rfcs
 [Ember RFC process]: https://github.com/emberjs/rfcs
 
-We've changed it in the past in response to [feedback](https://github.com/reactjs/rfcs/issues/182), and we're willing to change it again if needed. Please file an issue in this repository if you have ideas or suggestions.
+We've changed it in the past in response to feedback, and we're open to changing it again if needed.
