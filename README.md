@@ -165,3 +165,13 @@ and if we're ready to evaluate it, we will try to review it sooner. If we're hes
 the design or if we don't have enough information to evaluate it, we will leave it open
 until it receives enough community feedback. We recognize it is frustrating to not receive
 a timely review, but you can be sure that none of the work you put into an RFC is in vain.
+
+## Inspiration
+
+React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process]
+
+[Yarn RFC process]: https://github.com/yarnpkg/rfcs
+[Rust RFC process]: https://github.com/rust-lang/rfcs
+[Ember RFC process]: https://github.com/emberjs/rfcs
+
+We've changed it in the past in response to [feedback](https://github.com/reactjs/rfcs/issues/182), and we're willing to change it again if needed. Please file an issue in this repository if you have ideas or suggestions.
