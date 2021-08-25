@@ -8,26 +8,26 @@ Introduce a new hook to reduce/improve some process.
 
 # Basic example
 
-In this example `useEffect` doesn't need a dependency for read updated `count`'s value, so
-that's mean whenever `count` changes we don't need to perform `useEffect` effect function.
-`useStateRef` just is a name, so might we need to change to better name.
+In this example we see `useEffect` that doesn't need a dependency to read updated `count`'s
+value, so that's mean we don't need to perform `useEffect` effect function event `count` will
+change. `useStateRef` just is a name, so might we need to change to better name.
 
 ```js
 const [count, setCount, getCount] = useStateRef();
 
 useEffect(() => {
-  const handleVisibiltuy = () => {
+  const handleVisibility = () => {
     console.log(getCount());
   };
 
-  document.addEventListener('visibilitychange', handleVisibiltuy);
+  document.addEventListener('visibilitychange', handleVisibility);
 
-  return () =>  document.removeEventListener('visibilitychange', handleVisibiltuy);
+  return () =>  document.removeEventListener('visibilitychange', handleVisibility);
 }, []);
 ```
 
 Also, in this example `useCallback` doesn't need a dependency to know `count`'s value, so
-`useCallback` inside function just perform once.
+`useCallback` inside function just perform once. that's awesome
 
 ```js
 const [count, setCount, getCount] = useStateRef();
@@ -60,7 +60,7 @@ function useStateRef<T>(initialValue: T): [T, (nextState: T) => void, () => T] {
 # Drawbacks
 
 This is a new hook, so we don't have any breaking change, also we can implement that by
-internal hook.
+internal React hooks.
 
 # Alternatives
 
