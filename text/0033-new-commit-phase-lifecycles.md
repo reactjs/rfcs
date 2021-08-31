@@ -192,7 +192,7 @@ Since this lifecycle- and async rendering in general- is new functionality, adop
 
 # How we teach this
 
-Lifecycle documentation on the website. Add a before an after example (like [the one above](#basic-example)) to the [Update on Async Rendering](https://github.com/reactjs/reactjs.org/pull/596) blog post "recipes".
+Lifecycle documentation on the website. Add a before and after example (like [the one above](#basic-example)) to the [Update on Async Rendering](https://github.com/reactjs/reactjs.org/pull/596) blog post "recipes".
 
 # Unresolved questions
 
