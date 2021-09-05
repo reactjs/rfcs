@@ -29,7 +29,7 @@ function Component(props) {
 Advanced solution: Automatic cancel with [co](https://www.npmjs.com/package/co)-like API
 
 ```js
-useEffect(function* () {
+useEffect(function* (_signal) {
     setLoading(true)
     // React automatically stops if the deps array outdated.
     setText(yield getData(props.id))
@@ -88,6 +88,7 @@ Why should we *not* do this? Please consider:
 - Breaking change? One more argument provided.
 - Generators compiled to ES5 is a very large state machine
     - BTW I ship modern ES sytnaxes to the user, so not a problem to myself.
+- Many AbortError will appear in the console, it's annoying
 
 # Alternatives
 
