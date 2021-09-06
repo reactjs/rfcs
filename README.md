@@ -57,13 +57,14 @@ and gaining enough context to write a good RFC takes more than a year.
 In practice, React RFCs serve two purposes:
 
 * **React Team RFCs** are submitted by [React Team members](https://reactjs.org/community/team.html) after extensive (sometimes,
-multi-month or multi-year) design, discussion, and experimentation. In practice, they comprise
+multi-month or multi-year) design, discussion, and experimentation. In practice, they comprise the
 majority of the RFCs that got merged so far. The purpose of these RFCs is to preview the design
 for the community and to provide an opportunity for feedback. We read every comment on the RFCs
 we publish, respond to questions, and sometimes incorporate the feedback into the proposal.
 Since our time is limited, we don't tend to write an RFC for a React feature unless we're very
 confident that it fits the design. Although it might look like most React Team RFCs easily
-get accepted, in practice it's because 98% of ideas were left on the cutting floor. The remaining
+get accepted, in practice it's because 98% of ideas were left on the cutting room floor. The remaining
+
 2% that we feel very confident and have team consensus on about are the ones that we announce as RFCs for community feedback.
 
 * **Community RFCs** can be submitted by anyone. In practice, most community RFCs do not get merged.
@@ -71,7 +72,8 @@ The most common reasons we reject an RFC is that it has significant design gaps 
 cohesively with all the other features, or does not fall into our view of the scope of React. However,
 getting merged is not the only success criteria for an RFC. Even when the API design does not match
 the direction we'd like to take, we find RFC discussions very valuable for research and inspiration.
-We don't always review community RFCs timely, but whenever we start work on a related area, we check
+We don't always review community RFCs in a timely manner, but whenever we start work on a related area, we check
+
 the RFCs in that area, and review the use cases and concerns that the community members have posted.
 When you send an RFC, your primary goal should not be necessarily to get it merged into React as is,
 but to generate a rich discussion with the community members. If your proposal later becomes accepted,
@@ -153,7 +155,8 @@ feel free to ask (e.g. by leaving a comment on the associated issue).
 
 Currently, the React Team cannot commit to reviewing RFCs in a timely manner.
 When you submit an RFC, your primary goal should be to solicit community feedback
-and generate a rich discussion. The React Team reevaluates the current list of
+and generate a rich discussion. The React Team re-evaluates the current list of
+
 projects and priorities every several months. Even if an RFC is well-designed,
 we often can't commit to integrating it right away. However, we find it very
 valuable to revisit the open RFCs every few months, and see if anything catches
