@@ -154,7 +154,6 @@ feel free to ask (e.g. by leaving a comment on the associated issue).
 Currently, the React Team cannot commit to reviewing RFCs in a timely manner.
 When you submit an RFC, your primary goal should be to solicit community feedback
 and generate a rich discussion. The React Team re-evaluates the current list of
-
 projects and priorities every several months. Even if an RFC is well-designed,
 we often can't commit to integrating it right away. However, we find it very
 valuable to revisit the open RFCs every few months, and see if anything catches
