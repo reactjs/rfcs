@@ -12,9 +12,6 @@ consistent and controlled path for new features to enter the project.
 
 [Active RFC List](https://github.com/reactjs/rfcs/pulls)
 
-React is still **actively developing** this process, and it will still change as
-more features are implemented and the community settles on specific approaches
-to feature development.
 
 ## Contributor License Agreement (CLA)
 
@@ -32,22 +29,12 @@ You should consider using this process if you intend to make "substantial"
 changes to React or its documentation. Some examples that would benefit
 from an RFC are:
 
-   - A new feature that creates new API surface area, and would
+  - A new feature that creates new API surface area, and would
      require a feature flag if introduced.
-   - The removal of features that already shipped as part of the release
+  - The removal of features that already shipped as part of the release
      channel.
-   - The introduction of new idiomatic usage or conventions, even if they
+  - The introduction of new idiomatic usage or conventions, even if they
      do not include code changes to React itself.
-
-The RFC process is a great opportunity to get more eyeballs on your proposal
-before it becomes a part of a released version of React. Quite often, even
-proposals that seem "obvious" can be significantly improved once a wider
-group of interested people have a chance to weigh in.
-
-The RFC process can also be helpful to encourage discussions about a proposed
-feature as it is being designed, and incorporate important constraints into
-the design while it's easier to change, before the design has been fully
-implemented.
 
 Some changes do not require an RFC:
 
@@ -57,6 +44,46 @@ Some changes do not require an RFC:
   criteria (speedup, better browser support)
   - Additions only likely to be _noticed by_ other implementors-of-React,
   invisible to users-of-React.
+
+## What to expect
+
+It is hard to write an RFC that would get accepted. Nevertheless, this shouldn't
+discourage you from writing one.
+
+React has a very limited API surface area, and each feature needs to work seamlessly with all other features.
+Even among the team members who work on React full time every day, ramping up
+and gaining enough context to write a good RFC takes more than a year.
+
+In practice, React RFCs serve two purposes:
+
+* **React Team RFCs** are submitted by [React Team members](https://reactjs.org/community/team.html) after extensive (sometimes,
+multi-month or multi-year) design, discussion, and experimentation. In practice, they comprise the
+majority of the RFCs that got merged so far. The purpose of these RFCs is to preview the design
+for the community and to provide an opportunity for feedback. We read every comment on the RFCs
+we publish, respond to questions, and sometimes incorporate the feedback into the proposal.
+Since our time is limited, we don't tend to write an RFC for a React feature unless we're very
+confident that it fits the design. Although it might look like most React Team RFCs easily
+get accepted, in practice it's because 98% of ideas were left on the cutting room floor. The remaining
+
+2% that we feel very confident and have team consensus on about are the ones that we announce as RFCs for community feedback.
+
+* **Community RFCs** can be submitted by anyone. In practice, most community RFCs do not get merged.
+The most common reasons we reject an RFC is that it has significant design gaps or flaws, does not work
+cohesively with all the other features, or does not fall into our view of the scope of React. However,
+getting merged is not the only success criteria for an RFC. Even when the API design does not match
+the direction we'd like to take, we find RFC discussions very valuable for research and inspiration.
+We don't always review community RFCs in a timely manner, but whenever we start work on a related area, we check
+
+the RFCs in that area, and review the use cases and concerns that the community members have posted.
+When you send an RFC, your primary goal should not be necessarily to get it merged into React as is,
+but to generate a rich discussion with the community members. If your proposal later becomes accepted,
+that's great. But even if it doesn't, it won't be in vain. The resulting discussion often informs the next
+proposal in the same problem space, whether it comes from the community or from the React Team. Many library
+authors are reading the discussions, so RFCs often lead to community experimentation and userland solutions.
+
+We apply the same level of rigour both to React Team RFCs and Community RFCs. The primary difference
+between them is in the design phase: React Team RFCs tend to be submitted at the end of the design
+process whereas the Community RFCs tend to be submitted at the beginning as a way to kickstart it.
 
 ## What the process is
 
@@ -79,7 +106,8 @@ to revise it in response.
 are much more likely to make progress than those that don't receive any
 comments.
 * Eventually, the team will decide whether the RFC is a candidate
-for inclusion in React.
+for inclusion in React. Note that a team review may take a long time,
+and we suggest that you ask members of the community to review it first.
 * RFCs that are candidates for inclusion in React will enter a "final comment
 period" lasting 3 calendar days. The beginning of this period will be signaled with a
 comment and tag on the RFCs pull request.
@@ -92,7 +120,8 @@ the team should then close the RFCs associated pull request.
 member will merge the RFCs associated pull request, at which point the RFC will
 become 'active'.
 
-## The RFC life-cycle
+
+## The RFC lifecycle
 
 Once an RFC becomes active, then authors may implement it and submit the
 feature as a pull request to the React repo. Becoming 'active' is not a rubber
@@ -124,15 +153,28 @@ feel free to ask (e.g. by leaving a comment on the associated issue).
 
 ## Reviewing RFCs
 
-Each week the team will attempt to review some set of open RFC
-pull requests.
+Currently, the React Team cannot commit to reviewing RFCs in a timely manner.
+When you submit an RFC, your primary goal should be to solicit community feedback
+and generate a rich discussion. The React Team re-evaluates the current list of
 
-We try to make sure that any RFC that we accept is accepted at the
-weekly team meeting. Every accepted feature should have a core team champion,
-who will represent the feature and its progress.
+projects and priorities every several months. Even if an RFC is well-designed,
+we often can't commit to integrating it right away. However, we find it very
+valuable to revisit the open RFCs every few months, and see if anything catches
+our eye. Whenever we start working on a new problem space, we also make sure
+to check for prior work and discussion in any related RFCs, and engage with them.
 
-**React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process]**
+We read all RFCs within a few weeks of submission. If we think the design fits React well,
+and if we're ready to evaluate it, we will try to review it sooner. If we're hesitant about
+the design or if we don't have enough information to evaluate it, we will leave it open
+until it receives enough community feedback. We recognize it is frustrating to not receive
+a timely review, but you can be sure that none of the work you put into an RFC is in vain.
+
+## Inspiration
+
+React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process]
 
 [Yarn RFC process]: https://github.com/yarnpkg/rfcs
 [Rust RFC process]: https://github.com/rust-lang/rfcs
 [Ember RFC process]: https://github.com/emberjs/rfcs
+
+We've changed it in the past in response to feedback, and we're open to changing it again if needed.
