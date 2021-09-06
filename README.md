@@ -64,7 +64,6 @@ we publish, respond to questions, and sometimes incorporate the feedback into th
 Since our time is limited, we don't tend to write an RFC for a React feature unless we're very
 confident that it fits the design. Although it might look like most React Team RFCs easily
 get accepted, in practice it's because 98% of ideas were left on the cutting room floor. The remaining
-
 2% that we feel very confident and have team consensus on about are the ones that we announce as RFCs for community feedback.
 
 * **Community RFCs** can be submitted by anyone. In practice, most community RFCs do not get merged.
@@ -73,7 +72,6 @@ cohesively with all the other features, or does not fall into our view of the sc
 getting merged is not the only success criteria for an RFC. Even when the API design does not match
 the direction we'd like to take, we find RFC discussions very valuable for research and inspiration.
 We don't always review community RFCs in a timely manner, but whenever we start work on a related area, we check
-
 the RFCs in that area, and review the use cases and concerns that the community members have posted.
 When you send an RFC, your primary goal should not be necessarily to get it merged into React as is,
 but to generate a rich discussion with the community members. If your proposal later becomes accepted,
@@ -171,7 +169,7 @@ a timely review, but you can be sure that none of the work you put into an RFC i
 
 ## Inspiration
 
-React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process]
+React's RFC process owes its inspiration to the [Yarn RFC process], [Rust RFC process], and [Ember RFC process].
 
 [Yarn RFC process]: https://github.com/yarnpkg/rfcs
 [Rust RFC process]: https://github.com/rust-lang/rfcs
