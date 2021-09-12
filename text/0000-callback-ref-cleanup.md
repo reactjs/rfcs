@@ -10,19 +10,12 @@ Callback Refs should allow returning a cleanup function which will be called whe
 
 ```jsx
 function MyComponent(props) {
-  const logClicks = useCallback((node) => {
-    if (!node) return;
-
-    const onClick = () => console.log('clicked!');
-
-    node.addEventListener('click', onClick);
-
-    return () => {
-      node.removeEventListener('click', onClick);
-    };
+  const exampleCallbackRef = useCallback((el) => {
+    /* effect code */
+    return () => { /* cleanup code */ };
   }, [])
 
-  return <button ref={logClicks} />;
+  return <button ref={exampleCallbackRef} />;
 }
 ```
 
@@ -35,72 +28,25 @@ called with a `null` (See section `Alternatives`). But, as the example above sho
 it is easier to clean up the effects of a Callback Ref when the element is already in the 
 scope of the cleanup function.
 
-This feature also opens the way for two useful code patterns:
-
-### Standalone Callback Refs
-
-In the example above, the Callback Ref can be moved out of the function component. 
-Because the callback does not need to keep a ref anymore.
+The lack of a cleanup mechanism becomes a problem when trying to use the same Callback Ref 
+for multiple elements. Consider the following example:
 
 ```jsx
-function logClicks (node) {
-  if (!node) return;
-
-  const onClick = () => console.log('clicked!');
-
-  node.addEventListener('click', onClick);
-
-  return () => {
-    node.removeEventListener('click', onClick);
-  };
+function exampleCallbackRef (el) {
+  /* effect code */
+  return () => { /* cleanup code */ };
 }
 
-function MyComponent(props) {
-  return <button ref={logClicks} />;
-}
-```
-
-### Register pattern
-
-The same Callback Ref can be used for multiple elements.
-
-```jsx
 function MyComponent(props) {
   return <>
-    <button ref={logClicks} />
-    <button ref={logClicks} />
-    <button ref={logClicks} />
+    <button ref={exampleCallbackRef} />
+    <button ref={exampleCallbackRef} />
+    <button ref={exampleCallbackRef} />
   </>;
 }
 ```
 
-For example, we can write a Callback Ref that adds all elements to an array, 
-and remove them from the array when they are removed from DOM:
-
-```jsx
-function Test() {
-  const listRef = useRef([]);
-
-  const register = useCallback((el) => {
-    if (!el) return;
-
-    listRef.current.push(el);
-    
-    return () => {
-      const index = listRef.current.indexOf(el);
-      if (index >= 0) listRef.current.splice(index, 1);
-    };
-  }, []);
-
-  return <>
-    {[0,1,2,3,4,5].map((x,i) => (
-        <span key={i} ref={register} />
-    )}
-  </>;
-}
-```
-
-See the section `Alternatives` for how `react-hook-form` uses the `register` pattern.
+With the new feature, it will be possible to know which element is being unmounted in the cleanup code.
 
 # Detailed design
 
@@ -175,7 +121,7 @@ Callback Ref is called with a null.
 See implementation of [@huse/effect-ref](https://github.com/ecomfe/react-hooks/blob/master/packages/effect-ref/src/index.ts)
 for such an example.
 
-However, none of the alternatives solve the problem introduced by the `register` pattern. 
+However, none of the alternatives solve the problem introduced by using the same Callback Ref for multiple elements.
 Although not as a drop-in replacement, workarounds exist. One of the libraries that use
 this pattern is `react-hook-form`, and it solves this issue by making `register` a function
 that returns the actual Callback Ref when called with a unique ID:
