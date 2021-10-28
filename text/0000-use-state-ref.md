@@ -4,13 +4,11 @@
 
 # Summary
 
-Introduce a new hook to reduce/improve some process.
+Introduce a new hook to reduce/improve some processes.
 
 # Basic example
 
-In this example we see `useEffect` that doesn't need a dependency to read updated `count`'s
-value, so that's mean we don't need to perform `useEffect` effect function event `count` will
-change. `useStateRef` just is a name, so might we need to change to better name.
+In this example we see `useEffect` that doesn't need a dependency to read updated `count`'s value, so that's mean we don't need to perform `useEffect` effect function event `count` will change. `useStateRef` just is a name, so might we need to change to a better name.
 
 ```js
 const [count, setCount, getCount] = useStateRef();
@@ -26,8 +24,7 @@ useEffect(() => {
 }, []);
 ```
 
-Also, in this example `useCallback` doesn't need a dependency to know `count`'s value, so
-`useCallback` inside function just perform once. that's awesome
+Also, in this example `useCallback` doesn't need a dependency to know `count`'s value, so `useCallback` inside function just performs once. that's awesome
 
 ```js
 const [count, setCount, getCount] = useStateRef();
@@ -39,10 +36,7 @@ const handleClick = useCallback(() => {
 
 # Motivation
 
-`useEffect` and `useCallback` needs to know dependencies to redefine `function` depended
-on new values of dependencies. but these are redundant process for `React` because we don't
-know what time we need it exactly ex: `handleClick` depend on user behavior so we just need
-`count`'s value when user need it.
+`useEffect` and `useCallback` need to know dependencies to redefine `function` depended on new values of dependencies. but these are redundant process for `React` because we don't know what time we need it exactly ex: `handleClick` depend on user behavior so we just need `count`'s value when the user needs it.
 
 # Detailed design
 
@@ -59,8 +53,7 @@ function useStateRef<T>(initialValue: T): [T, (nextState: T) => void, () => T] {
 
 # Drawbacks
 
-This is a new hook, so we don't have any breaking change, also we can implement that by
-internal React hooks.
+This is a new hook, so we don't have any breaking change, also we can implement that by internal React hooks.
 
 # Alternatives
 
@@ -68,8 +61,7 @@ Alternative can be a package, maybe
 
 # Adoption strategy
 
-Fortunately we don't have any breaking change, also we can embed this hook to `useState` without
-breaking change
+Fortunately, we don't have any breaking change, also we can embed this hook to `useState` without breaking change
 
 ```js
 const [count, setCount, getCount] = useState();
