@@ -444,7 +444,7 @@ Server components synthesize ideas from multiple sources:
 * Relay’s data-driven dependencies, which allow the server to dynamically choose which Client Component to use.
 * GraphQL, for demonstrating one approach to avoiding multiple round trips when loading data for client-side apps.
 
-Sebastian Markbage came up with the initial design for Server Components and developed this idea in collaboration with Andrew Clark, Dan Abramov, and Joe Savona. In addition, Lauren Tan, Juan Tejada, Luna Ruan, Andrey Lunyov, Eric Faust, and Royi Hagigi developed the first production integration of Server Components and provided substantial feedback on the design. We’d also like to thank our external partners, Chrome's Aurora team (especially Gerald Monaco, Shubhie Panicker, Nicole Sullivan, and Kara Erickson) and the Vercel team, for their valuable feedback.
+Sebastian Markbage came up with the initial design for Server Components and developed this idea in collaboration with Andrew Clark, Dan Abramov, and Joe Savona. In addition, Lauren Tan, Juan Tejada, Luna Ruan, Andrey Lunyov, Eric Faust, and Royi Hagigi developed the first production integration of Server Components and provided substantial feedback on the design. We’d also like to thank our external partners, Chrome's Aurora team (especially Gerald Monaco, Shubhie Panicker, Nicole Sullivan, and Kara Erickson) and the Vercel team (especially Shu Ding, Jiachi Liu, Tobias Koppers, Javi Velasco, and Tim Neutkens), for their valuable feedback.
 
 # FAQ
 
