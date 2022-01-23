@@ -24,7 +24,7 @@ useEffect(() => {
 }, []);
 ```
 
-Also, in this example `useCallback` doesn't need a dependency to know `count`'s value, so `useCallback` inside function just performs once. that's awesome
+Also, in this example, `useCallback` doesn't need a dependency to know `count`'s value, so `useCallback` inside function just performs once. that's awesome
 
 ```js
 const [count, setCount, getCount] = useStateRef();
@@ -41,8 +41,23 @@ const handleClick = useCallback(() => {
 # Detailed design
 
 A basic of implementation for `useStateRef` that we can use in project is:
+
+TS version:
+
 ```js
 function useStateRef<T>(initialValue: T): [T, (nextState: T) => void, () => T] {
+  const [state, setState] = useState(initialValue);
+  const stateRef = useRef(state);
+  stateRef.current = state;
+  const getState = useCallback(() => stateRef.current, []);
+  return [state, setState, getState];
+}
+```
+
+JS version:
+
+```js
+function useStateRef(initialValue) {
   const [state, setState] = useState(initialValue);
   const stateRef = useRef(state);
   stateRef.current = state;
