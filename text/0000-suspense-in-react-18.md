@@ -174,7 +174,9 @@ Doing something asynchronous without any feedback may also be confusing. For thi
 const [isPending, startTransition] = useTransition();
 
 function handleClick() {
-  setTab('comments');
+  startTransition(() => {
+    setTab('comments');
+  });
 }
 
 <Suspense fallback={<Spinner />}>
