@@ -104,7 +104,7 @@ Previously, React would do this in a sequence that goes like this:
 1. Fire the `Panel` effects because technically it has "mounted" (even though not fully).
 1. Wait for the `Comments` to be ready.
 1. Then, attempt rendering again.
-1. Remove the `Spinner` content form the DOM.
+1. Remove the `Spinner` content from the DOM.
 1. Place the `Comments` content into the `Panel` content that was already in the DOM.
 1. Remove `display: none` from the `Panel` content.
 
