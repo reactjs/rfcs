@@ -87,8 +87,8 @@ Consider code like this:
   {showComments && (
     <Suspense fallback={<Spinner />}>
       <Panel>
-       <Comments /> 
-     </Panel>
+        <Comments />
+      </Panel>
    </Suspense>
  )}
 </div>
