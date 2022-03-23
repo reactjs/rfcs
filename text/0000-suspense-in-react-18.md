@@ -2,6 +2,17 @@
 - RFC PR: (leave this empty)
 - React Issue: (leave this empty)
 
+_Note: This RFC is closer to an "intent to ship" and is different than the
+process we typically do because it is the result of years of research into
+concurrency, Suspense, and server rendering. All of what is posted here was
+designed and discussed over the last year in the React 18 Working Group
+([available here](https://github.com/reactwg/react-18/discussions)) and iterated
+on in public experimental releases since 2018. **We'd like to get one final
+round of broad public feedback from the community before shipping in case there
+are new concerns that have not been discussed before.** You can consider the
+Working Group to be a part of the RFC, so please feel free to quote and discuss
+any content from it when commenting on the RFC here._
+
 # Summary
 
 This RFC describes several changes that we'd like to make to the behavior of the `<Suspense>` component:
@@ -14,8 +25,6 @@ This RFC describes several changes that we'd like to make to the behavior of the
 The Suspense API itself does not change.
 
 This RFC *does not* add support for data fetching. The changes in this RFC are prerequisites for that future step.
-
-*This RFC is different than the process we typically do because it is the result of years of research into concurrency, Suspense, and server rendering. **We'd like to get one final round of broad public feedback from the community before shipping in case there are new concerns that have not been discussed before.** All of what is posted here was designed and discussed over the last year in the React 18 Working Group ([available here](https://github.com/reactwg/react-18/)). You can consider the Working Group to be a part of the RFC, so please feel free to quote and discuss any content from it when commenting on the RFC here.*
 
 # Basic example
 
