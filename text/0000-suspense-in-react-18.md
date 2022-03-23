@@ -128,7 +128,7 @@ Read https://github.com/reactwg/react-18/discussions/7 for more details on the p
 
 ## New feature: Server-side rendering support with streaming
 
-Previously, if you a component suspends during server rendering, React would throw a hard error. In practice, it meant that apps using server rendering (or built with an SSR framework like Next.js or Remix) could not use Suspense for code splitting in a supported way.
+Previously, if a component suspends during server rendering, React would throw a hard error. In practice, it meant that apps using server rendering (or built with an SSR framework like Next.js or Remix) could not use Suspense for code splitting in a supported way.
 
 We are adding a new server renderer that supports streaming HTML out-of-order. Unlike the old server renderer that synchronously produces a string, the new server renderer produces a stream. That stream starts with the initial HTML that can be flushed early. However, the new renderer is also fully integrated with Suspense, which means that it's able to "wait" for parts of the tree that are not ready, and emit fallback HTML (e.g. spinners) for them. When the content is ready, React emits the content HTML in the same stream along with a small inline `<script>` to insert it in the right place in the original DOM structure. As a result, even if some part of the page is slow on the server, the user sees a progressively loading page with all intentionally designed intermediate loading states — even before client JS loads.
 
