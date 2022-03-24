@@ -210,9 +210,9 @@ function Photos() {
   return (
     <>
       <MyPhotos />
-+      <Suspense fallback={<PhotosGlimmer />}>
++     <Suspense fallback={<PhotosGlimmer />}>
         <TaggedPhotosVerySlow />
-+      </Suspense>
++     </Suspense>
     </>
   )
 }
