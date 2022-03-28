@@ -1,6 +1,6 @@
 - Start Date: 2022-03-23
-- RFC PR: (leave this empty)
-- React Issue: (leave this empty)
+- RFC PR: https://github.com/reactjs/rfcs/pull/214
+- React Issue: https://github.com/facebook/react/pull/22239
 
 _Note: This RFC is closer to an "intent to ship" and is different than the
 process we typically do because it is the result of years of research into
