@@ -332,7 +332,9 @@ function Chat({ selectedRoom }) {
 
 Here, `createKeys` is not an event, so it should be specified in the effect dependencies. This ensures that if the user changes the encryption settings while in the chat, and a different function is passed as `createKeys`, it will cause the API to reconnect.
 
-Here is another example where a piece of code is incorrectly marked as an event:
+### Not all functions extracted from effects are events
+
+Here is an example where a piece of code is incorrectly marked as an event:
 
 ```js
 function Chat({ selectedRoom, theme }) {
