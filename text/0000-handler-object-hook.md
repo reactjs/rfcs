@@ -174,6 +174,44 @@ const NewModalCert: FunctionComponent<ModalProps> = ({ cert_name }) => {
 
 ```
 
+# Basic example 2
+
+Shows handlers inter-operation. Successfully trigger render from another state handler.
+
+App.tsx:
+```jsx
+function App() {
+
+  const [ books, booksHandler ]           = useStateHandler( BooksHandler );
+  const [ form, formHandler]              = useStateHandler( FormHandler )
+
+  useEffect(() => {
+    booksHandler.load();
+    formHandler.init();
+    booksHandler.resetForm = formHandler.init;
+  }, [prestamosHandler, formHandler]);
+
+  return (
+    <>
+      <Menu />
+      <div className="section">
+        <div className="container page">
+
+          <Item type='add' book={form} setValues={formHandler.setValue} save={booksHandler.saveItem}>
+            Add
+          </Item>
+
+          {books?.map( p => <Item key={p.id} save={booksHandler.saveItem} book={p}>Edit</Item> )}
+       
+        </div>
+      </div>
+    </>
+  );
+}
+
+export default App;
+```
+
 # Motivation
 
 
