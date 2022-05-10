@@ -189,7 +189,7 @@ function App() {
     booksHandler.load();
     formHandler.init();
     booksHandler.resetForm = formHandler.init;
-  }, [prestamosHandler, formHandler]);
+  }, [ /*prestamosHandler, formHandler*/ ]);
 
   return (
     <>
@@ -226,6 +226,7 @@ Note that useState, useReducer and custom hooks are wide used alongside this hoo
 **Why to integrate to react core and RFC process?**
 
 * I don't know about react source code but I konw this can be improved in many ways; from definition to implementation.
+* Eliminate undesired warnings about handlers in dependency array list.
 
 
 # Detailed design
