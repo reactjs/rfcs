@@ -4,7 +4,7 @@
 
 # Summary
 
-Add a special props named innerHooks to React.Component and extend createElement.
+Add a special props named connectContainer to React.Component and extend createElement.
 
 # Basic example
 
@@ -30,7 +30,7 @@ import { useOptions } from "./useOptions";
 const Example = (props) => (
   <Parent>
     <Component
-      innerHooks={() => ({
+      connect={() => ({
         options: useOptions(),
       })}
     />
@@ -54,7 +54,7 @@ const Example = (props) => {
 ```
 
 but, they are different about execution scopes. The formar is in child scope and the latter is in parent scope.
-In addition, innerHooks prop must return partial props of the component.
+In addition, connectContainer prop must return partial props of the component.
 
 # Motivation
 
@@ -183,7 +183,7 @@ const Example = (props) => {
         <Component>
         {/* ...Omitted */}
             <Select
-                innerHooks={() => {
+                connectContainer={() => {
                     const [optionValue, setOptionValue] = useState()
                     const options = useOptions()
                     return {
@@ -211,7 +211,7 @@ const Example = (props) => {
         <Context.Provider value={{value: 'any'}}>
           {/* ...Assuming a vast of <AnotherFieldNoDependsOnContext /> */}
           <Field
-              innerHooks={() => {
+              connectContainer={() => {
                   const {value} = useContext(Context)
                   return {
                       value,
@@ -240,7 +240,7 @@ const Example = (props) => {
                   <>
                     {/* ...Assuming a vast of <AnotherFieldNoDependsOnContext /> */}
                     <Field
-                        innerHooks={() => {
+                        connectContainer={() => {
                             const {value} = useContext(Context)
                             return {
                                 value,
@@ -261,12 +261,12 @@ There is simular problem about readability even if you use consumer per componen
 
 # Detailed design
 
-The innerHooks is called in intermediate layer from parent and child.
+The connectContainer is called in intermediate layer from parent and child.
 React render function create component only call hooks and merge props passed by innerProps.
 
 ```tsx
 function InterMediate(props) {
-    const propsFromInnerHooks = innerHooks && innerHooks()
+    const propsFromInnerHooks = connectContainer && connectContainer()
     return <Child {...props} {...propsFromInnerHooks}>
 }
 ```
@@ -274,11 +274,11 @@ function InterMediate(props) {
 In api level, we may be able to optimize performance.
 
 ```tsx
-React.createElement(Hello, { innerHooks: someHandleHookFunction }, null);
+React.createElement(Hello, { connectContainer: someHandleHookFunction }, null);
 
 function createElement(Component, props, ...children) {
-  if (props.innerHooks) {
-    props = merge(props, props.innerHooks());
+  if (props.connectContainer) {
+    props = merge(props, props.connectContainer());
   }
   // continue to original function process
 }
@@ -287,8 +287,8 @@ function createElement(Component, props, ...children) {
 # Drawbacks
 
 - possible to be worse rendering performance by intermediate hooks
-- parent scope variables included in innerHooks can perfome unexpected side effects.
-- type inference is more complicated, it needs returned type of innerHooks and exclude them from original props if it injected
+- parent scope variables included in connectContainer can perfome unexpected side effects.
+- type inference is more complicated, it needs returned type of connectContainer and exclude them from original props if it injected
 
 # Alternatives
 
@@ -296,18 +296,18 @@ No idea.
 
 # Adoption strategy
 
-- This does not have any breaking changes. It can ignore if there is not an innerHooks prop, unless users name a prop innerHooks.
-- React typing library like flow and typescript should change component type so that infer props type when exists the innerHooks prop.
+- This does not have any breaking changes. It can ignore if there is not an connectContainer prop, unless users name a prop connectContainer.
+- React typing library like flow and typescript should change component type so that infer props type when exists the connectContainer prop.
 
 # How we teach this
 
-The terminology is innerHooks.
+The terminology is connectContainer.
 
-We may need only adding innerHooks usage the React Hooks entry of document.
+We may need only adding connectContainer usage the React Hooks entry of document.
 
 And introduction as new feature is enough.
 
 # Unresolved questions
 
-- How to imprement innerHooks during rendering.
-- I may not consider enough how extent innerHooks side effects by innerHooks of decendants from parent have bad effects.
+- How to imprement connectContainer during rendering.
+- I may not consider enough how extent connectContainer side effects by connectContainer of decendants from parent have bad effects.
