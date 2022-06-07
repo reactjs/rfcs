@@ -786,8 +786,9 @@ await page.keyboard.type("Type this into the focused element...");
 
 # Adoption strategy
 
-* Work with library maintainers to adopt this new API.
-* Adoption beyond this is optional and can move at its own pace.
+* We don't expect application developers to use these APIs directly. They're meant to be the lower level stuff used by libraries like Jest.
+  * We will need to help library maintainers integrate the new test selector APIs.
+* We don't expect accessibility-first testing approaches to be deprecated. The new APIs can augment them though, or provide alternatives.
 
 Note that to use the test selector API at scale, you might want to use a Webpack alias (or equivalent) when building your test target:
 ```js
