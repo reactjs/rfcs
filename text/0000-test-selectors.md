@@ -76,7 +76,7 @@ While useful, most of these existing APIs generally have downsides:
 * They do not do enough to discourage brittle test selectors from being written (e.g. `"ProfilerHeader NavLink label a"`).
   * Test ids provide an alternative to this but they [have scaled very poorly in practice](https://gist.github.com/bvaughn/d3c8b8842faf2ac2439bb11773a19cec#gistcomment-3966895).
 
-A first-party React selector API could be adopted by these frameworks so they are no longer be renderer-specific, (although this might require imposing constraints on what the selector syntax supported). It could also make open source libraries like `[react-testing-library](https://github.com/testing-library/react-testing-library)` more powerful.
+A first-party React selector API could be adopted by these frameworks so they are no longer be renderer-specific, (although this might require imposing constraints on what the selector syntax supported). It could also make open source libraries like [`react-testing-library`](https://github.com/testing-library/react-testing-library) more powerful.
 
 Specifically, the API proposed below has the following goals:
 * Remove dependency on React internals that may change in future releases.
