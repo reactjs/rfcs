@@ -46,7 +46,7 @@ Element creation is a hot path because it is used a lot but also because it is a
 - `.defaultProps` in element creation doesn't work with `React.lazy` so in that case we also have to check for resolving defaultProps in the render phase too, and means that the semantics are inconsistent anyway.
 - Children are passed as var args and we have to patch them onto props dynamically instead of statically knowning the shape of the props at the callsite.
 - The transform uses `React.createElement` which is a dynamic property look up instead of a constant closed over module scope. This minimizes poorly and takes a little cost to run.
-- We don't know if the passed in props is a user created object that can be mutated so we must always clone it once.
+- We don't know if the passed-in props is a user-created object that can be mutated so we must always clone it once.
 - `key` and `ref` gets extracted from JSX props provided so even if we didn't clone, we'd have to delete a prop, which would cause that object to become map-like.
 - `key` and `ref` can be spread in dynamically so without prohibitive analysis, we don't know if these patterns will include them `<div {...props} />`.
 - The transform relies on a the name `React` being in scope of JSX. I.e. you have to import the default. This is unfortunate as more things like Hooks are typically used as named arguments. Ideally, you wouldn't have to import anything to use JSX.
@@ -61,17 +61,17 @@ The design will include three steps. 1) A new JSX transform. 2) Deprecations and
 
 ## JSX transform changes
 
-There are many combinations of transpilers, bundlers and downstream tooling that needs to be updated to make any changes to React JSX support.
+There are many combinations of transpilers, bundlers, and downstream tooling that need to be updated to make any changes to React JSX support.
 
 ### Auto-import
 
 The first thing we need to change is getting rid of the requirement to have a `React` identifier in scope.
 
-Ideally the element creation should be part of the transpiler's own runtime. There are some practical concerns. For one, we have both DEV mode and PROD mode. The DEV mode version is a lot more complicated and integrated into React. We also make subtle changes between versions - such as this one.
+Ideally, the element creation should be part of the transpiler's own runtime. There are some practical concerns. For one, we have both DEV mode and PROD mode. The DEV mode version is a lot more complicated and integrated into React. We also make subtle changes between versions - such as this one.
 
 It's much easier to iterate on new versions by deploying npm packages than updates to the compiler toolchain. Therefore, it might be best if the actual implementation still lives in the `react` package.
 
-Ideally you wouldn't need to write any imports to use JSX:
+Ideally, you wouldn't need to write any imports to use JSX:
 
 ```js
 function Foo() {
