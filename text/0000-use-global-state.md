@@ -8,8 +8,63 @@ Implement an easy-to-use global state hook with unique keys and batch updates. N
 
 # Basic example
 
-If the proposal involves a new or changed API, include a basic code example.
-Omit this section if it's not applicable.
+#### 1.First set a unique `key` for the global state, and can also set an initial value.
+
+```tsx
+const initStep = 1;
+const key = 'global-step';
+const [step, setStep] = useGlobalState(key, initStep);
+```
+##### Or encapsulate a `useGlobalStep` twice
+
+```tsx
+const useGlobalStep = (initStep: number = 0) => {
+  const key = 'global-step';
+  useGlobalState(key, initStep);
+}
+```
+
+#### 2.Introduce `useGlobalState` in other components or pages and use the same `key`.
+
+```tsx
+const PageA = () => {
+  const key = 'global-step';
+  const [step, setStep] = useGlobalState(key, 1);
+  return <div>
+    {step}
+    <Button onClick={() => setStep(step + 1)}>step + 1</Button>
+  </div>
+}
+
+const PageB = () => {
+  const key = 'global-step';
+  const [step, setStep] = useGlobalState(key, 1);
+  return <div>
+    {step}
+    <Button onClick={() => setStep(step - 1)}>step - 1</Button>
+  </div>
+}
+```
+
+##### Or use the secondary encapsulated `useGlobalStep`.
+
+```tsx
+const PageA = () => {
+  const [step, setStep] = useGlobalStep();
+  return <div>
+    {step}
+    <Button onClick={() => setStep(step + 1)}>step + 1</Button>
+  </div>
+}
+
+const PageB = () => {
+  const [step, setStep] = useGlobalStep();
+  return <div>
+    {step}
+    <Button onClick={() => setStep(step - 1)}>step - 1</Button>
+  </div>
+}
+```
 
 # Motivation
 
