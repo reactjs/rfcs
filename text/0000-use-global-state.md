@@ -78,7 +78,7 @@ It can be implemented using unique keys and batch updates, which is much simpler
 
 # Detailed design
 
-![architecture diagram](https://bojuematerial-prudcut-public.oss-cn-guangzhou.aliyuncs.com/fdsafdsfdggfhfhgfgds.png)
+![architecture diagram](https://bojuematerial-prudcut-public.oss-cn-guangzhou.aliyuncs.com/fdsafdsfdggfhfhgfgds.png?t=1)
 
 # Drawbacks
   
