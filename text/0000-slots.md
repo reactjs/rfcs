@@ -70,18 +70,34 @@ export default function App() {
 
 When creating UI library, we have different approaches on the component API design. The most common way is the Configuration pattern used by most UI libraries, everything in one component and provides child props for composition, like `<TextField label helperText />`. It's easy to use, but when we need to to add some extra props to label like `data-testid`, then we have to introduce new props for that which will bloat the api very easily.
 
-Another way to solve this problem is Composition pattern, like `<TextField><TextFieldLabel /><TextFieldInput /></TextField>`, it provides the best flexibility, we are free to customise every part of our component, but it causes another problem: consistency, we have to organise your sub components exactly the same order as expected, and the biggest problem is that it's very hard and cumbersome to communicate between parent and children.
+Another way to solve this problem is Composition pattern, like `<TextField><TextFieldLabel /><TextFieldInput /></TextField>`, it provides the best flexibility, we are free to customise every part of our component, but it causes another problem: consistency, we have to organise the sub components exactly the same order as expected, and the biggest problem is that it's very hard and cumbersome to communicate between parent and children, e.g. A11y support.
 
-For a dedicated Design System, we need consistent ui regardless how we compose it. Here the Slots pattern solve those problem perfectly, we can compose our component with both flexibility and consistency, and it's extreme easy to add A11y support thanks the ability of Inversion of Control. We don't need to using React Context to communicate between parent and children, and no rerendering needed to sync the data.
+For a dedicated Design System, we need consistent ui regardless how we compose it. Here the Slots pattern solve those problem perfectly, we can compose our components with both flexibility and consistency, and it's extreme easy to add A11y support thanks the ability of Inversion of Control. We don't need to using React Context to communicate between parent and children, and no rerendering needed to sync the data.
 
-## Accessible List, virtualisation and custom renderer
+## Accessible List
+
+Given the following element
+
+```jsx
+<Menu>
+  <MenuItem onSelect={download}>Download</MenuItem>
+  <MenuItem onSelect={save}>Save</MenuItem>
+  <MenuItem onSelect={preview}>Preview</MenuItem>
+</Menu>
+```
+
+How can we set `aria-activedescendant={activeElementId}` to `Menu` for assistive tech, how will `MenuItem` know if it's currently active? The problem is well explained by (Reach UI)[https://github.com/reach/reach-ui/tree/dev/packages/descendants#the-problem].
+
+But the Reach UI's solution is not ideal and a bit cumbersome, it doesn't work well with SSR. With Slots, the menu can read the children's information before rendering to DOM tree, and can decide how to render the children, so the problem could be solve in a very elegant and efficient way.
+
+## Virtualisation and custom renderer
 
 Quoted from [the comment](https://github.com/facebook/react/issues/24979#issuecomment-1193176328) by @devongovett
 
 > A bunch of libraries have a problem where they need to know about certain types of descendants. For example, a list component with keyboard navigation needs to know what elements exist in the collection in order to implement things like typeahead, arrow keys, selection, etc. Reach UI has a good [overview](https://github.com/reach/reach-ui/tree/dev/packages/descendants) of a bunch of different approaches to this. The most commonly used of them involve rendering all of the items to the DOM, and using some kind of context-based registration system to tell the parent about themselves, and the DOM to sort them into the correct order.  
 > This has the downside that all of the items must be in the DOM at all times. In some cases, like virtualized scrolling, or a combobox/select where users can set the item without showing the list, some or all of the items shouldn't be rendered to the DOM. In React Aria, we walk the JSX tree to do this, which makes for a more natural API than giving up JSX completely (info). But this breaks composition, because only certain known element types are allowed.
 
-Even with the Reach UI's solution, it doesn't work well with SSR. With the Slots pattern, we don't render the children to real DOM but only collect information, so virtualisation is supported by nature.
+With the Slots pattern, we don't render the children to real DOM but only collect information, so virtualisation is supported by nature.
 
 Also the Slots proposal actually enabled another way of creating custom renderer, we don't need to import the `react-reconciler` which added a lot of bundle size, instead we use the version already bundled in `react-dom` or `react-native`, we define custom tags by `createSlot` and implement custom rendering in `createHost`, an easy showcase is implementing dynamic and extendable declarative configuration.
 
@@ -118,7 +134,7 @@ The api is very similar to the [deleted](https://github.com/facebook/react/pull/
 
 `createSlot<T extends React.ElementType>(Fallback?: T)` creates a slot component and won't be rendered to real DOM but only collect node info, which will be used by `createHost`. `Fallback` is a fallback component that if the slot is used without HostSlots(outside of `createHost`), it will be fallback to a normal component, which is similar to `slot` property for Web Components, that if the slot is not used in template it will act as a normal component. If `Fallback` is not provided, it will create a pure slot component that nothing will be rendered if it's used without HostSlots. (Not sure about the `Fallback` argument as it's not able to implement with `react-call-return`.)
 
-`createHost(children: React.ReactNode, callback: (slots: React.ReactElement[]) => JSX.Element | null)` mounts the children which hosting slotted components and return the collected slots elements in callback, and then we can render the result to real DOM conditionally. We can find the slots by filter the `slots`(shown in the example above).
+`createHost(children: React.ReactNode, callback: (slots: React.ReactElement[]) => JSX.Element | null)` mounts the children which hosting slotted components and return the collected slots elements in callback, and then we can render the result to real DOM conditionally. We can find the slots by filter the `slots`(shown in the [example](#basic-example) above).
 
 For `children` of `createHost`, similar to `react-call-return`, slot component can be extended, wrapped with `Fragment`, but can't be wrapped with Host components(like `div`), see the following use cases
 
@@ -167,7 +183,7 @@ const Comp1 = () => (
 );
 ```
 
-For nested slots, `createHost` works like peeling the onion, it will only collect the top level slots, nested slots will be handled at next tick if they are included in `callback`'s return, to continue with the very first example:
+For nested slots, `createHost` works like peeling the onion, it will only collect the top level slots, nested slots will be handled at next tick if they are included in `callback`'s return, to continue with the very first (example)[#basic-example]:
 
 ```jsx
 const NestedField = createSlot();
