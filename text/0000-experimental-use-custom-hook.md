@@ -45,6 +45,8 @@ hooks implementation is just arrays. https://www.swyx.io/hooks/#not-magic-just-a
 So, implementation-wise, it will be `Map<customHook, array>` instead of just an array.
 The referential equality of `customHook` is important.
 
+(A little more precicely, `experimental_use` can be nested, so `Map<customHook, array>` is a recursive structure forming a tree.)
+
 A question is if this is an acceptable concept, but a similar approach is once proposed.
 https://github.com/reactwg/react-18/discussions/25
 > The "create" function acts as the type/key/identity for the cache.
