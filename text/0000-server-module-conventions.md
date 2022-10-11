@@ -29,7 +29,7 @@ We also propose using package.json conditional exports to allow an import to for
 import Component from "./Component.js";
 function Parent() {
   // Component is of type Reference<T> where T is the type
-  // of the default export of Component.client.js
+  // of the default export of Component.js
   // Because of this React knows that it can't render it on
   // the server and instead will leave it as a placeholder
   // to later be rendered on the client.
@@ -43,11 +43,12 @@ function Parent() {
 
 function Child() {
   // Component is of type Reference<T> where T is the type
-  // of the default export of Component.client.js
+  // of the default export of Component.js
   // Because of this React knows that it can't render it on
   // the server and instead will leave it as a placeholder
   // to later be rendered on the client.
-  return <Component />;
+  let [state, setState] = useState(false);
+  return <Component onClick={() => setState(true)} value={state} />;
 }
 ```
 
