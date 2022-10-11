@@ -26,7 +26,7 @@ We also propose using package.json conditional exports to allow an import to for
 
 ```js
 // Parent.js
-import Component from "./Component.client.js";
+import Component from "./Component.js";
 function Parent() {
   // Component is of type Reference<T> where T is the type
   // of the default export of Component.client.js
