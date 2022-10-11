@@ -150,7 +150,7 @@ The implications of this is also that you shouldn't add the `"use client"` direc
 
 # Drawbacks
 
-The main drawback of this new approach is that we further the uncanny valley. It's hard to tell when you jump into any given file whether that is going to get used as a Shared, Client and Shared component. That's the big downside of the whole Server Components design that we're taking a bet that it's worth learning this one thing to unlock its possibilities. To help combat this, we'll also propose that, as a convention Server Components are mostly written as "Async Functions" form instead of "Hooks Functions". More on that soon. While Shared and Client Components would be written as "Hooks Functions". This distinction is not enforced though.
+The main drawback of this new approach is that we further the uncanny valley. It's hard to tell when you jump into any given file whether that is going to get used as a Shared, Client and Server component. That's the big downside of the whole Server Components design that we're taking a bet that it's worth learning this one thing to unlock its possibilities. To help combat this, we'll also propose that, as a convention Server Components are mostly written as "Async Functions" form instead of "Hooks Functions". More on that soon. While Shared and Client Components would be written as "Hooks Functions". This distinction is not enforced though.
 
 Additionally, since it's not enforced, it's difficult for tooling to tell if a file is a Shared, Client or Server Component. The only thing where you can tell that for sure is at the boundaries that are annotated. Otherwise you need to inspect the dependency graph. A lot of early errors might only be detected by a bundler that has the graph available to it.
 
