@@ -140,7 +140,7 @@ It's also not necessarily the best enforcement because it doesn't prevent a comp
 
 Therefore, we propose another convention to files with a `"use client"` directive:
 
-The conventions apply if a module exports a function that is identified as a React Component, according to some definition specified by the [React Compiler](https://reactjs.org/blog/2022/06/15/react-labs-what-we-have-been-working-on-june-2022.html#react-compiler) and the [Rules of Hooks Lint rule](https://reactjs.org/docs/hooks-rules.html). Basically if it contains a capital name and containers JSX or Hooks.
+The conventions apply if a module exports a function that is identified as a React Component, according to some definition specified by the [React Compiler](https://reactjs.org/blog/2022/06/15/react-labs-what-we-have-been-working-on-june-2022.html#react-compiler) and the [Rules of Hooks Lint rule](https://reactjs.org/docs/hooks-rules.html). Basically if it contains a capital name and contains JSX or Hooks.
 
 In that case, such function's arguments must all be serializable according to the Serialization rules of [React Server Components](https://github.com/josephsavona/rfcs/blob/server-components/text/0000-server-components.md) (basically JSON + Cycles, Binary Data, Promises, JSX etc).
 
