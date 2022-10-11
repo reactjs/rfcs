@@ -8,7 +8,7 @@ This is a new take on [the original v1 of this proposal](https://github.com/reac
 
 Please watch [the React Server Components intro talk](https://reactjs.org/server-components/) and high level [React Server Components RFC](https://github.com/reactjs/rfcs/pull/188) for some background context on this RFC.
 
-[React Server Components](https://github.com/reactjs/rfcs/pull/188) doesn't have much of an API other than integration into meta-frameworks. Instead, we propose that the main way you make choices about what runs on the server and client is defined by its file extension.
+[React Server Components](https://github.com/reactjs/rfcs/pull/188) doesn't have much of an API other than integration into meta-frameworks. Instead, we propose that the main way you make choices about what runs on the server and client is defined by a directive.
 
 We also propose using package.json conditional exports to allow an import to fork its implementation between server and client usage.
 
