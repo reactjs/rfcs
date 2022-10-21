@@ -28,7 +28,7 @@ in development mode to the developer may just unsubscribe to abort its async flo
 
 One approach I can think of to implement this is something like this:
 
-```flow js
+```typescript
 
 function updateCallback<T>(callback: T, deps: Array<mixed> | void | null): T {
   const hook = updateWorkInProgressHook();
