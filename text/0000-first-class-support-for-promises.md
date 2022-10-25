@@ -114,13 +114,9 @@ One of our primary motivations is to provide a seamless integration with the res
 
 However, the original proposal for Server Components did not make it easy to access promise-based APIs. Each data source needed to be wrapped with special bindings that were tricky to implement correctly. There was no straightforward way to wrap an arbitrary, one-off async operation.
 
-We were frequently asked: why not use async/await? We offered a [brief explanation](https://github.com/josephsavona/rfcs/blob/server-components/text/0000-server-components.md#why-not-use-asyncawait):
+We were frequently asked: why not use async/await? Originally, we wanted to have a consistent API for accessing data across Server Components, Client Components, and Shared Components. However, we're unable to support async/await in Client Components for technical reasons we'll cover in a later section.
 
-> We would like to use a consistent API for accessing data across Server Components, Client Components, and Shared Components.
-
-Implied in this statement was the idea that we're unable to support async/await in Client Components. That's true, for technical reasons we'll cover in a later section.
-
-Indeed, ideally we would prefer to support async/await everywhere. We have no desire to replace promises with our own asynchronous primitive, nor do we want to require every asynchronous API to be wrapped React-specific bindings. But at the time of the original RFC, we judged that having a consistent API across Server and Client Components was the more important goal.
+Ideally we would prefer to support async/await everywhere. We have no desire to replace promises with our own asynchronous primitive, nor do we want to require every asynchronous API to be wrapped React-specific bindings. But at the time of the original RFC, we judged that having a consistent API across Server and Client Components was the more important goal.
 
 We've since changed our mind. We now believe that the benefits of async/await in Server Components outweigh the downsides of having a different API (`use`) on the client.
 
