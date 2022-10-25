@@ -9,6 +9,7 @@
 # Table Of Contents
 
 * [Summary](#summary)
+* [Changes Since v1](#changes-since-v1)
 * [Basic Example](#basic-example)
 * [Motivation](#motivation)
     * [Zero-Bundle-Size Components](#zero-bundle-size-components)
@@ -22,7 +23,7 @@
     * [Refetch Sequence](#update-refetch-sequence)
     * [Capabilities & Constraints of Server and Client Components](#capabilities--constraints-of-server-and-client-components)
     * [Sharing Code Between Server and Client](#sharing-code-between-server-and-client)
-    * [Naming Conventions For Server/Client Components](#naming-convention-for-serverclient-components)
+    * [Conventions For Server/Client Components](#conventions-for-serverclient-components)
     * [Open Areas of Research](#open-areas-of-research)
 * [Drawbacks](#drawbacks)
 * [Alternatives](#alternatives)
@@ -45,21 +46,26 @@ This RFC discusses an upcoming feature for React called **Server Components**. S
 * Server Components are **rendered progressively and incrementally stream rendered units of the UI to the client**. Combined with Suspense, this allows developers to **craft intentional loading states** and **quickly show important content** while waiting for the remainder of a page to load.
 * Developers can also **share code between the server and client**, allowing a single component to be used to render a static version of some content on the server on one route and an editable version of that content on the client in a different route. 
 
+# Changes Since v1
+
+- [We've replaced the `.server.js` / `.client.js` filename convention with a `'use client'` directive](https://github.com/reactjs/rfcs/pull/227).
+- [We've added native `async / await` support to Server Components](https://github.com/reactjs/rfcs/pull/229).
+
 # Basic Example
 
-This example renders a simple Note with a title and body. It renders a non-editable view of the Note using a Server Component and optionally renders an editor for the Note using a Client Component (a traditional React component). First, we render the Note on the server. Our working convention is to name Server Components with the `.server.js` suffix (or `.server.jsx`, `.server.tsx`, etc):
+This example renders a simple Note with a title and body. It renders a non-editable view of the Note using a Server Component and optionally renders an editor for the Note using a Client Component (a traditional React component). First, we render the Note on the server.
 
 ```javascript
-// Note.server.js - Server Component
+// Note.js - Server Component
 
-import db from 'db.server'; 
-// (A1) We import from NoteEditor.client.js - a Client Component.
-import NoteEditor from 'NoteEditor.client';
+import db from 'db'; 
+// (A1) We import from NoteEditor.js - a Client Component.
+import NoteEditor from 'NoteEditor';
 
-function Note(props) {
+async function Note(props) {
   const {id, isEditing} = props;
   // (B) Can directly access server data sources during render, e.g. databases
-  const note = db.posts.get(id);
+  const note = await db.posts.get(id);
   
   return (
     <div>
@@ -77,14 +83,18 @@ function Note(props) {
 
 This example illustrates a few key points:
 
-* This is “just” a React component: it takes in props and renders a view. There are some constraints of Server Components - they can’t use state or effects, for example - but overall they work as you’d expect. More details are provided below in [Capabilities & Constraints of Server and Client Components](#capabilities--constraints-of-server-and-client-components).
-* Server Components can directly access server data sources such as a database, as illustrated in (B). This is implemented via a generic mechanism, allowing the community to create compatible APIs that work with various data sources.
-* Server Components can hand off rendering to the client by importing and rendering a “client” component, as illustrated in (A1) and (A2) respectively. Client Components use the `.client.js` suffix (or `.client.jsx`, `.client.tsx`, etc). Bundlers will treat these imports similarly to other dynamic imports, potentially splitting them into another bundle according to various heuristics. In this example, `NodeEditor.client.js` would only be loaded on the client if `props.isEditing` was true. 
+* This is “just” a React component -- it takes in props and renders a view. There are some constraints of Server Components - they can’t use state or effects, for example - but overall they work as you’d expect. More details are provided below in [Capabilities & Constraints of Server and Client Components](#capabilities--constraints-of-server-and-client-components).
+* Server Components can directly access server data sources such as a database, as illustrated in (B). This is implemented via a [generic mechanism that supports arbitrary asynchronous data sources with `async` / `await`.](https://github.com/reactjs/rfcs/pull/229) 
+* Server Components can hand off rendering to the client by importing and rendering a “client” component, as illustrated in (A1) and (A2) respectively. Client Components contain a [`'use client'` directive at the top of the file](https://github.com/reactjs/rfcs/pull/227). Bundlers will treat these imports similarly to other dynamic imports, potentially splitting them (and all the files they import) into another bundle according to various heuristics. In this example, `NodeEditor.js` would only be loaded on the client if `props.isEditing` was true. 
 
 In contrast, Client Components are the typical components you’re already used to. They can access the full range of React features: state, effects, access to the DOM, etc. The name “Client Component” doesn’t mean anything new, it only serves to distinguish these components from Server Components. To continue our example, here’s how we can implement the Note editor:
 
 ```javascript
-// NodeEditor.client.js - Client Component
+// NodeEditor.js - Client Component
+
+'use client';
+
+import { useState } from 'react';
 
 export default function NoteEditor(props) {
   const note = props.note;
@@ -108,7 +118,7 @@ export default function NoteEditor(props) {
 }
 ```
 
-*This looks like a regular React component because it is:* Client Components are just regular components.
+*This looks like a regular React component because it is:* Client Components are just regular components. The [`'use client'` directive](https://github.com/reactjs/rfcs/pull/227) at the top marks this component (and any modules it imports) as code that must execute on the Client.
 
 An important consideration is that when React renders the results of Server Components on the client it preserves the state of Client Components that may have been rendered before. Specifically, React merges new props passed from the server into existing Client Components, maintaining the state (and DOM) of these components to preserve focus, state, and any ongoing animations.
 
@@ -125,7 +135,6 @@ Developers constantly have to make choices about using third-party packages. Usi
 Note that *this is just one set of libraries you might use* and there may be smaller or larger alternatives. Even if you prefer alternative libraries that are only X bytes, *your users still have to download those X bytes*. The point of this example is not to pick on any particular library but to demonstrate that *using libraries is helpful as developers but increases bundle size and can hurt application performance*:
 
 ```javascript
-// NoteWithMarkdown.js
 // NOTE: *before* Server Components
 
 import marked from 'marked'; // 35.9K (11.2K gzipped)
@@ -139,10 +148,10 @@ function NoteWithMarkdown({text}) {
 
 However, many parts of an application aren’t interactive and don’t need full data consistency. For example, “detail” pages often show information about a product, user, or other entity and don’t need to update in response to user interaction. The Note example here is a perfect example.
 
-Server Components allow developers to render static content on the server, taking full advantage of React’s component-oriented model and freely using third-party packages while incurring zero impact on bundle size. If we migrate the above example to a Server Component we can use the *exact same code* for our feature but avoid sending it to the client - a code savings of over 240K (uncompressed):
+Server Components allow developers to render static content on the server or during the build, taking full advantage of React’s component-oriented model and freely using third-party packages while incurring zero impact on bundle size. If we render the above example as a Server Component, we can use the *exact same code* for our feature but avoid sending it to the client - a code savings of over 240K (uncompressed):
 
 ```javascript
-// NoteWithMarkdown.server.js - Server Component === zero bundle size
+// Server Component === zero bundle size
 
 import marked from 'marked'; // zero bundle size
 import sanitizeHtml from 'sanitize-html'; // zero bundle size
@@ -159,11 +168,10 @@ One of the most common pain points when writing React apps is deciding how to ac
 For example, if you’re creating a new app (or even your very first app!) and aren’t sure where to store your data, you can start with your file system:
 
 ```javascript
-// Note.server.js - Server Component
-import fs from 'react-fs';
+import fs from 'fs';
 
-function Note({id}) {
-  const note = JSON.parse(fs.readFile(`${id}.json`));
+async function Note({id}) {
+  const note = JSON.parse(await fs.readFile(`${id}.json`));
   return <NoteWithMarkdown note={note} />;
 }
 ```
@@ -171,11 +179,10 @@ function Note({id}) {
 More sophisticated apps can similarly take advantage of direct backend access to use databases, internal (micro)services, and other backend-only data sources:
 
 ```javascript
-// Note.server.js - Server Component
-import db from 'db.server';
+import db from 'db';
 
-function Note({id}) {
-  const note = db.notes.get(id);
+async function Note({id}) {
+  const note = await db.notes.get(id);
   return <NoteWithMarkdown note={note} />;
 }
 ```
@@ -188,11 +195,11 @@ If you’ve worked with React for a while you may be familiar with the concept o
 // PhotoRenderer.js
 // NOTE: *before* Server Components
 
-import React from 'react';
+import { lazy } from 'react';
 
 // one of these will start loading *when rendered on the client*:
-const OldPhotoRenderer = React.lazy(() => import('./OldPhotoRenderer.js'));
-const NewPhotoRenderer = React.lazy(() => import('./NewPhotoRenderer.js'));
+const OldPhotoRenderer = lazy(() => import('./OldPhotoRenderer.js'));
+const NewPhotoRenderer = lazy(() => import('./NewPhotoRenderer.js'));
 
 function Photo(props) {
   // Switch on feature flags, logged in/out, type of content, etc:
@@ -209,13 +216,11 @@ Code splitting can be very helpful in improving performance, but there are two m
 Server Components address these limitations in two ways. First, they make code splitting automatic: Server Components treat all imports of Client Components as potential code-split points. Second, they allow developers to make the choice of which component to use much earlier, on the server, so that the client can download it earlier in the rendering process. The net effect is that Server Components let developers focus more on their app and write natural code, with the framework optimizing delivery of the app by default:
 
 ```javascript
-// PhotoRenderer.server.js - Server Component
-
-import React from 'react';
+// PhotoRenderer.js - Server Component
 
 // one of these will start loading *once rendered and streamed to the client*:
-import OldPhotoRenderer from './OldPhotoRenderer.client.js';
-import NewPhotoRenderer from './NewPhotoRenderer.client.js';
+import OldPhotoRenderer from './OldPhotoRenderer.js';
+import NewPhotoRenderer from './NewPhotoRenderer.js';
 
 function Photo(props) {
   // Switch on feature flags, logged in/out, type of content, etc:
@@ -256,11 +261,11 @@ When both a parent and child component use this approach, however, the child can
 Server Components allow applications to achieve this goal by moving sequential round trips to the server. The problem isn’t really the round trips, it’s that they are from client to server. By moving this logic to the server we reduce the request latency and improve performance. Even better, Server Components allow developers to continue fetching the minimal data they need directly from within their components:
 
 ```javascript
-// Note.server.js - Server Component
+// Note.js - Server Component
 
-function Note(props) {
+async function Note(props) {
   // NOTE: loads *during* render, w low-latency data access on the server
-  const note = db.notes.get(props.id);
+  const note = await db.notes.get(props.id);
   if (note == null) {
     // handle missing note
   }
@@ -279,15 +284,15 @@ To address this challenge we initially experimented with one approach to ahead-o
 Server components help to address this by removing the abstraction cost on the server. For example, if a Server Component with multiple layers of wrappers for configurability ends up rendering to a single element, then that's all that will be sent to the client. In the next example, `Note` uses an intermediate `NoteWithMarkdown` abstraction that renders down to a wrapping `<div>`, so React would send just the div (and its contents) to the client:
 
 ```javascript
-// Note.server.js
+// Note.js
 // ...imports...
 
-function Note({id}) {
-  const note = db.notes.get(id);
+async function Note({id}) {
+  const note = await db.notes.get(id);
   return <NoteWithMarkdown note={note} />;
 }
 
-// NoteWithMarkdown.server.js
+// NoteWithMarkdown.js
 // ...imports...
 
 function NoteWithMarkdown({note}) {
@@ -322,7 +327,7 @@ In this section we’ll review the stages to loading the Note example above, wit
 The process for rendering the Note example is roughly as follows:
 
 * **On the Server:**
-    * [framework] The framework’s router will match the requested URL to a Server Component, passing the route parameters as props to the component. It will ask React to render the component and its props: in this case, `Note.server.js`.
+    * [framework] The framework’s router will match the requested URL to a Server Component, passing the route parameters as props to the component. It will ask React to render the component and its props: in this case, `Note.js`.
     * [React] React will render the root Server Component and any children that are also Server Components. Rendering stops at native components (divs, spans, etc) and at Client Components. Native components are streamed as a JSON description of the UI, and Client Components are streamed including the serialized props plus a bundle reference to the code for the component. 
         * Note that if any Server Component suspends, React will pause rendering of that subtree and stream a placeholder value instead. When the component is able to continue (un-suspends), React will re-render the component and stream the actual result of the component to the client. You can think of the data streamed to the target as JSON but with slots for components that suspend, where the values to place into those slots are provided as additional items later in the response stream. 
     * [framework] The framework is responsible for progressively streaming the rendered output to the client as React renders each unit of UI.
@@ -360,7 +365,7 @@ The main new concept introduced in this proposal is **Server Components**. In co
     * ❌ *May not* use rendering lifecycle (effects). So `useEffect()` and `useLayoutEffect()` are not supported.
     * ❌ *May not* use browser-only APIs such as the DOM (unless you polyfill them on the server).
     * ❌ *May not* use custom hooks that depend on state or effects, or utility functions that depend on browser-only APIs.
-    * ✅ *May* use server-only data sources such as databases, internal (micro)services, filesystems, etc.
+    * ✅ *May* use `async / await` with server-only data sources such as databases, internal (micro)services, filesystems, etc.
     * ✅ *May* render other Server Components, native elements (div, span, etc), or Client Components.
     * **Server Hooks/Utilities:** Developers may also create custom hooks or utility libraries that are designed for the server. All of the rules for Server Components apply. For example, one use-case for server hooks is to provide helpers for accessing server-side data sources.
 * **Client Components:** These are standard React components, so all the rules you’re used to apply. The main new rules to consider are what they can’t do with respect to Server Components. Client Components:
@@ -374,7 +379,7 @@ The main new concept introduced in this proposal is **Server Components**. In co
 
 ### Sharing Code Between Server and Client
 
-> ⚠️ NOTE: This section may feel intimidating, but you don’t need to memorize all of these rules to use Server Components. We have lint rules to help enforce these constraints based on the .server.js and .client.js naming convention. React will also provide clear runtime errors for any violations. While the list of the rules appears long, the intuition is simple: Client Components can’t access server-only features like the filesystem, Server Components can’t access client-only features like state, and Client Components may only import other Client Components. 
+> ⚠️ NOTE: This section may feel intimidating, but you don’t need to memorize all of these rules to use Server Components. React will provide clear lint, build, and runtime errors for any violations. While the list of the rules appears long, the intuition is simple: Client Components can’t access server-only features like the filesystem, Server Components can’t access client-only features like state, and Client Components may only import other Client Components. 
 
 In addition to pure Server Components and pure Client Components, developers may also create components and hooks that work on *both* the server and the client. This allows logic to be shared across environments so long as the components meet *all* the constraints of *both* Server and Client Components. Therefore, shared components and hooks:
 
@@ -386,17 +391,27 @@ In addition to pure Server Components and pure Client Components, developers may
 * ❌ *May not* render Server Components or use server hooks.
 * ✅ *May* be used on the server and client.
 
-Although shared components have the most restrictions, we’ve found that in practice many components already obey these rules and can be used across the server and client without modification. Many components simply transform some props based on some conditions, without using state or loading additional data. This is why shared components are the default and don’t have a special file extension.
+Although shared components have the most restrictions, we’ve found that in practice many components already obey these rules and can be used across the server and client without modification. Many components simply transform some props based on some conditions, without using state or loading additional data. This is why shared components are the default.
 
 A canonical example of a shared component is something like a Markdown renderer. If we are loading a route to *view* some content written in Markdown (but not edit it), it is more efficient to render the Markdown on the server and avoid downloading the potentially-large Markdown rendering library to the client. But if the user then wants to edit the content, the Markdown library can be downloaded on demand to provide a live preview while the user edits. Having a shared component allows an application to have a single source of truth for this rendering.
 
-### Naming Convention for Server/Client Components
+### Conventions for Server/Client Components
 
-> NOTE: **This approach is not final**. Please [see our related RFC to provide feedback about these conventions](https://github.com/reactjs/rfcs/pull/189). We recognize that this choice could have ramifications on the JS ecosystem and we would like to avoid any unintended negative consequences.
+To mark a component as a Client Component, add `'use client'` directive at the top of your file. This lets you use features like state and event handlers:
 
-Bundlers, linters, and other tools need a way to distinguish between server and Client Components. We are currently using the naming convention of `.server.js` for Server Components and `.client.js` for Client Components, with all other `.js` files considered shared code. In addition, we are exploring some additional conventions for package.json exports to allow different versions of a single package to be used depending on whether the consumer is a server or Client Component. 
+```js
+'use client';
 
-See [the related RFC](https://github.com/reactjs/rfcs/pull/189) to provide feedback.
+import { useState } from 'react';
+
+function Button({ children, onClick }) {
+  // ...
+}
+```
+
+You only need to add this directive to the Client Components that you import from Server Components. If you don't add the directive, by default all components will be treated as Shared — imports from the Server are treated as Server Components, and imports from the Client are treated as Client Components. In practice, this means that you only need to annotate Sever → Client entry points.
+
+See the [module conventions RFC](https://github.com/reactjs/rfcs/pull/227) for more details.
 
 ### Open Areas of Research
 
@@ -404,7 +419,7 @@ Although we have figured out many of the important fundamentals of Server Compon
 
 * **Developer Tools**. We consider first-class developer tools to be a prerequisite for officially releasing any React feature, including Server Components. Our goal is to provide an integrated developer experience for writing React apps that span the server and client. For example, the component inspector might show the Server Component hierarchy, even though those components don’t actually exist in the client tree. Similarly, developers would ideally be able to see server errors and logs show up on the client developer console and be able to breakpoint server code from the client source pane. We’re actively exploring some approaches to realize these ideas in an ergonomic and secure fashion.
 * **Routing**. As noted above, applications will generally need some integration with a router in order to map requests for pages into requests to render specific Server Components, and to transmit their rendered output to the client for final display. For the initial release we plan to integrate Server Components into one or more frameworks, which can then serve as a guide for how others can integrate routing. We’ll explore open questions around how routing can work as part of these first framework integrations.
-* **Bundling**. Server Components must be able to dynamically send Client Components to the client, including any metadata necessary for the client to fetch the appropriate bundle(s) from a static resource server such as a CDN. As noted in the [Naming Convention for Server/Client Components](#naming-convention-for-serverclient-components), bundlers also need to understand the conventions around `.server.js` and `.client.js` files and other Server Component-specific package.json conventions. This an area we are actively exploring in collaboration with projects such as Webpack and Parcel. This exploration includes research into different heuristics to find the most efficient bundling strategies.
+* **Bundling**. Server Components must be able to dynamically send Client Components to the client, including any metadata necessary for the client to fetch the appropriate bundle(s) from a static resource server such as a CDN. As noted in the [Conventions for Server/Client Components](#conventions-for-serverclient-components), bundlers also need to understand the `'use client'` directive and other Server Component-specific package.json conventions. This an area we are actively exploring in collaboration with projects such as Webpack and Parcel. This exploration includes research into different heuristics to find the most efficient bundling strategies.
 * **Pagination and partial refetches**. As noted above in [Update (Refetch) Sequence](#update-refetch-sequence), the typical method of reloading a page is to reload it in full. However there are some cases where this is not desirable, such as during pagination. Ideally our app would only fetch the next N items instead of refetching all items that the user has seen up to that point. We are still investigating how best to model pagination with Server Components. For example, internally we are loading Server Components via GraphQL, and using our existing infrastructure for pagination in GraphQL to work around lack of pagination in Server Components. However, we are committed to developing a general solution within React for this use-case.
 * **Mutations and invalidations**. In our initial demo we simply clear all cached Server Components whenever an update occurs. This is a simple approach that works well for many apps, but some apps may require more sophisticated invalidation strategies. We are still investigating how to support a generic mechanism for more fine-grained cache invalidation as well as an approach for supporting “optimistic” mutations.
 * **Pre-rendering.** One approach for improving page transition times is to pre-render content that the user is likely to interact with. For example, if a user hovers over a link, the application may begin to eagerly load that page. We are still investigating how to support pre-rendering out of the box for applications using Server Components.
@@ -444,7 +459,7 @@ Server components synthesize ideas from multiple sources:
 * Relay’s data-driven dependencies, which allow the server to dynamically choose which Client Component to use.
 * GraphQL, for demonstrating one approach to avoiding multiple round trips when loading data for client-side apps.
 
-Sebastian Markbage came up with the initial design for Server Components and developed this idea in collaboration with Andrew Clark, Dan Abramov, and Joe Savona. In addition, Lauren Tan, Juan Tejada, Luna Ruan, Andrey Lunyov, Eric Faust, and Royi Hagigi developed the first production integration of Server Components and provided substantial feedback on the design. We’d also like to thank our external partners, Chrome's Aurora team (especially Gerald Monaco, Shubhie Panicker, Nicole Sullivan, and Kara Erickson) and the Vercel team (especially Shu Ding, Jiachi Liu, Tobias Koppers, Javi Velasco, and Tim Neutkens), for their valuable feedback.
+Sebastian Markbage came up with the initial design for Server Components and developed this idea in collaboration with Andrew Clark, Dan Abramov, and Joe Savona. In addition, Lauren Tan, Juan Tejada, Luna Ruan, Andrey Lunyov, Eric Faust, and Royi Hagigi developed the first production integration of Server Components and provided substantial feedback on the design. We’d also like to thank our external partners, Chrome's Aurora team (especially Gerald Monaco, Shubhie Panicker, Nicole Sullivan, and Kara Erickson) and the Vercel team (especially Shu Ding, Jiachi Liu, Tobias Koppers, Javi Velasco, and Tim Neutkens), for their valuable feedback. Additionally, we'd like to thank Fran Dios, Josh Larson, Romuald Brillout, Ward Peeters, and others for their feedback on the Server/Client conventions.
 
 # FAQ
 
@@ -545,12 +560,6 @@ Concurrent Mode is a set of optimizations across React and also integrates with 
 ### How do you do routing?
 
 We don’t know yet. It’s an active area of research. There is a missing feature similar to Context for Server Context that we need to build into React first. 
-
-### Why not use async/await?
-
-The React IO libraries used in the demo and RFC follow the conventions we've discussed previously for writing Suspense-compatible data-fetching APIs. Suspense-compatible APIs return data synchronously when it is already available, throw if there is an error, or "suspend" to indicate to React that they are unable to return a value. The mechanism for Suspending is to throw a Promise value. React uses resolution of the promise to know when the API may be ready to provide a value (or that it has failed) and to schedule an attempt to render the component again.
-
-One new consideration in the design of Suspense from this proposal is that we would like to use a consistent API for accessing data across Server Components, Client Components, and Shared Components. Overall, though, the design of Suspense is outside the scope of this RFC. We agree that we should document this design clearly and will prioritize doing so in the new year.
 
 ### Are Server Components refetched whenever their props change?
 
