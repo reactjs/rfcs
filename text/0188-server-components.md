@@ -85,12 +85,12 @@ This example illustrates a few key points:
 
 * This is “just” a React component -- it takes in props and renders a view. There are some constraints of Server Components - they can’t use state or effects, for example - but overall they work as you’d expect. More details are provided below in [Capabilities & Constraints of Server and Client Components](#capabilities--constraints-of-server-and-client-components).
 * Server Components can directly access server data sources such as a database, as illustrated in (B). This is implemented via a [generic mechanism that supports arbitrary asynchronous data sources with `async` / `await`.](https://github.com/reactjs/rfcs/pull/229) 
-* Server Components can hand off rendering to the client by importing and rendering a “client” component, as illustrated in (A1) and (A2) respectively. Client Components contain a [`'use client'` directive at the top of the file](https://github.com/reactjs/rfcs/pull/227). Bundlers will treat these imports similarly to other dynamic imports, potentially splitting them (and all the files they import) into another bundle according to various heuristics. In this example, `NodeEditor.js` would only be loaded on the client if `props.isEditing` was true. 
+* Server Components can hand off rendering to the client by importing and rendering a “client” component, as illustrated in (A1) and (A2) respectively. Client Components contain a [`'use client'` directive at the top of the file](https://github.com/reactjs/rfcs/pull/227). Bundlers will treat these imports similarly to other dynamic imports, potentially splitting them (and all the files they import) into another bundle according to various heuristics. In this example, `NoteEditor.js` would only be loaded on the client if `props.isEditing` was true. 
 
 In contrast, Client Components are the typical components you’re already used to. They can access the full range of React features: state, effects, access to the DOM, etc. The name “Client Component” doesn’t mean anything new, it only serves to distinguish these components from Server Components. To continue our example, here’s how we can implement the Note editor:
 
 ```javascript
-// NodeEditor.js - Client Component
+// NoteEditor.js - Client Component
 
 'use client';
 
