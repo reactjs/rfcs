@@ -429,7 +429,7 @@ Even though `use` can be [called conditionally](#conditionally-suspending-on-dat
 
 Theoretically, it will "work" in the runtime if you call `use` inside a function which itself is only called from inside a React component or Hook, but this will be treated as a compiler error.
 
-If we allowed `use` to be called in regular functions, it would be up to the developer to keep track of whether it was being in the right context, since there's no way to enforce this in the type systems of today. That was one of the reasons we created the "use"- naming convention in the first place, to distinguish between React functions and non-React functions.
+If we allowed `use` to be called in regular functions, it would be up to the developer to keep track of whether it was being called in the right context, since there's no way to enforce this in the type systems of today. That was one of the reasons we created the "use"- naming convention in the first place, to distinguish between React functions and non-React functions.
 
 It would also make it harder for a memoizing compiler to re-use computations, because it would have to assume that _any_ arbitrary function might possibly suspend.
 
