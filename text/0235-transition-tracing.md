@@ -4,7 +4,7 @@
 
 # Summary
 
-We want to create a new React version of the [Interaction Tracing API](https://gist.github.com/bvaughn/8de925562903afd2e7a12554adcdda16https://gist.github.com/bvaughn/8de925562903afd2e7a12554adcdda16https://gist.github.com/bvaughn/8de925562903afd2e7a12554adcdda16). This will allow developers to use the Profiler API and DevTools Profiler/Timeline to:
+We want to create a new React version of the [Interaction Tracing API](https://gist.github.com/bvaughn/8de925562903afd2e7a12554adcdda16). This will allow developers to use the Profiler API and DevTools Profiler/Timeline to:
 
 1. Watch for performance regressions for specific transitions
 2. Understand why a React transition is slow so they can make performance improvements to better user experience
