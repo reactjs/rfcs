@@ -165,7 +165,7 @@ The only alternative to a built-in API is a Recoil-like library. I have created
 one and will hopefully be able to open source it soon. Still, that isn't quite
 equal to having that full hooks and Context integration of a built-in API.
 
-# Adoption strategy
+# Adoption strategy (TODO)
 
 If we implement this proposal, how will existing React developers adopt it? Is
 this a breaking change? Can we write a codemod? Should we coordinate with
@@ -187,6 +187,7 @@ re-organized or altered? Does it change how React is taught to new developers
 at any level?
 
 How should this feature be taught to existing React developers?
+
 ---
 
 ## Terminology (TODO)
