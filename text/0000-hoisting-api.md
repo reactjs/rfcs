@@ -6,107 +6,11 @@
 
 Introduce a new built-in API for creating hooks which will be automatically hoisted.
 This would address the desire for simplified state sharing in a more composable and flexible manner.
-Currently, calling this `createStore`.
 
 # Basic example
 
-I'm going to build off of [Scaling Up With Reducer and Context](
-https://beta.reactjs.org/learn/scaling-up-with-reducer-and-context)
-from the Beta docs.
-
-### TasksContext.js
-```diff
-- const TasksContext = createContext (null)
-- const TasksDispatchContext = createContext (null)
--
-  const INITIAL = [
-    // ...
-  ]
-
-  const reducer = (tasks, action) => {
-    // ...
-  }
-
-+ export const TasksProvider = Fragment
-- export const TasksProvider = ({ children }) => {
--   const [tasks, dispatch] = useReducer (reducer, INITIAL)
--   return (
--     <TasksContext.Provider value={tasks}>
--       <TasksDispatchContext.Provider value={dispatch}>
--         {children}
--       </TasksDispatchContext.Provider>
--     </TasksContext.Provider>
--   )
-- }
-+
-+ const useTasksReducer = hoist (() => useReducer (reducer, INITIAL))
-
-- export const useTasks = () => useContext (TasksContext)
-+ export const useTasks = hoist (() => useTasksReducer()[0])
-
-- export const useTasksDispatch = () => useContext (TasksDispatchContext)
-+ export const useTasksDispatch = hoist (() => useTasksReducer()[1])
-```
-
-### TaskList.js
-```diff
-- const useTaskIds = () => {
-+ const useTaskIds = hoist (() => {
-    const tasks = useTasks ()
-    return useMemo (() => {
-      return tasks.map (t => t.id)
-    }, [ tasks ])
-+ })
-- }
-
-  export default function TaskList() {
-    const ids = useTaskIds ()
-    const items = ids.map (id => (
-      <TaskIdContext.Provider key={id} value={id}>
-        <Task />
-      </TaskIdContext.Provider>
-    ))
-    return <>{items}</>
-  }
-```
-
-### Task.js (new!)
-```diff
-export const TaskIdContext = createContext ()
-
-- const useTaskProperty = (key) => {
-+ const useTaskProperty = hoist ((key) => {
-    const id = useContext (TaskIdContext)
-    const tasks = useTasks ()
-
-    return useMemo (() => {
-      const task = tasks.find (t => t.id === id)
-      return task[key]
-    }, [ tasks, id, key ])
-+ })
-- }
-
-  const useTaskEditingState = hoist (() => {
-
-  })
-
-- export default function Task () {
--   const [isEditing, setIsEditing] = useState (false)
--   const dispatch = useTaskDispatch ()
--   const text = useTaskProperty ("text")
--   const done = useTaskProperty ("done")
--   
-  return (
-    <div>
-      <TaskCheckbox />
-      <TaskText />
-      <Task>
-    </div>
-  )
-- }
-```
-
----
+Here is a contrived example with an item in a list that can be expanded.
+For a more real world use case see the end of the RFC.
 
 ```tsx
 import { IdContext, useExpandedState } from "./state"
@@ -141,23 +45,11 @@ export function List ({ ids }) {
 }
 ```
 
-## Global State
+## Hoisted to Item-Level
 
-```tsx
-const useExpandedStateById = hoist ((id: string) => {
-  useAssertConstant (id)
-  return useState (false)
-})
-
-export const IdContext = createContext ("")
-
-export const useExpandedState = () => {
-  const id = useContext (TodoIdContext)
-  return useExpandedStateById (id)
-}
-```
-
-## Item-Level State
+With this version, the expanded state is shared just between the descendents of
+the `IdContext.Provider`. If that provider were to unmount all of the expanded
+states would also be unmounted.
 
 ```tsx
 export const IdContext = createContext ("")
@@ -167,6 +59,25 @@ const useExpandedState = hoist (() => {
   useAssertConstant (id)
   return useState (false)
 })
+```
+
+## Global State
+
+With this version, the expanded state would be sharable across all components
+and would persist for the length of the session.
+
+```tsx
+const useExpandedStateById = hoist ((id: string) => {
+  useAssertConstant (id) // never
+  return useState (false)
+})
+
+export const IdContext = createContext ("")
+
+export const useExpandedState = () => {
+  const id = useContext (TodoIdContext)
+  return useExpandedStateById (id)
+}
 ```
 
 # Motivation
@@ -199,33 +110,60 @@ I ended up creating a new atomic state library one which could have state that i
 After iterating on the API for a while, I realized that I was approaching hooks and 
 that this would be better integrated with React given it's reliance on Context.
 
-# Detailed design
+# Detailed design (TODO)
 
 This is the bulk of the RFC. Explain the design in enough detail for somebody
 familiar with React to understand, and for somebody familiar with the
 implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
 defined here.
+
 ---
 
-
+Please refer to the Full Example section at the end of the RFC.
 
 # Drawbacks
 
 - The implementation would be non-trivial.
-- Somewhat changes the meaning of Context, arguably.
+- Arguably, a retcon of the Context API.
+- Can be used in a way that behavior depends on memoization.
 - Educating developers on an additional concept and API.
 - Somewhat overlaps with what already exists.
 - This is yet another state management solution.
 - Unsure of any conflicts their might be with lesser known features.
 
+## Global State
+
+While `hoist` (as I've described it) could be used like `useGlobalState` (which
+has previously been rejected) we could alter the API to prevent that. I'm not
+convinced that would be desirable but it is an option.
+
 # Alternatives
 
 What other designs have been considered? What is the impact of not doing this?
+
 ---
 
-It's not possible to do this with hooks as an external library,
-the closest I've been able to get is making a Recoil-like library which is substantially lesser than full hooks support.
+The status quo is viable for React, this is more of an opportunity. The issues
+addressed by `hoist` are some of the most prominent and 
+
+## Similar API
+
+There are a number of ways to implement a hoisting API that works in a similar
+way but with different syntax. `hoist` as I've described here is arguably, a
+bit too "auto-magical" and that could be confusing.
+
+## Provider API
+
+If we had an API for making Context Providers that could be added lazily 
+without unmounting the tree underneath that would unlock addressing some of the
+problems that `hoist` is addressing but it would not be close to equivalent.
+
+## Atomic Library
+
+The only alternative to a built-in API is a Recoil-like library. I have created
+one and will hopefully be able to open source it soon. Still, that isn't quite
+equal to having that full hooks and Context integration of a built-in API.
 
 # Adoption strategy
 
@@ -251,13 +189,11 @@ at any level?
 How should this feature be taught to existing React developers?
 ---
 
-## Terminology
+## Terminology (TODO)
 
-I'm using the term Store currently by default. More than open to changing it. 
-I experimented with just calling it `hoist` but I found that to be a bit hand-wavy;
-I think `hoist` implies that the referential integrity of the parameters wouldn't matter but it would have to.
 
-## Presentation
+
+## Presentation (TODO)
 
 The first 8 minutes on this video about Recoil do a fantastic job of talking about this problem: 
 https://www.youtube.com/watch?v=_ISAA_Jt9kI&t=3s. 
@@ -267,7 +203,7 @@ Then we present it again from the "bottom-up"
 to show how this we can think about components using these stores as composition.
 I would adapt that talk to include the big differences from Recoil to the proposed API: hooks and context.
 
-## Documentation
+## Documentation (TODO)
 
 This would involve changes to the React documentation, mostly additions.
 I think this would become a major part of the suggested approach to React development.
@@ -275,7 +211,7 @@ I assume the Provider pattern isn't more prominently featured because it's a
 pattern as opposed to an API and not a particularly popular one.
 I expect this being an API makes it much more suitable as a best practice.
 
-# Unresolved questions
+# Unresolved questions (TODO)
 
 - Does this conflict with lesser-known React APIs current or future?
 - What would need to change internally to support this?
@@ -425,7 +361,6 @@ const ProductPage = ({ id }) => (
 
 
 
-
 ## Current Closest Equivalent
 
 Here's the closest I can get with our current toolset. It is debatably 
@@ -510,86 +445,13 @@ export const useSelectedColorState = ProductScope.hoist (() => {
 
 
 
+## Built-In API
 
-## Conservative Built-In APIs
-
-### ./provider
-```tsx
-import { createScope } from "react"
-
-export const ProductIdContext = createContext ("")
-export const ProductScope = createScope ()
-
-export const ProductProvider = ({ children, id }) => {
-  return (
-    <ProductIdContext.Provider value={id}>
-      <ProductScope>
-        {content}
-      </ProductScope>
-    </ProductIdContext>
-  )
-}
-```
-
-### ./color/state.tsx
-```tsx
-import { ProductIdContext, ProductScope } from "./provider"
-
-const SelectedColorStore = createStore (() => {
-  const productId = useContext (ProductIdContext)
-  const [ selectedColorId, setSelectedColorId ] = useState ("")
-
-  useEffect (() => {
-    setSelectedColor ("")
-  }, [ productId ])
-
-  return useMemo (() => ({
-    selectedColorId,
-    setSelectedColorId,
-  }), [ selectedColorId, setSelectedColorId ])
-}, [ ProductScope ])
-
-export const useSelectedColorState = () => useStore (SelectedColorStore)
-```
-
-### ./color/swatch.tsx
-```tsx
-const ColorSelectedStore = () => {
-  const color = useContext (ColorContext)
-  const { selectedColor } = useSelectedColorState ()
-  return color === selectedColor
-}
-
-const SelectColorStore = (color: string) => {
-  const { setSelectedColor } = useSelectedColorState ()
-  return useCallback (() => {
-    setSelectedColor (color)
-  }, [ color, setSelectedColor ])
-}
-
-export function Swatch () {
-  const color = useContext ()
-  const onClick = useSelectColor (colorId)
-
-  const selected = useColorSelected ()
-  // ...
-}
-```
-
-
-
-
-## Aggressive Built-In API
-
-With a built-in API we get the following benefits:
-- No Scope needed, using Context gets the info we need.
-- Better throwing of Errors/Promises
-- We can support arguments
+With a built-in API we're able to infer the level of hoisting based on 
+`useContext` so no Scope is needed.
 
 ### ./color/state
 ```tsx
-import { ProductIdContext } from "./provider"
-
 export const useSelectedColorState = hoist (() => {
   const productId = useContext (ProductIdContext)
   const [ selectedColorId, setSelectedColorId ] = useState ("")
