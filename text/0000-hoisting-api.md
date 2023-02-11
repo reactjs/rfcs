@@ -7,6 +7,8 @@
 Introduce a new built-in API for creating hooks which will be automatically hoisted.
 This would address the desire for simplified state sharing in a more composable and flexible manner.
 
+
+
 # Basic example
 
 Here is a contrived example with an item in a list that can be expanded.
@@ -75,15 +77,18 @@ const useExpandedStateById = hoist ((id: string) => {
 export const IdContext = createContext ("")
 
 export const useExpandedState = () => {
-  const id = useContext (TodoIdContext)
+  const id = useContext (IdContext)
   return useExpandedStateById (id)
 }
 ```
 
+
+
 # Motivation
 
-The Provider pattern is our de-facto solution to hoisted state but it has a fundamental limitation:
-we cannot add Providers during the runtime without side effects caused by re-mounting the tree.
+The Provider pattern is our de-facto solution to hoisted state but it has a 
+fundamental limitation: we cannot add Providers during the runtime without side 
+effects caused by re-mounting the tree.
 
 Situations where Providers are insufficient:
 - Lazily loading hoisted state like for Micro-Frontends or plugins.
@@ -98,17 +103,10 @@ This approach has some ergonomic benefits as well:
 - Avoiding re-renders from derived state is trivial.
   - Pattern is resilient to duplication.
 
-I think this could potentially become the industry standard over third-party libraries.
+I think this could potentially become the industry standard over third-party 
+libraries.
 
-## Backstory
 
-I was trying to figure out how to share state between components that are distributed and loaded dynamically 
-using Module Federation, which the Provider pattern was highly incompatible with. 
-I started with Recoil which worked well for global state but I also needed state that was hoisted but not global.
-
-I ended up creating a new atomic state library one which could have state that is contextual instead of global.
-After iterating on the API for a while, I realized that I was approaching hooks and 
-that this would be better integrated with React given it's reliance on Context.
 
 # Detailed design (TODO)
 
@@ -122,6 +120,8 @@ defined here.
 
 Please refer to the Full Example section at the end of the RFC.
 
+
+
 # Drawbacks
 
 - The implementation would be non-trivial.
@@ -132,85 +132,76 @@ Please refer to the Full Example section at the end of the RFC.
 - This is yet another state management solution.
 - Unsure of any conflicts their might be with lesser known features.
 
-## Global State
+## Not Global State
 
 While `hoist` (as I've described it) could be used like `useGlobalState` (which
 has previously been rejected) we could alter the API to prevent that. I'm not
 convinced that would be desirable but it is an option.
 
+
+
 # Alternatives
 
-What other designs have been considered? What is the impact of not doing this?
-
----
-
 The status quo is viable for React, this is more of an opportunity. The issues
-addressed by `hoist` are some of the most prominent and 
+addressed by `hoist` are some of the most common in the React community and a
+good number of the RFCs submitted are related to state management in one way or
+another.
 
-## Similar API
+### Similar API
 
 There are a number of ways to implement a hoisting API that works in a similar
 way but with different syntax. `hoist` as I've described here is arguably, a
 bit too "auto-magical" and that could be confusing.
 
-## Provider API
+### Provider API
 
 If we had an API for making Context Providers that could be added lazily 
 without unmounting the tree underneath that would unlock addressing some of the
 problems that `hoist` is addressing but it would not be close to equivalent.
 
-## Atomic Library
+### Atomic Library
 
 The only alternative to a built-in API is a Recoil-like library. I have created
 one and will hopefully be able to open source it soon. Still, that isn't quite
 equal to having that full hooks and Context integration of a built-in API.
 
+
+
 # Adoption strategy (TODO)
-
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
-
----
 
 I think this is a similar kind of change to when hooks were added. 
 It's a significant addition that would effect how React developers write their code
 but it's not a breaking change to the library and it can be adopted incrementally.
 
+It's relationship with Context could make adoption more complicated though. It
+seems like a non-issue to me right now but I could be wrong.
+
+
+
 # How we teach this
 
-What names and terminology work best for these concepts and why? How is this
-idea best presented? As a continuation of existing React patterns?
+### Terminology (TODO)
 
-Would the acceptance of this proposal mean the React documentation must be
-re-organized or altered? Does it change how React is taught to new developers
-at any level?
+### Presentation
 
-How should this feature be taught to existing React developers?
+The first 8 minutes on this video about Recoil do a fantastic job of talking
+about this problem: https://www.youtube.com/watch?v=_ISAA_Jt9kI&t=3s. We 
+present the (prop-less) Provider pattern and it's limitations. Then we
+"extract" the Provider from the tree which would be just one of these hoisted
+hooks.
 
----
+We can then present it again from the "bottom-up" to show how this is another
+form of composition in React as we're now explicitly importing hoisted code
+instead of relying implicitly upon some Provider.
 
-## Terminology (TODO)
-
-
-
-## Presentation (TODO)
-
-The first 8 minutes on this video about Recoil do a fantastic job of talking about this problem: 
-https://www.youtube.com/watch?v=_ISAA_Jt9kI&t=3s. 
-We present the (prop-less) Provider pattern and it's limitations.
-Then we "extract" the Provider from the tree which would be just like a "store".
-Then we present it again from the "bottom-up" 
-to show how this we can think about components using these stores as composition.
-I would adapt that talk to include the big differences from Recoil to the proposed API: hooks and context.
-
-## Documentation (TODO)
+### Documentation (TODO)
 
 This would involve changes to the React documentation, mostly additions.
-I think this would become a major part of the suggested approach to React development.
-I assume the Provider pattern isn't more prominently featured because it's a
-pattern as opposed to an API and not a particularly popular one.
-I expect this being an API makes it much more suitable as a best practice.
+I think this would become a major part of the suggested approach to React
+development. I assume the Provider pattern isn't more prominently featured
+because it's a pattern as opposed to an API and not a particularly popular one.
+
+
 
 # Unresolved questions (TODO)
 
@@ -220,15 +211,30 @@ I expect this being an API makes it much more suitable as a best practice.
 - What would be needed for this to fit the React team's vision? 
 (see: https://github.com/reactjs/rfcs/pull/130#issuecomment-901475687)
 
+## Memory Leak
 
+With the current version of the API, there is potential for memory leaks and
+that is something that we'd need to figure out. That edge case can occur when
+using hoist with args along with a context which has a value that changes.
+
+The API can be designed differently to avoid this (by having the hoisted hooks
+unmount once unused) but that comes with it's own drawbacks. Such a solution
+would make the lifecycle kind of unpredictable.
+
+### IDEA: "Fixed" Context
+
+This could be solved by a variant of Context which unmounts it's children when
+it's value changes. I only bring it up because I expect such a feature has
+other uses like with server components.
+
+Additionally, with `hoist` in React, I'm having a difficult time imagining the
+use case for Contexts with dynamic values.
 
 
 
 # Full Example
 
 I've added this section with the real world example that led me to this idea.
-
-
 
 ## Use Case
 
