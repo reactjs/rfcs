@@ -4,8 +4,9 @@
 
 # Summary
 
-Introduce a new built-in API for creating hooks which will be automatically hoisted.
-This would address the desire for simplified state sharing in a more composable and flexible manner.
+Introduce a new built-in API for creating hooks which will be automatically
+hoisted. This would address the desire for state sharing across components in
+a more composable, explicit and flexible way.
 
 
 
@@ -47,11 +48,11 @@ export function List ({ ids }) {
 }
 ```
 
-## Hoisted to Item-Level
+### Hoisted to Item-Level
 
 With this version, the expanded state is shared just between the descendents of
 the `IdContext.Provider`. If that provider were to unmount all of the expanded
-states would also be unmounted.
+states would be lost.
 
 ```tsx
 export const IdContext = createContext ("")
@@ -63,14 +64,14 @@ const useExpandedState = hoist (() => {
 })
 ```
 
-## Global State
+### Hoisted to Global-Level
 
 With this version, the expanded state would be sharable across all components
 and would persist for the length of the session.
 
 ```tsx
 const useExpandedStateById = hoist ((id: string) => {
-  useAssertConstant (id) // never
+  useAssertConstant (id) // always passes
   return useState (false)
 })
 
@@ -108,7 +109,7 @@ libraries.
 
 
 
-# Detailed design (TODO)
+# Detailed design
 
 This is the bulk of the RFC. Explain the design in enough detail for somebody
 familiar with React to understand, and for somebody familiar with the
@@ -118,21 +119,88 @@ defined here.
 
 ---
 
-Please refer to the Full Example section at the end of the RFC.
+Please refer to the Full Example section at the end of the RFC for a real-world
+use case that shows why `hoist` can be uniquely valuable compared to current 
+React and existing third-party libraries.
+
+## Errors & Promises
+
+Thrown errors and promises would be expected to route through the components
+which use the hoisted hook. This is really the only viable approach otherwise
+there would be huge potential unintended side effects to using `hoist`.
+
+### Example
+
+Layout should render the same with or without `hoist` here. The one difference
+is if you navigate away then return `useFooterData` wouldn't suspend twice.
+
+```tsx
+const useHeaderData = hoist (() => useAsync (async () => {
+  throw new Error ("No Header Data")
+}))
+
+const useFooterData = hoist (() => useAsync (async () => {
+  return await loadFooterData()
+}))
+
+function Header () {
+  const data = useHeaderData()
+  // ...
+}
+
+function Footer () {
+  const data = useFooterData()
+  // ...
+}
+
+function Layout ({ children }) {
+  return <>
+    <ErrorBoundary fallback={<FallbackHeader />}>
+      <Suspense>
+        <Header />
+      </Suspense>
+    </ErrorBoundary>
+    { children }
+    <Suspense>
+      <Footer />
+    </Suspense>
+  </>
+}
+```
 
 
 
 # Drawbacks
 
 - The implementation would be non-trivial.
-- Arguably, a retcon of the Context API.
 - Can be used in a way that behavior depends on memoization.
 - Educating developers on an additional concept and API.
-- Somewhat overlaps with what already exists.
 - This is yet another state management solution.
-- Unsure of any conflicts their might be with lesser known features.
 
-## Not Global State
+## Difficult Implementation
+
+From looking at the source code, it looks like it would require a good amount
+of refactoring of the internals to get this to work. The big issue is the
+initial execution
+
+## Context
+
+It can be argued that this is a retcon of the Context API, not a breaking 
+change but definitely a re-imagining of how and when Context should be used. 
+As far as I can tell, `hoist` eliminates the need for passing dynamic values
+through Context. 
+
+It may be that between this and Context's conflicts with RSC 
+that the path forward is with a new, restrictive Context API that expects it's
+value not to change.
+
+### Memory Leak
+
+With the current version of the API, there was potential for memory leaks when
+using both args and dynamic context. That is something that we'd need to 
+figure out, there are options though.
+
+## Global State
 
 While `hoist` (as I've described it) could be used like `useGlobalState` (which
 has previously been rejected) we could alter the API to prevent that. I'm not
@@ -182,6 +250,8 @@ seems like a non-issue to me right now but I could be wrong.
 
 ### Terminology (TODO)
 
+
+
 ### Presentation
 
 The first 8 minutes on this video about Recoil do a fantastic job of talking
@@ -191,8 +261,8 @@ present the (prop-less) Provider pattern and it's limitations. Then we
 hooks.
 
 We can then present it again from the "bottom-up" to show how this is another
-form of composition in React as we're now explicitly importing hoisted code
-instead of relying implicitly upon some Provider.
+form of composition in React as we're now explicitly importing from the same
+area as the business logic exists.
 
 ### Documentation (TODO)
 
@@ -211,30 +281,12 @@ because it's a pattern as opposed to an API and not a particularly popular one.
 - What would be needed for this to fit the React team's vision? 
 (see: https://github.com/reactjs/rfcs/pull/130#issuecomment-901475687)
 
-## Memory Leak
-
-With the current version of the API, there is potential for memory leaks and
-that is something that we'd need to figure out. That edge case can occur when
-using hoist with args along with a context which has a value that changes.
-
-The API can be designed differently to avoid this (by having the hoisted hooks
-unmount once unused) but that comes with it's own drawbacks. Such a solution
-would make the lifecycle kind of unpredictable.
-
-### IDEA: "Fixed" Context
-
-This could be solved by a variant of Context which unmounts it's children when
-it's value changes. I only bring it up because I expect such a feature has
-other uses like with server components.
-
-Additionally, with `hoist` in React, I'm having a difficult time imagining the
-use case for Contexts with dynamic values.
-
 
 
 # Full Example
 
 I've added this section with the real world example that led me to this idea.
+
 
 ## Use Case
 
@@ -367,7 +419,6 @@ const ProductPage = ({ id }) => (
 ```
 
 
-
 ## Current Closest Equivalent
 
 Here's the closest I can get with our current toolset. It is debatably 
@@ -437,16 +488,16 @@ import { ProductIdContext, ProductScope } from "./provider"
 
 export const useSelectedColorState = ProductScope.hoist (() => {
   const productId = useContext (ProductIdContext)
-  const [ selectedColorId, setSelectedColorId ] = useState ("")
+  const [ selectedColor, setSelectedColor ] = useState ("")
 
   useEffect (() => {
     setSelectedColor ("")
   }, [ productId ])
 
   return useMemo (() => ({
-    selectedColorId,
-    setSelectedColorId,
-  }), [ selectedColorId, setSelectedColorId ])
+    selectedColor,
+    setSelectedColor,
+  }), [ selectedColor, setSelectedColor ])
 })
 ```
 
@@ -461,16 +512,16 @@ With a built-in API we're able to infer the level of hoisting based on
 ```tsx
 export const useSelectedColorState = hoist (() => {
   const productId = useContext (ProductIdContext)
-  const [ selectedColorId, setSelectedColorId ] = useState ("")
+  const [ selectedColor, setSelectedColor ] = useState ("")
 
   useEffect (() => {
     setSelectedColor ("")
   }, [ productId ])
 
   return useMemo (() => ({
-    selectedColorId,
-    setSelectedColorId,
-  }), [ selectedColorId, setSelectedColorId ])
+    selectedColor,
+    setSelectedColor,
+  }), [ selectedColor, setSelectedColor ])
 })
 ```
 
