@@ -76,7 +76,7 @@ A component always has it's own `addEventListener` and `dispatchEvent` available
 To listen to child events, a higher-level component must use the `useEventTarget` hook.
 Components call `addEventListener` to listen to events, then pass it to a component through the `target` prop.
 
-Setting `target` should be considered equivalent to the following: `for (const [name, fn] of target) child.addEventListener(name, fn)`
+Setting `target` should be considered equivalent to the following: `for (const [name, fn] of target) child.addEventListener(name, fn)`.
 To implement this, the JSX transformer will need to create an EventTarget instance, possibly using `useMemo`.
 It will then need to connect the events from the `target` prop to the newly-created EventTarget instance, possibly using code like the example above.
 The new EventTarget is then passed down as the `target` prop to the component along with the `children` prop.
@@ -93,7 +93,8 @@ defined here.
 
 The first drawback that comes to mind is that if a component already has a `target` property, this will almost certainly break backwards-compatibility with it.
 
-Another drawback is that since the `target` prop must always be available to any component it requires that every transformed component must keep an EventTarget instance under the hood.
+Another drawback is that since the `target` prop must always be available to any component it requires that every transformed component must keep an EventTarget instance under the hood even if it isn't being used.
+I don't know much about the internals of the current version of React, so I can't say if there will be a performance penalty for this
 
 
 <!--
