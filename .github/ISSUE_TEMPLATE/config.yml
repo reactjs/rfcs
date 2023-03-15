@@ -1,0 +1,10 @@
+contact_links:
+    - name: ⚛️ Feature Request or Proposal
+      about: To submit a feature request or a proposal, follow the RFC process and send a pull request. Do NOT create issues for proposals.
+      url: https://github.com/reactjs/rfcs#what-the-process-is
+    - name: 📃 Documentation Issue
+      url: https://github.com/reactjs/reactjs.org/issues/new
+      about: This issue tracker is not for documentation issues. Please file documentation issues here.
+    - name: 🤔 Questions and Help
+      url: https://reactjs.org/community/support.html
+      about: This issue tracker is not for support questions. Please refer to the React community's help and discussion forums.
