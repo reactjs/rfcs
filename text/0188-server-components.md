@@ -409,7 +409,7 @@ function Button({ children, onClick }) {
 }
 ```
 
-You only need to add this directive to the Client Components that you import from Server Components. If you don't add the directive, by default all components will be treated as Shared — imports from the Server are treated as Server Components, and imports from the Client are treated as Client Components. In practice, this means that you only need to annotate Sever → Client entry points.
+You only need to add this directive to the Client Components that you import from Server Components. If you don't add the directive, by default all components will be treated as Shared — imports from the Server are treated as Server Components, and imports from the Client are treated as Client Components. In practice, this means that you only need to annotate Server → Client entry points.
 
 See the [module conventions RFC](https://github.com/reactjs/rfcs/pull/227) for more details.
 
