@@ -12,74 +12,31 @@ a more composable, explicit and flexible way.
 
 # Basic example
 
-Here is a contrived example with an item in a list that can be expanded.
-For a more real world use case see the end of the RFC.
+Sharing the count state between two Counters within the same scope
 
-```tsx
-import { IdContext, useExpandedState } from "./state"
+```jsx
+import { createScope, createStore, useStore } from "react"
 
-function ExpandedContent () {
-  const [ expanded ] = useExpandedState()
-  if (!expanded) return null
+const CounterScope = createScope ()
+CounterScope.displayName = "CounterScope"
+
+const countStore = createStore (() => {
+  const [ count, setCount ] = useState (0)
+  return { count, increment }
+}, [ CounterScope ])
+
+function Counter () {
+  const { count, increment } = useStore (countStore)
   // ...
 }
 
-function ExpandButton () {
-  const [ expanded, setExpanded ] = useExpandedState()
-  // ...
-}
-
-function Item () {
+function App () {
   return <>
-    <ExpandButton />
-    <Content />
-    <ExpandedContent />
+    <CounterScope>
+      <Counter />
+      <Counter />
+    </CounterScope>
   </>
-}
-
-export function List ({ ids }) {
-  return <>
-    {ids.map (id => (
-      <IdContext.Provider key={id} value={id}>
-        <Item />
-      </IdContext.Provider>
-    ))}
-  </>
-}
-```
-
-### Hoisted to Item-Level
-
-With this version, the expanded state is shared just between the descendents of
-the `IdContext.Provider`. If that provider were to unmount all of the expanded
-states would be lost.
-
-```tsx
-export const IdContext = createContext ("")
-
-const useExpandedState = hoist (() => {
-  const id = useContext (IdContext)
-  useAssertConstant (id)
-  return useState (false)
-})
-```
-
-### Hoisted to Global-Level
-
-With this version, the expanded state would be sharable across all components
-and would persist for the length of the session.
-
-```tsx
-const useExpandedStateById = hoist ((id: string) => {
-  useAssertConstant (id) // always passes
-  return useState (false)
-})
-
-export const IdContext = createContext ("")
-
-export const useExpandedState = () => {
-  const id = useContext (IdContext)
-  return useExpandedStateById (id)
 }
 ```
 
@@ -111,60 +68,165 @@ libraries.
 
 # Detailed design
 
-This is the bulk of the RFC. Explain the design in enough detail for somebody
-familiar with React to understand, and for somebody familiar with the
-implementation to implement. This should get into specifics and corner-cases,
-and include examples of how the feature is used. Any new terminology should be
-defined here.
+> This is the bulk of the RFC. Explain the design in enough detail for somebody
+> familiar with React to understand, and for somebody familiar with the
+> implementation to implement. This should get into specifics and corner-cases,
+> and include examples of how the feature is used. Any new terminology should be
+> defined here.
 
----
+TODO
 
-Please refer to the Full Example section at the end of the RFC for a real-world
-use case that shows why `hoist` can be uniquely valuable compared to current 
-React and existing third-party libraries.
+## Global Scoping
 
-## Errors & Promises
-
-Thrown errors and promises would be expected to route through the components
-which use the hoisted hook. This is really the only viable approach otherwise
-there would be huge potential unintended side effects to using `hoist`.
+To ensure a store is globally scoped an empty scopes list is used.
 
 ### Example
 
-Layout should render the same with or without `hoist` here. The one difference
-is if you navigate away then return `useFooterData` wouldn't suspend twice.
+```tsx
+const canScrollStore = createStore (() => {
+  const [ canScroll, setCanScroll ] = useState (false)
+  
+  useLayoutEffect (() => {
+    // enable/disable scrolling
+  }, [ canScroll ])
+  
+  return { canScroll, setCanScroll }
+}, [])
+
+function Modal () {
+  const { canScroll, setCanScroll } = use (canScrollStore)
+  
+  useEffect (() => {
+    setCanScroll (false)
+  }, [])
+  
+  // ...
+}
+```
+
+
+
+## Local Scoping
+
+Stores without a scopes list parameter are "local", they are scoped to whatever
+uses them. This is helpful for two use cases:
+
+1. Conditional Hook Calls
+2. Passing and using a "custom hook"
+
+### Example
+
+`NavbarContent` can be just the navbar or it can have a menu of data inside of it.
+That menu and whether or not it should be displayed can be changed from page to 
+page and that logic can be passed through context using a local store.
 
 ```tsx
-const useHeaderData = hoist (() => useAsync (async () => {
-  throw new Error ("No Header Data")
-}))
-
-const useFooterData = hoist (() => useAsync (async () => {
-  return await loadFooterData()
-}))
-
-function Header () {
-  const data = useHeaderData()
+const menuStore = createStore (() => {
   // ...
-}
+})
 
-function Footer () {
-  const data = useFooterData()
-  // ...
-}
+const MenuStoreContext = createContext (menuStore)
 
+function Navbar ({ simple }) {
+  const menuStore = useContext (MenuStoreContext)
+  const menu = simple ? undefined : use (menuStore)
+  return <NavbarContent menu={menu} />
+}
+```
+
+
+
+## Use Case: Store Family
+
+One of the most valuable attributes of `createStore` is that any number of
+stores can be created which means each item in a dynamically sized list could
+have a store. This is based on Recoil's `atomFamily` utility.
+
+A utility like that doesn't need to be a part of React but here's what it might
+look like:
+
+```jsx
+function createStoreFamily (hook) {
+  return _.memoize ((key) => {
+    return createStore (() => hook (key))
+  })
+}
+```
+
+### Pitfall: Memory Leak
+
+This pattern is prone to memory leaks, however, that's not really a React problem
+unless it's decided to that `createStoreFamily` is important enough to be included
+in the core library (which I think is perfectly reasonable).
+
+### Example
+
+```jsx
+const AccordionScope = createScope ()
+
+const openIdStore = createStore (() => {
+  const [ openId, setOpenId ] = useState (null)
+  return { openId, setOpenId }
+}, [ AccordionScope ])
+
+const openStoreBy = createStoreFamily ((id) => {
+  const { openId, setOpenId } = useStore (openIdStore)
+  const open = openId === id
+  const toggleOpen = useEvent (() => setOpenId (open ? null : id))
+  return { open, toggleOpen }
+}, [ AccordionScope ])
+
+function AccordionItem ({ id, children }) {
+  const { open, toggleOpen } = useStore (openStoreBy (id))
+  return (
+    <Expandable open={open} onToggle={toggleOpen}>
+      {children}
+    </Expandable>
+  )
+}
+```
+
+
+
+## Errors & Suspense
+
+Thrown errors and promises would be expected to route through the components
+which use the store. This is really the only viable approach otherwise
+there would be huge potential unintended side effects.
+
+This is how throwing works in libraries like Jotai and Recoil.
+
+### Example
+
+Layout should render the same with or without the "middleman" stores here. The
+children are rendered immediately, the Footer and Header both trigger their
+Suspense boundaries and then Footer and FallbackHeader are rendered.
+
+```tsx
 function Layout ({ children }) {
   return <>
-    <ErrorBoundary fallback={<FallbackHeader />}>
-      <Suspense>
+    <ErrorBoundary fallback={<HeaderFallback />}>
+      <Suspense fallback={<HeaderLoader />}>
         <Header />
       </Suspense>
     </ErrorBoundary>
     { children }
-    <Suspense>
-      <Footer />
-    </Suspense>
   </>
+}
+
+// Header
+
+const fetchHeaderData = cache (async () => {
+  throw new Error ("No Header Data")
+})
+
+const headerDataStore = createStore (() => {
+  return use (fetchHeaderData())
+}, [])
+
+function Header () {
+  const data = use (headerDataStore)
+  // ...
 }
 ```
 
@@ -177,61 +239,39 @@ function Layout ({ children }) {
 - Educating developers on an additional concept and API.
 - This is yet another state management solution.
 
-## Difficult Implementation
+### Difficult Implementation
 
 From looking at the source code, it looks like it would require a good amount
 of refactoring of the internals to get this to work. The big issue is the
 initial execution
 
-## Context
+### Global State
 
-It can be argued that this is a retcon of the Context API, not a breaking 
-change but definitely a re-imagining of how and when Context should be used. 
-As far as I can tell, `hoist` eliminates the need for passing dynamic values
-through Context. 
-
-It may be that between this and Context's conflicts with RSC 
-that the path forward is with a new, restrictive Context API that expects it's
-value not to change.
-
-### Memory Leak
-
-With the current version of the API, there was potential for memory leaks when
-using both args and dynamic context. That is something that we'd need to 
-figure out, there are options though.
-
-## Global State
-
-While `hoist` (as I've described it) could be used like `useGlobalState` (which
-has previously been rejected) we could alter the API to prevent that. I'm not
-convinced that would be desirable but it is an option.
+It's been previously mentioned that global state in general kind of violates the
+React team's model for composability. The solution I've proposed does allow for 
+global state but we could do things differently if needed.
 
 
 
 # Alternatives
 
 The status quo is viable for React, this is more of an opportunity. The issues
-addressed by `hoist` are some of the most common in the React community and a
-good number of the RFCs submitted are related to state management in one way or
+addressed by `createStore` are some of the most common in the React community and 
+a good number of the RFCs submitted are related to state management in one way or 
 another.
-
-### Similar API
-
-There are a number of ways to implement a hoisting API that works in a similar
-way but with different syntax. `hoist` as I've described here is arguably, a
-bit too "auto-magical" and that could be confusing.
 
 ### Provider API
 
 If we had an API for making Context Providers that could be added lazily 
 without unmounting the tree underneath that would unlock addressing some of the
-problems that `hoist` is addressing but it would not be close to equivalent.
+problems that `createStore` is addressing but it would not be close to equivalent.
 
 ### Atomic Library
 
 The only alternative to a built-in API is a Recoil-like library. I have created
 one and will hopefully be able to open source it soon. Still, that isn't quite
-equal to having that full hooks and Context integration of a built-in API.
+equal to having that full hooks and Context integration of a built-in API
+
 
 
 
@@ -250,15 +290,11 @@ seems like a non-issue to me right now but I could be wrong.
 
 ### Terminology (TODO)
 
-
-
 ### Presentation
 
 The first 8 minutes on this video about Recoil do a fantastic job of talking
-about this problem: https://www.youtube.com/watch?v=_ISAA_Jt9kI&t=3s. We 
-present the (prop-less) Provider pattern and it's limitations. Then we
-"extract" the Provider from the tree which would be just one of these hoisted
-hooks.
+about this problem: https://www.youtube.com/watch?v=_ISAA_Jt9kI&t=3s. We then
+slide in stores instead of atoms and then add scopes for non-global state.
 
 We can then present it again from the "bottom-up" to show how this is another
 form of composition in React as we're now explicitly importing from the same
@@ -280,262 +316,3 @@ because it's a pattern as opposed to an API and not a particularly popular one.
 - Is it okay if it's always memoized?
 - What would be needed for this to fit the React team's vision? 
 (see: https://github.com/reactjs/rfcs/pull/130#issuecomment-901475687)
-
-
-
-# Full Example
-
-I've added this section with the real world example that led me to this idea.
-
-
-## Use Case
-
-Here's the features, this will be true for every example. The code will be the
-same unless specified otherwise.
-
-### ./provider
-```tsx
-export const ColorContext = createContext ("")
-export const ProductIdContext = createContext ("")
-
-// TODO: add any wrappers as necessary
-export const ProductProvider = ({ children, id }) => (
-  <ProductIdContext.Provider value={id}>
-    {children}
-  </ProductIdContext>
-)
-```
-
-### ./label
-
-Exogenous to the example.
-`ProductLabel` displays basic product information.
-
-### ./data
-
-Exogenous to the example.
-Hooks which use ProductIdContext and return data from the server.
-
-### ./color/state.tsx
-```tsx
-export const useSelectedColorState = () => {
-  // TODO
-  return { selectedColor, setSelectedColor }
-}
-```
-
-### ./color/swatch.tsx
-```tsx
-const useColorSelected = () => {
-  const color = useContext (ColorContext)
-  const { selectedColor } = useSelectedColorState ()
-  return color === selectedColor
-}
-
-// doesn't use ColorContext for example purposes
-const useSelectColor = (color: string) => {
-  const { setSelectedColor } = useSelectedColorState ()
-  return useCallback (() => {
-    setSelectedColor (color)
-  }, [ color, setSelectedColor ])
-}
-
-export function Swatch ({ color }) {
-  const selected = useColorSelected ()
-  const onClick = useSelectColorId (colorId)
-  // ...
-}
-```
-
-### ./color/components.tsx
-```tsx
-import { useProductColors, useProductColorImageUrl } from "../data"
-
-export function ColorField () {
-  const colors = useProductColors ()
-  return (
-    <div>
-      {colors.map (color => (
-        <ColorButton key={color} color={color} />
-      ))}
-    </div>
-  )
-}
-
-export function ProductImage () {
-  const { selectedColor } = useSelectedColorState ()
-  const src = useProductColorImageUrl (selectedColor)
-  return <img src={src} />
-}
-```
-
-### ./card.tsx
-```tsx
-import { ProductLabel } from "./label"
-import { ColorField, ProductImage } from "./color/components"
-
-export const ProductCard = () => (
-  <div>
-    <ProductImage />
-    <ColorField />
-    <ProductLabel />
-  </div>
-)
-```
-
-### ./page.tsx
-```tsx
-import { ProductLabel } from "./label"
-import { ColorField, ProductImage } from "./color/components"
-import { Card } from "./card"
-import { useRecommendations } from "./data"
-
-const Recommendations = () => {
-  const ids = useRecommendations ()
-  const cards = ids.map (id => (
-    <ProductProvider key={id} id={id}>
-      <ProductCard />
-    </ProductProvider>
-  ))
-  return <>{cards}</>
-}
-
-const ProductPage = ({ id }) => (
-  <ProductProvider id={id}>
-    <article>
-      <section>
-        <ProductImage />
-      </section>
-      <section>
-        <ProductLabel />
-        <ColorField />
-      </section>
-      <section>
-        <Recommendations />
-      </section>
-    </article>
-  <ProductProvider>
-)
-```
-
-
-## Current Closest Equivalent
-
-Here's the closest I can get with our current toolset. It is debatably 
-desirable for ergonomic reasons but it still has all the limitations of Context
-and in-practice the scopes are implicitly coupled to a context.
-
-### react-hoisting (fake package)
-```tsx
-function createScope () {
-  const providers = []
-
-  const component = ({ children }) => {
-    let content = children
-
-    for (const Provider of providers) {
-      content = <Provider>{content}</Provider>
-    }
-
-    return content
-  }
-
-  const hoist = (hook) => {
-    const TheContext = createContext ()
-
-    providers.push (({ children }) => {
-      const value = hook ()
-      return (
-        <TheContext.Provider value={value}>
-          {children}
-        </TheContext.Provider>
-      )
-    })
-
-    return () => useContext (TheContext)
-  }
-
-  return {
-    Provider: component,
-    hoist,
-  }
-}
-```
-
-### ./provider
-```tsx
-import { createScope } from "react-hoisting"
-
-export const ColorContext = createContext ("")
-export const ProductIdContext = createContext ("")
-
-export const ProductScope = createScope ()
-
-export const ProductProvider = ({ children, id }) => {
-  return (
-    <ProductIdContext.Provider value={id}>
-      <ProductScope.Provider>
-        {children}
-      </ProductScope.Provider>
-    </ProductIdContext>
-  )
-}
-```
-
-### ./color/state.tsx
-```tsx
-import { ProductIdContext, ProductScope } from "./provider"
-
-export const useSelectedColorState = ProductScope.hoist (() => {
-  const productId = useContext (ProductIdContext)
-  const [ selectedColor, setSelectedColor ] = useState ("")
-
-  useEffect (() => {
-    setSelectedColor ("")
-  }, [ productId ])
-
-  return useMemo (() => ({
-    selectedColor,
-    setSelectedColor,
-  }), [ selectedColor, setSelectedColor ])
-})
-```
-
-
-
-## Built-In API
-
-With a built-in API we're able to infer the level of hoisting based on 
-`useContext` so no Scope is needed.
-
-### ./color/state
-```tsx
-export const useSelectedColorState = hoist (() => {
-  const productId = useContext (ProductIdContext)
-  const [ selectedColor, setSelectedColor ] = useState ("")
-
-  useEffect (() => {
-    setSelectedColor ("")
-  }, [ productId ])
-
-  return useMemo (() => ({
-    selectedColor,
-    setSelectedColor,
-  }), [ selectedColor, setSelectedColor ])
-})
-```
-
-### ./color/swatch.tsx
-```tsx
-const useColorSelected = hoist ((color: string) => {
-  const { selectedColor } = useSelectedColorState ()
-  return color === selectedColor
-})
-
-const useSelectColor = hoist ((color: string) => {
-  const { setSelectedColor } = useSelectedColorState ()
-  return useCallback (() => {
-    setSelectedColor (color)
-  }, [ color, setSelectedColor ])
-})
-```
