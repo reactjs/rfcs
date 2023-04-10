@@ -1,33 +1,33 @@
-- Start Date: 2023-03-15
+- Start Date: 2023-04-10
 - RFC PR: 
 - React Issue: 
 
 # Summary
 
-This adds a `target` prop to every React component and a `useEventTarget` hook to use it.
+This adds two props (`addEventListener` and `dispatchEvent`) to every React component and a `useEventTarget` hook to use them.
 
 # Basic example
 
 ```jsx
 function ParentComponent() {
   const [text, setText] = useState("Count: 0");
-  const target = useEventTarget();
-  target.addEventListener("count", (evt) => {
+  const eventTarget = useEventTarget();
+  eventTarget.addEventListener("count", (evt) => {
     setText(`Count: ${evt.detail.count}`);
   });
-  
+
   return (
-    <ChildComponent target={target}>
+    <ChildComponent eventTarget={eventTarget}>
       <h1>{text}</h1>
     </ChildComponent>
   );
 }
 
-function ChildComponent({ children, target }) {
+function ChildComponent({ children, dispatchEvent }) {
   const [count, setCount] = useState(0);
   const onClick = (count) => {
     setCount(count);
-    target.dispatchEvent(new CustomEvent("count", {
+    dispatchEvent(new CustomEvent("count", {
       detail: { count }
     }));
   };
@@ -44,7 +44,7 @@ function ChildComponent({ children, target }) {
 
 # Motivation
 
-The web is event-driven; it's time to make React be as well.
+The web is event-driven: it's time to make React be as well.
 
 The vast majority of Web APIs involve EventTarget, including DOM elements.
 It's a simple yet elegant way of sharing data without disrupting the top-down nature of the DOM.
@@ -54,6 +54,7 @@ The child component's only role is to signal that new information is available.
 Parent-child communication without tightly coupling the two is a persistant problem in React.
 Most existing solutions involve passing both the value and set function from `useState()` to the child.
 Large-scale applications will often use Redux selectors and actions that operate on the same store in both parent and child.
+I've experienced this myself in commercial application development, where components will often use the same `useSelector` and `dispatch` call to communicate with each other.
 
 <!--
 Why are we doing this? What use cases does it support? What is the expected
@@ -67,19 +68,21 @@ closely to the solution you have in mind.
 
 # Detailed design
 
-There are two elements to this proposal: making a `target` prop available to every component the way `children` is now, and a new `useEventListener()` hook to use it.
+There are two elements to this proposal: making an `addEventListener` and `dispatchEvent` prop available to every component the way `children` is now, and a new `useEventTarget()` hook to use them.
 
-`target` should be defined and available to every React component, regardless of whether or not the parent component has set the `target` prop.
-With this change, every React component can be (mentally) thought of as the functional equivalent of a class inheriting EventTarget:
+By default, `addEventListener` and `dispatchEvent` will be empty functions: they do nothing when the component calls them. This changes when a parent component sets the `eventTarget` prop. When it does, the `dispatchEvent` and `addEventListener` props call their respective methods on the `eventTarget`.
+`addEventListener` and `dispatchEvent` should be defined and available to every React component, regardless of whether or not the parent component has set the `eventTarget` prop.
+
+With this change, every React component can be thought of (mentally) as the functional equivalent of a class inheriting EventTarget:
 A component always has it's own `addEventListener` and `dispatchEvent` available to it. It never has to check to make sure they were given by a parent, and there are no changes to the behavior if there are no listeners.
 
-To listen to child events, a higher-level component must use the `useEventTarget` hook.
-Components call `addEventListener` to listen to events, then pass it to a component through the `target` prop.
+To set the `eventTarget` property, a higher-level component must use the `useEventTarget` hook. When `eventTarget` has been set, the child `addEventListener` and `dispatchEvent` prop functions invoke their respective functions on the `eventTarget` given to them.
 
-Setting `target` should be considered equivalent to the following: `for (const [name, fn] of target) child.addEventListener(name, fn)`.
-To implement this, the JSX transformer will need to create an EventTarget instance, possibly using `useMemo`.
-It will then need to connect the events from the `target` prop to the newly-created EventTarget instance, possibly using code like the example above.
-The new EventTarget is then passed down as the `target` prop to the component along with the `children` prop.
+To implement this, the JSX transformer will need to do the following:
+1. If the `eventTarget` prop is undefined or null, it creates `addEventListener` and `dispatchEvent` as empty functions and then expose them to the transformed component as props. They are still defined so the component can call them without throwing an exception, but there is no behavior outside the component.
+2. If the `eventTarget` prop is given, it creates `addEventListener` and `dispatchEvent` as functions which call their respective methods on the EventTarget instance, then exposes them to the transformed component as props.
+
+While the `eventTarget` prop is set by the parent, it should not be exposed to the child component.
 
 <!--
 This is the bulk of the RFC. Explain the design in enough detail for somebody
@@ -91,11 +94,8 @@ defined here.
 
 # Drawbacks
 
-The first drawback that comes to mind is that if a component already has a `target` property, this will almost certainly break backwards-compatibility with it.
-
-Another drawback is that since the `target` prop must always be available to any component it requires that every transformed component must keep an EventTarget instance under the hood even if it isn't being used.
-I don't know much about the internals of the current version of React, so I can't say if there will be a performance penalty for this
-
+- If a component already has an `eventTarget` prop for something else, this will cause breaking changes. This may not be much of an issue since there don't seem to be any major libraries that use this.
+- The implementation could require the JSX transformer to keep an EventTarget instance under the hood for every component. On the other hand, that likely wouldn't be too difficult.
 
 <!--
 Why should we *not* do this? Please consider:
@@ -111,31 +111,20 @@ There are tradeoffs to choosing any path. Attempt to identify them here.
 
 # Alternatives
 
-- Do nothing. React works and there are user-land solutions for almost any problem.
-- I briefly considered the [useEvent](https://github.com/reactjs/rfcs/blob/useevent/text/0000-useevent.md) hook proposed by @gaearon before realizing it was for different use-cases.
+- Do nothing. React works and there are solutions for almost any problem.
+- I briefly considered the [useEvent](https://github.com/reactjs/rfcs/blob/useevent/text/0000-useevent.md) hook proposed by gaearon before realizing it was for different use-cases.
 - My previous Signals and Slots RFC ([0000-signals-and-slots.md](https://github.com/Symbitic/rfcs/blob/master/text/0000-signals-and-slots.md)) was intended to solve similar problems, but it applies an outside concept instead if using the EventTarget already adopted by the web.
-- User-land solutions like creating a new EventTarget and passing it. The problem is that this makes following the web optional rather than something built into React.
-- Use `eventTarget` as the prop name instead of `target` as it would be less likely to already be in use.
+- User-land solutions like creating a new EventTarget and passing it. The problem with that is that it doesn't solve the problem of making the web a first-class part of React.
 
 <!--
 What other designs have been considered? What is the impact of not doing this?
 -->
 
-# Adoption strategy
-
-Once implemented
-
-<!--
-If we implement this proposal, how will existing React developers adopt it? Is
-this a breaking change? Can we write a codemod? Should we coordinate with
-other projects or libraries?
--->
-
 # How we teach this
 
-The biggest problem with teaching is that most web developers will know that EventTarget is a class, which may lead them to think that using this requires switching back to class-based components.
+Our goal is to make React components more web-like. The word "more" should be emphasized to convey that this is not a breaking change: it simply helps React components act more like regular DOM elements.
 
-One way to solve this is to teach the `target` prop first, the `useEventTarget` hook second.
+In addition to documenting the `useEventTarget` hook, the three related props (`addEventListener`, `dispatchEvent`, and `eventTarget`) must also be taught. Since the `children` prop isn't especially well-documented, it might be useful to create a new page "Child Props" that describes every built-in prop available to all components.
 
 <!--
 What names and terminology work best for these concepts and why? How is this
@@ -149,6 +138,10 @@ How should this feature be taught to existing React developers?
 -->
 
 # Unresolved questions
+
+Should `useEventTarget` create a new instance every time it is called, or should the JSX transformer create a single instance and return it for every `useEventTarget`?
+
+What design should be used to handle the case when an `eventTarget` prop becomes undefined later?
 
 <!--
 Optional, but suggested for first drafts. What parts of the design are still
