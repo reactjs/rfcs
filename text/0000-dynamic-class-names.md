@@ -9,6 +9,9 @@ The proposed feature is to add a new syntax for dynamically adding classes to Re
 # Basic example
 
 ```jsx
+const [isHovering, isDisabled, isLoading] = [false, true, true];
+const custom = 'custom';
+
 <button classNames={[
   "primary",
   ["teal", "semi-transparent", isHovering && ["hover", "darken-2"]],
@@ -18,6 +21,11 @@ The proposed feature is to add a new syntax for dynamically adding classes to Re
   null,
   `${custom}-class`
 ]}>Click Me!</button>
+```
+
+**HTML Output:**
+```html
+<button class="primary teal semi-transparent loading is-disabled custom-class">Click Me!</button>
 ```
 
 In this example, the `classNames` attribute is used to add several classes to the button component based on certain conditions. 
