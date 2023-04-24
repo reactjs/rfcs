@@ -94,7 +94,7 @@ const canScrollStore = createStore (() => {
 }, [])
 
 function Modal () {
-  const { canScroll, setCanScroll } = use (canScrollStore)
+  const { canScroll, setCanScroll } = useStore (canScrollStore)
   
   useEffect (() => {
     setCanScroll (false)
@@ -146,9 +146,9 @@ A utility like that doesn't need to be a part of React but here's what it might
 look like:
 
 ```jsx
-function createStoreFamily (hook) {
+function createStoreFamily (hook, deps) {
   return _.memoize ((key) => {
-    return createStore (() => hook (key))
+    return createStore (() => hook (key), deps)
   })
 }
 ```
@@ -177,7 +177,7 @@ const openStoreBy = createStoreFamily ((id) => {
 }, [ AccordionScope ])
 
 function AccordionItem ({ id, children }) {
-  const { open, toggleOpen } = useStore (openStoreBy (id))
+  const { open, toggleOpen } = use (openStoreBy (id))
   return (
     <Expandable open={open} onToggle={toggleOpen}>
       {children}
@@ -225,9 +225,53 @@ const headerDataStore = createStore (() => {
 }, [])
 
 function Header () {
-  const data = use (headerDataStore)
+  const data = useStore (headerDataStore)
   // ...
 }
+```
+
+
+
+## Best Practices
+
+There are a couple keys to using Scope effectively that I think need to be called out.
+
+1. Context and Scope are often two sides of the same concept, they should be co-located.
+2. If a store calls another store, it should depend on the same scopes as that store. 
+To make that easier, we should allow for stores to be passed as if they were scopes.
+
+### Example
+
+```jsx
+// ./product.js
+
+import { createContext, createStore, createScope } from "react"
+
+const ProductScope = createScope ()
+const ProductIdContext = createContext ()
+
+export const ProductProvider = ({ children, id }) => (
+  <ProductIdContext.Provider key={id} value={id}>
+    <ProductScope>
+      {children}
+    </ProductScope>
+  </ProductIdContext.Provider>
+)
+
+export const productIdStore = createStore (() => {
+  return useContext (ProductIdContext)
+})
+
+// ./selected-color.js
+
+const selectedColorStore = createStore (() => {
+  const id = useStore (productIdStore)
+  
+  const [ defaultColor ] = use (fetchProductColors (id))
+  const [ selectedColor, setSelectedColor ] = useState (defaultColor)
+  
+  return { selectedColor, setSelectedColor }
+}, [ productIdStore ])
 ```
 
 
@@ -260,6 +304,84 @@ addressed by `createStore` are some of the most common in the React community an
 a good number of the RFCs submitted are related to state management in one way or 
 another.
 
+
+
+## Auto-Scoping Hoist API
+
+There is an alternate API that is more similar to the original version of this RFC.
+This variant would come with some tradeoffs but is arguably better as it uses Context
+to automatically determine the "scope" to hoist the "store" to.
+
+### Example
+
+This is equivalent to the "Best Practices" example.
+
+```jsx
+import { context, hoist } from "react"
+
+// ./product.js
+
+export const [ ProductIdProvider, useProductId ] = context ()
+
+// ./selected-color.js
+
+const useColorState = hoist (() => {
+  const id = useProductId ()
+  
+  const [ defaultColor ] = use (fetchProductColors (id))
+  const [ selectedColor, setSelectedColor ] = useState (defaultColor)
+  
+  useEffect (() => {
+    setSelectedColor (defaultColor)
+  }, [ id ])
+  
+  return { selectedColor, setSelectedColor }
+})
+```
+
+### How does `hoist` relate to `createStore`?
+
+Hoist is basically a wrapper around `createStoreFamily`. In both variations, there is a
+`createStore`, but in this variation `createStore` is an internal because it's not
+ever meant to be referenced directly.
+
+In the default version of this proposal, `createStore` has deps so `hoist` would also need
+a `deps` argument. But in this alternative proposal, no `deps` is needed.
+
+```js
+function createStoreFamily (hook) {
+  return _.memoize ((key) => {
+    return createStore (() => hook (key))
+  })
+}
+
+function hoist (hook) {
+  const family = createStoreFamily (hook)
+  return (...args) => useStore (family (...args))
+}
+```
+
+### Drawback: A Different Context API
+
+This would require a Context API that is either new or is a breaking change. The current
+`useContext` implementation allows it's argument to change but that would break this
+"auto-scoping" proposal. The context must stay the same.
+
+I assume this is a dealbreaker but maybe with RSC and it's conflicts with Context, I'm
+wrong and a new Context API is on the table.
+
+### Drawback: Incompatibility with conditional `use`
+
+There may be some wiggle room but generally, this "auto-scoping" variant isn't compatible
+with conditional execution because - like the drawback above - the scopes need to be 
+consistent.
+
+
+
+## Partial Alternatives
+
+These are options we have for addressing the same issue but in a less complete manner.
+
 ### Provider API
 
 If we had an API for making Context Providers that could be added lazily 
@@ -270,8 +392,7 @@ problems that `createStore` is addressing but it would not be close to equivalen
 
 The only alternative to a built-in API is a Recoil-like library. I have created
 one and will hopefully be able to open source it soon. Still, that isn't quite
-equal to having that full hooks and Context integration of a built-in API
-
+equal to having that full integration of a built-in API
 
 
 
