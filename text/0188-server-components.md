@@ -104,7 +104,7 @@ export default function NoteEditor(props) {
     setTitle(event.target.value);
   };
   const updateBody = event => {
-    setTitle(event.target.value);
+    setBody(event.target.value);
   };
   const submit = () => {
     // ...save note...
@@ -356,7 +356,7 @@ Key aspects of this process are described in detail below.
 
 ### Capabilities & Constraints of Server and Client Components
 
-> ⚠️ NOTE: This section may feel intimidating, but you don’t need to memorize all of these rules to use Server Components. We have lint rules to help enforce these constraints based on the .server.js and .client.js naming convention. React will also provide clear runtime errors for any violations. While the list of the rules appears long, the intuition is simple: Client Components can’t access server-only features like the filesystem, Server Components can’t access client-only features like state, and Client Components may only import other Client Components.
+> ⚠️ NOTE: This section may feel intimidating, but you don’t need to memorize all of these rules to use Server Components. React will provide clear lint, build, and runtime errors for any violations. While the list of the rules appears long, the intuition is simple: Client Components can’t access server-only features like the filesystem, Server Components can’t access client-only features like state, and Client Components may only import other Client Components.
 
 The main new concept introduced in this proposal is **Server Components**. In contrast, **Client Components** are the standard React components that developers are already familiar with: the name “Client Component” doesn’t mean anything new, it’s purely to distinguish them from Server Components. In this section we discuss some important differences between the capabilities of these two types of components. 
 
