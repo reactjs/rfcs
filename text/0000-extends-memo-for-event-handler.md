@@ -56,31 +56,33 @@ export default function memo(WrappedComponent, options) {
     return reactMemo(WrappedComponent, options);
   }
 
-  let Wrapped = WrappedComponent;
+  const MemoComponent = reactMemo(Wrapped, options.propsAreEqual);
+
   const {events} = options;
-  if (events) {
-    // events is an array or true
-    Wrapped = forwardRef((props, ref) => {
-      const memoEventsRef = useRef({});
-      const eventNames = Array.isArray(events)
-        ? events
-        : Object.keys(props).filter((k) => /^on[A-Z]/.test(k));
 
-      const memoEvents = eventNames.reduce(
-        (me, n) => ({
-          ...me,
-          [n]: fixEventHandler(memoEventsRef.current[e], props[e])
-        }),
-        {}
-      );
-      memoEventsRef.current = memoEvents;
-      return <WrappedComponent ref={ref} {...props} {...memoEvents} />;
-    });
+  if (!events) return MemoComponent;
 
-    Wrapped.displayName = `FixedEvent(${getDisplayName(WrappedComponent)})`;
-  }
+  // events is an array or true
+  const Wrapped = forwardRef((props, ref) => {
+    const memoEventsRef = useRef({});
+    const eventNames = Array.isArray(events)
+      ? events
+      : Object.keys(props).filter((k) => /^on[A-Z]/.test(k));
 
-  return reactMemo(Wrapped, options.propsAreEqual);
+    const memoEvents = eventNames.reduce(
+      (me, n) => ({
+        ...me,
+        [n]: fixEventHandler(memoEventsRef.current[e], props[e])
+      }),
+      {}
+    );
+    memoEventsRef.current = memoEvents;
+    return <MemoComponent ref={ref} {...props} {...memoEvents} />;
+  });
+
+  Wrapped.displayName = `FixedEvent(${getDisplayName(MemoComponent)})`;
+
+  return Wrapped;
 }
 
 const wm = new WeakMap();
