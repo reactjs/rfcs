@@ -49,42 +49,59 @@ Internally, `memo` function will approximately work like this:
 
 ```jsx
 // (!) Approximate behavior
-import {memo as reactMemo, useRef} from 'react';
+import {memo as reactMemo, forwardRef, useRef} from 'react';
 
-export function memo(Component, options) {
+export default function memo(WrappedComponent, options) {
   if (!options || typeof options === 'function') {
-    return reactMemo(Component, options);
+    return reactMemo(WrappedComponent, options);
   }
 
-  const {events, propsAreEqual} = options;
-
-  if (options.events) {
-
-    function Wrapped(props) {
-      const memoEvents = useRef({}).current;
+  let Wrapped = WrappedComponent;
+  const {events} = options;
+  if (events) {
+    // events is an array or true
+    Wrapped = forwardRef((props, ref) => {
+      const memoEventsRef = useRef({});
       const eventNames = Array.isArray(events)
         ? events
         : Object.keys(props).filter((k) => /^on[A-Z]/.test(k));
-      for (const e of eventNames) {
-        memoEvents[e] = memoEvents[e] || wrapEvent(props[e]);
-      }
-      return <Component {...props} {...memoEvents} />;
-    }
 
-    return reactMemo(Wrapped);
+      const memoEvents = eventNames.reduce(
+        (me, n) => ({
+          ...me,
+          [n]: fixEventHandler(memoEventsRef.current[e], props[e])
+        }),
+        {}
+      );
+      memoEventsRef.current = memoEvents;
+      return <WrappedComponent ref={ref} {...props} {...memoEvents} />;
+    });
+
+    Wrapped.displayName = `FixedEvent(${getDisplayName(WrappedComponent)})`;
   }
 
-  return reactMemo(Component, propsAreEqual);
+  return reactMemo(Wrapped, options.propsAreEqual);
 }
 
-const ws = new WeakSet();
+const wm = new WeakMap();
 
-function wrapEvent(func) {
-  if (typeof func !== 'function' || ws.has(func)) return func;
-  const wrapped = (...params) => func(...params);
-  ws.add(wrapped);
-  return wrapped;
+function fixEventHandler(fixed, handler) {
+  if (typeof handler !== 'function' || wm.has(handler)) return handler;
+  if (!fixed) {
+    fixed = (...params) => {
+      const h = wm.get(fixed);
+      return h(...params);
+    };
+  }
+
+  wm.set(fixed, handler);
+  return fixed;
 }
+
+function getDisplayName(WrappedComponent) {
+  return WrappedComponent.displayName || WrappedComponent.name || 'Component';
+}
+
 ```
 
 IMHO, the essence of the problem is that the event handler should not be regarded as an ordinary callback.
