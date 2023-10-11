@@ -534,11 +534,15 @@ type BoundDispatchCustomEvent<DetailType, TargetType> = (
 type ImperativeHandleWithBoundTarget<DetailType, TargetType> = {
   dispatchCustomEvent: BoundDispatchCustomEvent<DetailType>
 }
-type UseEventTargetImperativeHandle<DetailType, TargetType> = (
+interface UseEventTargetImperativeHandle{
+  <DetailType, TargetType>
     ref: React.Ref<TargetType>,
     handleFactory: () => TargetType,
     dependencies: any[]
-  ) => ImperativeHandleWithBountTarget<DetailType, TargetType>;
+  ): ImperativeHandleWithBountTarget<DetailType, TargetType>;
+}
+
+const useEventTargetImperativeHandle: UseEventTargetImperativeHandle;
 ```
 
 ### Alternatives
