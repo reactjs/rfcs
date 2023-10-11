@@ -64,11 +64,11 @@ type SlewOfCustomEventHandlers =
   | () => void
 ```
 
-> This type shows many of the types of observed but I've ommitted types that include a native DOM event in place of the React.SyntheticEvent, which happen occasionally when components abstract behaviors that are attached to the `window`, `document`, or `body` element.
+> This type shows many of the types I've observed but I've ommitted types that include a native DOM event in place of the React.SyntheticEvent, which happen occasionally when components abstract events that are attached to the `window`, `document`, `body` elements, or events that are attached directly to DOM elements.
 
 ### Example of interoperability problem
 
-Lets say you have a react library that provides you with an API for adding validation to input fields.
+Lets say you have a component library that provides you with an API for adding validation to input fields.
 
 The library may expose a hook that allows you to customize the validations for a given field, and provides you with a prop to monitor changes in the field.
 
@@ -112,11 +112,11 @@ A couple of things will need to change.
 2. ✅ the validators should change to something that can handle the new data type
 3. ❌ the `onChange` callback must handle the api exposed by `DatePicker`
 
-At this point, there are a couple of options available to each group of developers (developers of the `useValidatedInput` hook, and consumers of the hook).
+At this point, there are a couple of options available to each group of developers (developers of the `useValidatedInput` hook, and consumers of the hook) to handle the difference in the `onChange` API.
 
 1. The developers of the hook can accept a "strategy" function to read values from the `onChange` event
 
-> ❌ Interop exhibit 1. There has to be a strategy that is injected to properly handle the event. This is adding some code complexity
+> ❌ Interop issue exhibit 1. There has to be a strategy that is injected to properly handle the event. This is adding some code complexity
 
 ```ts
 const propsToMonitorChanges = useValidatedInput({
@@ -135,7 +135,7 @@ return <DatePicker onChange={onChange} />
 
 2. The consumers of the hook can wrap the `onChange` event so that it has the shape of a native event
 
-> ❌ Interop exhibit 2. Users of the validation library have to implement adapters for things to work, adding some code complexity.
+> ❌ Interop issue exhibit 2. Users of the validation library have to implement adapters for things to work, adding some code complexity.
 
 ```ts
 const propsToMonitorChanges = useValidatedInput({
@@ -160,6 +160,8 @@ return (
   />
 );
 ```
+
+> > > Another option for the `useValidatedInput` hook is to reduce the API to just what is needed. If it only needs the value, have the `onChange` callback only accept the value. However, this may not be practical if the `onChange` callback must do other things besides just reading the value. (such as monitoring the timestamp of the event, or manage focus.)
 
 # Detailed design
 
@@ -205,8 +207,6 @@ interface CustomEventInit<DetailType> {
   detail?: DetailType;
 }
 
-type DispatchCustomEvent = <DetailType>(handler: CustomEventHandler<DetailType>, eventInit: CustomEventInit<DetailType>) =>
-
 /**
  * This utility function can be used when implementing components which emit custom events.
  * It can be used in cases where the custom event serves as an abstraction of multiple different
@@ -214,14 +214,17 @@ type DispatchCustomEvent = <DetailType>(handler: CustomEventHandler<DetailType>,
  * event handled in the  component (such as receiving a new message from a websocket).
  *
  **/
-const dispatchCustomEvent: DispatchCustomEvent;
+function dispatchCustomEvent<DetailType>(
+  handler: CustomEventHandler<DetailType>,
+  eventInit: CustomEventInit<DetailType>
+): void;
 ```
 
-## Niche cases 1: Event default behavior
+## Additional considerations 1: Event default behavior
 
 In addition to the core part of the proposal, it would be good to allow library developers to expose a default event behavior that is cancelable.
 
-### Example: Form component with validation behavior on submit
+### Use case example: Form component with validation behavior on submit
 
 Scenario:
 
@@ -233,7 +236,7 @@ A user of the form library wants to perform some other validations, or some asyn
 
 ### Proposal
 
-Leaning on the standard event APIs, we can lean on the `preventDefault` method. `dispatchCustomEvent` can accept a `defaultBehavior` option, which can be used at the call site to define the default behavior of the event. Internally, `dispatchCustomEvent` can defer the execution of `defaultBehavior` until after the user-defined event handler is called, allowing the user-defined handler to cancel the default behavior.
+Leaning on the standard event APIs, we can support the `preventDefault` method. `dispatchCustomEvent` can accept a `defaultBehavior` function, which can be used at the call site to define the default behavior of the event. Internally, `dispatchCustomEvent` can defer the execution of `defaultBehavior` until after the user-defined event handler is called, allowing the user-defined handler to cancel the default behavior.
 
 #### Types
 
@@ -253,7 +256,7 @@ interface CustomEventInit<DetailType> {
 }
 ```
 
-#### API 1: Library developer
+#### API Demo - Library developer - dispatch custom event with cancelable behavior
 
 Library developers can configure a defaultBehavior, which will execute after the provided callback is executed.
 
@@ -264,7 +267,7 @@ const Form = ({ onSubmit, children }) => {
   return (
     <form
       onSubmit={(evt) => {
-        // evt.preventDefault(); // Prevent native browser submit -- unrelated to proposal but necessary in component libraries. Just calling it out here to disambiguate between the two. The original preventDefault is irrelevant for porposes of this proposal
+        // evt.preventDefault(); // Prevent native browser submit -- unrelated to proposal but necessary in component libraries. Just calling it out here to disambiguate between the two. The original preventDefault is irrelevant for purposes of this proposal
 
         dispatchCustomEvent(onSubmit, {
           type: "submit",
@@ -281,7 +284,7 @@ const Form = ({ onSubmit, children }) => {
 };
 ```
 
-#### API 2: Library consumer
+#### API Demo - Library consumer - Prevents default behavior and customizes it
 
 Consumers of the form library can prevent the default behavior with the familiar `preventDefault` method, then wrap the validations behavior however they need.
 
@@ -290,7 +293,7 @@ Consumers of the form library can prevent the default behavior with the familiar
   onSubmit={(evt) => {
     evt.preventDefault(); // Prevents field validations
 
-    someAsyncAction().then(() => {
+    someAsyncProcess().then(() => {
       someRef.current.performValidations();
     });
   }}
@@ -299,15 +302,15 @@ Consumers of the form library can prevent the default behavior with the familiar
 </Form>
 ```
 
-## Niche cases 2: Imperative event API
+## Additional considerations 2: Imperative event API
 
 Following the scenario above, notice that in the example where the validation logic is wrapped by the consumer of the `Form` component, I used some arbitrary ref reference (so to not imply that the ref has to come from anywhere in particular). However, it may be practical or beneficial to allow events to expose an imperative API. This can reduce the need for refs in some cases, where you just need to perform some imperative action during the event. For example, in native events, we can do things such as `evt.target.focus()`. Following this, it may be useful to allow exposing an imperative API in custom events, where component developers can expose an abstract API for performing some action in the event.
 
-### Example 1: (Building on the last Form example) Wrapping default validation logic in a form
+### Use case example 1: (Building on the last Form example) Wrapping default validation logic in a form
 
-The scenario for this example builds on top of the scenario for "Niche cases 1: Form component with validation behavior on submit.". As showed in the proposed solution for the problem, the developer has to access some ref to perform the validations after some async process.
+The scenario for this example builds on top of the scenario for "Additional considerations 1: Form component with validation behavior on submit.". As showed in the proposed solution for the problem, the developer has to access some ref to perform the validations after some async process.
 
-### Example 2: Moving focus to some abstracted element
+### Use case example 2: Moving focus to some abstracted element
 
 Another example is needing to move focus to some element abstracted by a component.
 
@@ -317,7 +320,7 @@ Building on the Form example, lets say there is a requirement to `focus` on the 
 
 Problem:
 
-The `Form` component may already have all the ingredients and information to know which field needs to be focused. It would be practical if it can expose a simple API to focus on the relevant field. Otherwise, it must communicate enough information for the caller to be able to move focus to the field, thus creating the posibility for increased code complexity,or the need to manage more refs.
+The `Form` component may already have all the ingredients and information to know which field needs to be focused (including a ref to the field). It would be practical if it can expose a simple API to focus on the relevant field. Otherwise, it must communicate enough information for the caller to be able to move focus to the field, thus creating the posibility for increased code complexity, or the need to manage more refs.
 
 ### Proposal
 
@@ -325,9 +328,32 @@ A simple extension of the core proposal that address this issue is to extend the
 
 I can see this is potentially a controversial part of the proposal. (More on this in the Drawbacks section). The thinking behind this choice is the following:
 
-1. Custom events are partly intended to increase component encapsulation, while also maintaining some of the familiar structures established in the DOM. In the DOM, the `target` property is the `EventTarget` that triggered the event. Adopting the models in the DOM, it makes sense to think of the component as the event target of a react custom event. As the event target, the component can be accessible via `event.target`; However, when the paradigm of a component changes from declarative to imperative, we refer to the component as it's exposed `ref`, thus it seems reasonable that `event.target` gives access to the `ref` of the component.
+1. Custom events are partly intended to improve component encapsulation, while also maintaining some of the familiar structures established in the DOM. In the DOM, the `target` property is the `EventTarget` that triggered the event. Adopting the models in the DOM, it makes sense to think of the component as the event target of a react custom event. As the event target, the component can be accessible via `event.target`; However, when the paradigm of a component changes from declarative to imperative, we refer to the component as it's exposed `ref`, thus it seems reasonable that `event.target` gives access to the `ref` of the component.
 
 2. This choice can facilitate improving interoperability of libraries, as it makes it trivial for library developers to expose APIs such as `event.target.value` or `event.target.focus()`
+
+#### API Demo - Consumers using the custom event target
+
+```tsx
+<Form
+  onSubmit={(evt) => {
+    if (someCondition) {
+      evt.preventDefault(); // Prevent validations
+
+      performSomeAsyncAction().then(() => {
+        const hasValidationError = evt.target.validateFields(); // perform default validations
+
+        if (hasValidationError) {
+          evt.target.focusOnFieldWithError(); // Focuses on first field with errors
+          // or evt.target.focus()
+        }
+      });
+    }
+  }}
+>
+  {/* Fields omitted*/}
+</Form>
+```
 
 #### Types
 
@@ -349,7 +375,7 @@ interface CustomEventInit<DetailType, TargetType> {
 }
 ```
 
-#### API 1: Library developer exposes event target
+#### API Demo - Library developer exposes event target
 
 For this part of the proposal, there are a couple of choices that can be made depending on the mental model the react team feels is more appropriate to adopt.
 
@@ -358,7 +384,7 @@ The choices for the models that I can identify are the following:
 1. The target refers to the component emitting the event.
 2. The target refers to some abstract EventTarget that is not inherently coupled to the identity of the component.
 
-Depending on which of these choices are made, the API for configuring the target can be expressed as more "closed" (where some assumptions are made automatically) or "opened" where it is completely arbitrary and up to the developer to make a deliberate choice.
+Depending on which of these choices are made, the API for configuring the target can be expressed in a "closed" fashion (where some assumptions are made automatically) or "opened" where it is completely arbitrary and up to the developer to make a deliberate choice of setting the target.
 
 ##### Example of "closed" api
 
@@ -369,29 +395,20 @@ In the closed API, some assumptions can be tied to the generation of component r
 In this example, `dispatchCustomEvent` is provided by the `useImperativeHandle` and the target is automatically bound.
 
 ```tsx
-
 const MyComponent = React.forwardRef(({ onCustomEvent }, ref) => {
-  const {dispatchCustomEvent} = useImperativeHandle(ref, () => {
-    performSomeComponentAction: () => {}
+  const { dispatchCustomEvent } = useImperativeHandle(ref, () => {
+    performSomeComponentAction: () => {};
     /* generate handle*/
-  })
+  });
 
   React.useEffect(() => {
     subscribeToSomething(() => {
       dispatchCustomEvent(onCustomEvent, {
-        type: 'custom-event'
-      })
-    })
-  }, [])
-})
-
-
-// Consumer
-<MyComponent onCustomEvent={(evt) => {
-  if (someCondition) {
-    evt.target.performSomeComponentAction();
-  }
-}} />
+        type: "custom-event",
+      });
+    });
+  }, []);
+});
 ```
 
 ##### Option 2: new hook for defining imperative handle that emits custom events
@@ -452,22 +469,9 @@ const MyComponent = React.forwardRef(({ onCustomEvent }, ref) => {
 My personal preference is "Option 2: new hook for defining imperative handle that emits custom events" for the following reasons.
 
 1. It seems it would be relatively simple to implement
-2. Provides a clear pattern for binding the target
-3. Makes it easy to expose the ref to the caller
-
-#### API 2: Component consumers use the event target
-
-This demo is rather simple as it just shows what consumers of the component will be able to do once the target is exposed. Following the example implementations above, consumers should be able to write the following code:
-
-```tsx
-<MyComponent
-  onCustomEvent={(evt) => {
-    if (someCondition) {
-      evt.target.performSomeComponentAction();
-    }
-  }}
-/>
-```
+2. Provides a clear pattern for binding the target, without a need of managing merging of refs
+3. Removes the need to keep and pass refs around (as the open API does).
+4. Avoids changing existing APIs. Changing `useImperativeHandle` to have a return type may be a breaking change (depending on how you look at it). In the ideal case production code is not affected, but developers may start to get typiging errors or lint errors if they do not assign the return type to a variable.
 
 ### Final Types
 
@@ -547,9 +551,9 @@ const useEventTargetImperativeHandle: UseEventTargetImperativeHandle;
 
 ### Alternatives
 
-- User land solution. Because this doesn't require changes to the core of react, this can be easily handled by an open source library. However, it is less likely to achieve the success I would like to see with this as the chances of multiple open source libraries implementing slightly different patterns is still there. The problem is less in the complexity of the implementation, but in the lack of a standard, which leads to the inconsistencies I mentioned in the problem statement.
+- User land solution. Because this doesn't require changes to the core of react, this can be easily handled by an open source library. However, it is less likely to achieve the level of adoption I would like to see with this, as the chances of multiple open source libraries implementing slightly different patterns is still there. The problem is less in the complexity of the implementation, but in the lack of a standard, which leads to the inconsistencies I mentioned in the problem statement.
 
-- [RFC: EventTarget](https://github.com/reactjs/rfcs/pull/246) has some overlaps with this RFC. However, I believe this proposal align with the react conventions for custom events and is simpler to implement because it does not rely on props requiring special treatment by react.
+- [RFC: EventTarget](https://github.com/reactjs/rfcs/pull/246) has some overlaps with this RFC. However, I believe this proposal align with the react conventions for custom events (simple callbacks) and is simpler to implement because it does not rely on props requiring special treatment by react.
 
 # Drawbacks
 
@@ -569,7 +573,7 @@ I may lean on the react team for a more thorough exploration of the drawbacks. T
 
 1. The API for emitting custom events adds some complexity to something that is relatively simple for react users: Calling a callback function.
 1. Since it is an opt-in feature and it may be hard for casual users of react to see the benefit of using this API, it may go unused in the majority of cases.
-1. As I mentioned before, this can be implemented in the user space. However, `react` is positioned to have a broader and more positive impact than any open source library.
+1. As I mentioned before, this can be implemented in the user space. However, `react` is positioned to have a broader and more positive impact than any open source library in terms of adoption.
 1. Library developers that choose to adopt these new APIs will have to consider potential breaking changes. Older unmaintained libraries will continue to expose inconsistent APIs.
 1. This solution is attempting to solve an inconsistency problem, but since it is an opt-in solution, it will never completely get rid of inconsistency in library APIs.
 
@@ -579,9 +583,9 @@ I may lean on the react team for a more thorough exploration of the drawbacks. T
 this a breaking change? Can we write a codemod? Should we coordinate with
 other projects or libraries? -->
 
-For react this would not be a breaking change.
+For react this would (or should) not be a breaking change.
 
-For library developers choosing to implement a custom event API that aligns with react and this proposal, they will likely have to introduce a breaking change in their libraries, unless the implement some strategy for maintaining backwards compatibility (like emitting the legacy and new events)
+For library developers choosing to implement a custom event API that aligns with react and this proposal, they will likely have to introduce a breaking change in their libraries, unless they implement some strategy for maintaining backwards compatibility (like emitting the legacy and new events and exposing different props.)
 
 # How we teach this
 
@@ -594,7 +598,7 @@ at any level?
 
 How should this feature be taught to existing React developers? -->
 
-Thankfully much of this proposal builds on existing web standards which may make it easy to teach. However, recognizing that there will be differences between the web standards and the APIs expressed here, I'd imagine that we would call this "React Custom Events".
+Thankfully much of this proposal builds on existing web standards and naming conventions, which may make it easy to teach. However, recognizing that there will be differences between the web standards and the APIs expressed here, I'd imagine that we would call this "React Custom Events".
 
 # Unresolved questions
 
