@@ -529,7 +529,7 @@ interface CustomEventInit<DetailType, TargetType> {
 type BoundCustomEventInit<DetailType> = Omit<CustomEventInit<DetailType, any>, 'target'>
 type BoundDispatchCustomEvent<DetailType, TargetType> = (
   handler: CustomEventHandler<DetailType, TargetType>,
-  eventInit: BoundCustomEventInit<DetailType, TargetType>
+  eventInit: BoundCustomEventInit<DetailType>
 ): void
 type ImperativeHandleWithBoundTarget<DetailType, TargetType> = {
   dispatchCustomEvent: BoundDispatchCustomEvent<DetailType>
