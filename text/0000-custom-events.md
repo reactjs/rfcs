@@ -4,7 +4,7 @@
 
 # Summary
 
-This RFC proposes adding a utility to dispatch custom events in components. The RFC only includes a proposal for a utility function called `dispatchCustomEvent`: a utility that introduces some standards for emitting custom events from components.
+This RFC proposes adding a utility to dispatch custom events in components. The RFC includes a proposal for a utility function called `dispatchCustomEvent`: a utility that introduces some standards for emitting custom events from components, as well as a hook (potentially named `useEventTargetImperativeHandle`) to create bound versions of the `dispatchCustomEvent` function, to emit custom events that expose an imperative API.
 
 # Basic example
 
