@@ -163,7 +163,7 @@ return (
 
 # Detailed design
 
-<-- This is the bulk of the RFC. Explain the design in enough detail for somebody
+<!-- This is the bulk of the RFC. Explain the design in enough detail for somebody
 familiar with React to understand, and for somebody familiar with the
 implementation to implement. This should get into specifics and corner-cases,
 and include examples of how the feature is used. Any new terminology should be
