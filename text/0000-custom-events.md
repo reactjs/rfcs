@@ -536,7 +536,7 @@ type BoundDispatchCustomEvent<DetailType, TargetType> = (
   eventInit: BoundCustomEventInit<DetailType>
 ): void
 type ComponentEventTarget<DetailType, TargetType> = {
-  dispatchCustomEvent: BoundDispatchCustomEvent<DetailType>
+  dispatchCustomEvent: BoundDispatchCustomEvent<DetailType, TargetType>
 }
 
 function useEventTargetImperativeHandle<DetailType, TargetType>(
