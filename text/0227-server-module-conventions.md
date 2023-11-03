@@ -138,7 +138,7 @@ Therefore, we propose another convention to files with a `"use client"` directiv
 
 The conventions apply if a module exports a function that is identified as a React Component, according to some definition specified by the [React Compiler](https://reactjs.org/blog/2022/06/15/react-labs-what-we-have-been-working-on-june-2022.html#react-compiler) and the [Rules of Hooks Lint rule](https://reactjs.org/docs/hooks-rules.html). Basically if it contains a capital name and contains JSX or Hooks.
 
-In that case, such function's arguments must all be serializable according to the Serialization rules of [React Server Components](https://github.com/josephsavona/rfcs/blob/server-components/text/0000-server-components.md) (basically JSON + Cycles, Binary Data, Promises, JSX etc).
+In that case, such function's arguments must all be serializable according to the Serialization rules of [React Server Components](https://github.com/reactjs/rfcs/blob/main/text/0188-server-components.md) (basically JSON + Cycles, Binary Data, Promises, JSX etc).
 
 This can be enforced by a framework using code gen, a TypeScript plugin or just built-in to TypeScript. This doesn't need any additional information from the graph to be enforced.
 
