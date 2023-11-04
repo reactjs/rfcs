@@ -17,7 +17,7 @@ We also propose using package.json conditional exports to allow an import to for
 - No more file extension conventions.
 - A `"use client"` directive at the top of a file defines that it's a boundary between server and client.
 - Server and Client Components no longer have to explicitly state so. Everything is implicitly Shared until proven otherwise, and then the build errors.
-- `import "server-only"` and `import "client-only"` can be used to poision a module so it can only be imported in that environment.
+- `import "server-only"` and `import "client-only"` can be used to poison a module so it can only be imported in that environment.
 - TypeScript Convention for enforcing serializable boundaries.
 
 # Basic example
