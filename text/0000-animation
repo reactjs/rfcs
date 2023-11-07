@@ -1,0 +1,79 @@
+- Start Date: 2023-07-04
+- RFC PR: (leave this empty)
+- React Issue: (leave this empty)
+
+# Summary
+
+Introduce a built-in component for animations in React.
+
+# Basic example
+
+Proposed is the inclusion of a built-in `Animation` component that would handle various types of animations effectively.
+
+Please refer to this example for a demonstration: https://codesandbox.io/p/sandbox/o1mplp
+
+```jsx
+<Animation
+  duration={500}
+  fill="both"
+  direction={show ? "normal" : "reverse"}
+  keyframes={[
+    { opacity: 0, transform: "translateX(0px)" },
+    { opacity: 1, transform: "translateX(500px)" },
+  ]}
+>
+  {show && <Card />}
+</Animation>
+```
+
+The best part of in the above example is `show` state, the `show` state determines whether the `Card` component is displayed on the page. When `show` is set to `false`, the Card component performs the animation and disappears after completion.
+
+Animations can be composed together as shown in this example: https://codesandbox.io/p/sandbox/0rm9xk
+
+```jsx
+<Animation
+  duration={2000}
+  iterations={Infinity}
+  keyframes={[
+    { borderRadius: 0, transform: "scale(0) rotate(0turn)" },
+    { borderRadius: "50%", transform: "scale(1) rotate(1turn)" },
+]}>
+  <Animation
+    duration={1000}
+    iterations={Infinity}
+    keyframes={[{ backgroundColor: "red" }, { backgroundColor: "blue" }]}
+  >
+    <Card />
+  </Animation>
+</Animation>
+```
+
+# Motivation
+
+In React projects, animations are often handled by external packages, each with their own advantages and disadvantages. Having a built-in component for animations in React would be beneficial as it can directly interact with low-level React APIs.
+
+# Detailed design
+
+The proposed built-in Animation component would handle animations on child components by utilizing DOM access. that's mean it dosen't need to re-render child components. Therefore, child components should use `forwardRef` to enable this feature. The advantage of this approach is that child components can be used with or without animation without requiring any changes.
+
+# Drawbacks
+
+Why should we *not* do this? Please consider:
+
+- Potential increase in the React package size
+- Possible argument that animations are not directly related to React itself
+- Existing third-party packages already available for handling animations
+
+# Alternatives
+
+For testing purposes, an alternative package called Reactima has been developed: https://www.npmjs.com/package/reactima
+
+# Adoption strategy
+
+Introducing the proposed built-in `Animation` component would not introduce any breaking changes and would have no impact on existing React features.
+
+# How we teach this
+
+All prop and method names are based on the `Web Animation API`, which can be referenced for further guidance:
+
+https://developer.mozilla.org/en-US/docs/Web/API/Web_Animations_API
