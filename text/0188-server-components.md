@@ -331,7 +331,7 @@ The process for rendering the Note example is roughly as follows:
     * [React] React will render the root Server Component and any children that are also Server Components. Rendering stops at native components (divs, spans, etc) and at Client Components. Native components are streamed as a JSON description of the UI, and Client Components are streamed including the serialized props plus a bundle reference to the code for the component. 
         * Note that if any Server Component suspends, React will pause rendering of that subtree and stream a placeholder value instead. When the component is able to continue (un-suspends), React will re-render the component and stream the actual result of the component to the client. You can think of the data streamed to the target as JSON but with slots for components that suspend, where the values to place into those slots are provided as additional items later in the response stream. 
     * [framework] The framework is responsible for progressively streaming the rendered output to the client as React renders each unit of UI.
-        * Note that by default React returns a description of the rendered UI, not HTML. This is necessary to allow reconciling (merging) newly fetched data with exiting Client Components. A framework may choose to combine Server Components with “server-side rendering” (SSR) to *also* stream the initial render as HTML, which would speed up the initial, non-interactive display of a page.
+        * Note that by default React returns a description of the rendered UI, not HTML. This is necessary to allow reconciling (merging) newly fetched data with existing Client Components. A framework may choose to combine Server Components with “server-side rendering” (SSR) to *also* stream the initial render as HTML, which would speed up the initial, non-interactive display of a page.
 * **On the Client**
     * [framework] On the client, the framework receives the streamed React response and renders it on the page with React.
     * [React] React deserializes the response and renders the native elements and Client Components. This happens *progressively* — React doesn’t need to wait for the whole stream to finish in order to show something. Suspense allows developers to show intentional loading states while the code for Client Components is loading and while the Server Components are fetching the remaining data.
@@ -409,7 +409,7 @@ function Button({ children, onClick }) {
 }
 ```
 
-You only need to add this directive to the Client Components that you import from Server Components. If you don't add the directive, by default all components will be treated as Shared — imports from the Server are treated as Server Components, and imports from the Client are treated as Client Components. In practice, this means that you only need to annotate Sever → Client entry points.
+You only need to add this directive to the Client Components that you import from Server Components. If you don't add the directive, by default all components will be treated as Shared — imports from the Server are treated as Server Components, and imports from the Client are treated as Client Components. In practice, this means that you only need to annotate Server → Client entry points.
 
 See the [module conventions RFC](https://github.com/reactjs/rfcs/pull/227) for more details.
 
