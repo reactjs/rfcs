@@ -128,7 +128,7 @@ The nice thing about this convention is that it works outside of Server Componen
 
 # TypeScript Convention
 
-Types between the Server and Client boundary mostly just work because they behave the same as if there was no boundaray. One limitation is that if those types includes a non-serializable type - according to the React Server Components specification, you get an error.
+Types between the Server and Client boundary mostly just work because they behave the same as if there was no boundary. One limitation is that if those types include a non-serializable type, according to the React Server Components specification, you get an error.
 
 The correct way to model this is to model Client References for exports at the boundaries and then have the callsite of JSX accept a Client Reference as a component and enforce the serialization at the callsite. This ensures that you can still pass client references from server to client in other forms than JSX. In fact, this is how Flow already implements it and it could be implemented in TypeScript too. However, this requires a bit more involved type checking from the TypeScript side.
 
