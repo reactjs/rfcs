@@ -52,7 +52,7 @@ for the start and end points of the text selection.
   selection: {
     start: number,
     end: number,
-    cursorPosition: {
+    selectionPosition: {
       start: { x: number, y: number },
       end: { x: number, y: number }
     }
