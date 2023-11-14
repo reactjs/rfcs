@@ -44,9 +44,20 @@ enhance user experience with dynamic and interactive text input features.
 # Detailed design
 
 The proposed design includes:
+
 1. Enhanced Selection Data: Updating the `onSelectionChange` event's data to include
 `selectionPosition`, which will contain the coordinates `{x: number, y: number}`
 for the start and end points of the text selection.
+```js
+  selection: {
+    start: number,
+    end: number,
+    cursorPosition: {
+      start: { x: number, y: number },
+      end: { x: number, y: number }
+    }
+  }
+```
 
 2. Type Definitions and Flow Updates: Adjusting type definitions in TextInput.d.ts
 and TextInput.flow.js to integrate the new data structure.
