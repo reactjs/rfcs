@@ -4,13 +4,13 @@
 
 # Summary
 
-This proposal aims to enhance the TextInput component in React Native by
-introducing advanced tracking of text selection positions. The feature
-will provide developers with the coordinates (x and y) for both the start
-and end of the text selection and cursor within a TextInput. This enhancement
-will facilitate functionalities like inline suggestions (emojis, text suggestions)
-based on the selection, thereby improving the interactivity and user experience
-of text input fields
+This proposal aims to enhance the TextInput component by introducing
+advanced tracking of text selection positions. The feature will provide
+developers with the coordinates (x and y) for both the start and end of
+the text selection and cursor within a TextInput. This enhancement will
+facilitate functionalities like inline suggestions
+(emojis, text suggestions) based on the selection, thereby improving
+the interactivity and user experience of text input fields
 
 # Basic example
 
@@ -100,12 +100,12 @@ Documentation and examples will be provided for smooth adoption.
 
 # How we teach this
 
-Documentation Updates: Revise the React Native documentation to include this new feature,
+Documentation Updates: Revise the documentation to include this new feature,
 supplemented with code examples.
 
 Tutorial Creation: Develop tutorials showing practical implementations of the feature.
 
-Community Engagement: Promote the feature within the React Native community for feedback
+Community Engagement: Promote the feature within the community for feedback
 and wider adoption.
 
 # Unresolved questions
