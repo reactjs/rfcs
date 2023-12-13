@@ -242,6 +242,8 @@ One element I didn’t mention is that if `useIsolation` uses variables from the
 
 As mentioned before, `useContextSelector` proposed in https://github.com/reactjs/rfcs/pull/119 is a good substitute proposal. But this proposal is more generic as it can be also used with any kind of state / variable.
 
+https://github.com/reactjs/rfcs/issues/168 is a similar RFC for the same hook: `useIsolation`. But this other RFC was closed as it was opened as an issue and not a PR. And this one adds the concept of dependencies to it (otherwise it should be similar).
+
 # Adoption strategy
 
 As this is a new feature, no need to do a breaking change / introduce a new major / do codemods.<br>
