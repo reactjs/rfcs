@@ -32,60 +32,6 @@ const MyComponent = () => {
 };
 ```
 
-## Advanced example
-
-An example with more realistic code with a _real_ context, props, states
-
-```jsx
-const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
-
-const MyComponent = (props) => {
-  const [otherState] = React.useState({});
-
-  const [arr, setArr] = React.useState([]);
-  
-  const concatString = React.useIsolation(() => {
-    const context = React.useContext(CustomHeavyContext);
-    return [...context.foo, ...arr, ...props.otherArr].join(',');
-  }, [arr, props.otherArr]);
-};
-```
-
-In this example: `concatString` will only be recomputed if:
-- `CustomHeavyContext` changes,
-- `arr` changes,
-- `props.otherArr` changes.
-
-But not if `otherState` or other props change.<br>
-And if `CustomHeavyContext` changes but `CustomHeavyContext.foo` doesn’t, `concatString` will indeed be recomputed, but the new value will be stable (as `concatString` is a string). So `MyComponent` won’t re-render.
-
-<details><summary>Similar example with a non-stable value</summary>
-
-```jsx
-const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
-
-const MyComponent = (props) => {
-  const [otherState] = React.useState({});
-
-  const [arr, setArr] = React.useState([]);
-  
-  const foo = React.useIsolation(() => {
-    return React.useContext(CustomHeavyContext).foo;
-  }, []); // Here the dependencies could have been fully avoided, as `React.useContext(CustomHeavyContext).foo` is by definition stable
-
-  const concatArr = React.useMemo(() => {
-    return [...foo, ...arr, ...props.otherArr];
-  }, [foo, arr, props.otherArr]);
-};
-```
-
-Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavyContext).foo, ...arr, ...props.otherArr]` would re-generate a new array every time, even if `React.useContext(CustomHeavyContext).foo` doesn’t change.
-
-</details>
-
-
-
-
 # Motivation
 
 This topic is mostly for performance reasons. A few of other RFCs are proposing solutions to solve this:
@@ -184,6 +130,61 @@ With this piece of code,
 - if `other` gets updated, `isolated()` **won’t** have to be re-computed
 - if `CustomHeavyContext` gets updated, `isolated()` will have to be re-computed
 
+## Advanced example
+
+An example with more realistic code with a _real_ context, props, states
+
+```jsx
+const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
+
+const MyComponent = (props) => {
+  const [otherState] = React.useState({});
+
+  const [arr, setArr] = React.useState([]);
+  
+  const concatString = React.useIsolation(() => {
+    const context = React.useContext(CustomHeavyContext);
+    return [...context.foo, ...arr, ...props.otherArr].join(',');
+  }, [arr, props.otherArr]);
+};
+```
+
+In this example: `concatString` will only be recomputed if:
+- `CustomHeavyContext` changes,
+- `arr` changes,
+- `props.otherArr` changes.
+
+But not if `otherState` or other props change.<br>
+And if `CustomHeavyContext` changes but `CustomHeavyContext.foo` doesn’t, `concatString` will indeed be recomputed, but the new value will be stable (as `concatString` is a string). So `MyComponent` won’t re-render.
+
+<details><summary>Similar example with a non-stable value</summary>
+
+```jsx
+const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
+
+const MyComponent = (props) => {
+  const [otherState] = React.useState({});
+
+  const [arr, setArr] = React.useState([]);
+  
+  const foo = React.useIsolation(() => {
+    return React.useContext(CustomHeavyContext).foo;
+  }, []); // Here the dependencies could have been fully avoided, as `React.useContext(CustomHeavyContext).foo` is by definition stable
+
+  const concatArr = React.useMemo(() => {
+    return [...foo, ...arr, ...props.otherArr];
+  }, [foo, arr, props.otherArr]);
+};
+```
+
+Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavyContext).foo, ...arr, ...props.otherArr]` would re-generate a new array every time, even if `React.useContext(CustomHeavyContext).foo` doesn’t change.
+
+</details>
+
+## Wrapping existing hook for perf optimizations only
+
+**TO WRITE**
+
 ## Settings no dependencies or settings the wrong dependencies
 
 Could using `useIsolation` lead to performance issues if it’s used without dependencies, or with wrong dependencies?
@@ -228,7 +229,7 @@ TL;DR: even if no dependencies are set, performances shouldn’t be an issue, an
 
 # Drawbacks
 
-The base principle of this new hook is to be able to create new _call scope_ (aka component-like scopes).<br>
+The base principle of this new hook is to be able to create new _call scope_ (aka component-like scopes or hooks within hooks).<br>
 But this may be a huge change in React’s internals.
 
 As this is deeply related to this "component-like scope", it’s also impossible to polyfill / re-create on the user world and has to be implemented within React (I may be wrong on this).
@@ -250,7 +251,7 @@ It can be released in a minor version.
 
 The dependency array makes it really close to already existing hooks like `useMemo` / `useCallback` / `useEffect`.
 
-Also this perfectly fits those already existing hooks as it could be built on top of them, so no new patterns to learn. And the previous best-practices can still be applied. It also follows the same rule of hooks as usual.
+Also this perfectly fits those already existing hooks as it could be built on top of them, so no new patterns to learn. And the previous best-practices can still be applied. It also follows the same rule of hooks as usual.<br>
 
 For new React developers, it could be taught as a hook to boost performance, like `useMemo`: it should work without, but this can prevent unnecessary re-renders.
 
