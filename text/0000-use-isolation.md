@@ -181,7 +181,7 @@ Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavy
 
 </details>
 
-## Wrapping existing hook for perf optimizations only
+## Wrapping existing hooks for perf optimizations only
 
 **TO WRITE**
 
@@ -240,7 +240,7 @@ One element I didn’t mention is that if `useIsolation` uses variables from the
 
 # Alternatives
 
-As mentioned before, `useContextSelector` proposed in https://github.com/reactjs/rfcs/pull/119 is a good substitute proposal. But this proposal is more generic as it can be also used with any kind of state / variable.
+As mentioned before, `useContextSelector` proposed in https://github.com/reactjs/rfcs/pull/119 is a good substitute proposal. But this proposal is more generic as it can be also used with any kind of state / variable (see [Wrapping existing hooks for perf optimizations only](#wrapping-existing-hooks-for-perf-optimizations-only).
 
 https://github.com/reactjs/rfcs/issues/168 is a similar RFC for the same hook: `useIsolation`. But this other RFC was closed as it was opened as an issue and not a PR. And this one adds the concept of dependencies to it (otherwise it should be similar).
 
