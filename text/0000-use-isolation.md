@@ -185,7 +185,57 @@ Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavy
 
 ## Wrapping existing hooks for perf optimizations only
 
-**TO WRITE**
+In this section, some pieces of code will be displayed. They won’t be optimal in order to represent what we could find in existing codebases (as not everything can be refactored, often devs have to work with non-optimal code).
+
+Imagine that we have those hooks:
+
+```jsx
+const useLongPoll = (url, delay) => {
+  const [id, setId] = React.useState(0);
+
+  React.useEffect(() => {
+    const intervalId = setInterval(() => setId(id => id +1), delay);
+    return () => clearInterval(intervalId);
+  }, []);
+
+  const [status, setStatus] React.useState();
+  React.useEffect(() => {
+    const controller = new AbortController();
+    fetchStatus(url, { signal: controller.signal }).then(result => setStatus(result));
+    return () => controller.abort();
+  // Trigger a re-fetch every so often
+  }, [id]);
+
+  return status;
+}
+
+const MyComponent = () => {
+  // Fetch the status every 1s
+  const status = useLongPoll('/status', 1000);
+
+  if (!status) {
+    return null;
+  }
+  return <Card status={status}>{getContent(status)}</Card>
+}
+```
+
+`useLongPoll` isn’t optimal as it creates a re-render every `<delay>`ms. But this may be in one of the dependencies a code base is using so devs may not have the ability of changing that.<br>
+This means that `MyComponent` will be re-executed every second (or so) even if the `status` didn’t change. `useIsolation` could fix that:
+
+```jsx
+const MyComponent = () => {
+  // Fetch the status every 1s
+  const status = useIsolation(() => useLongPoll('/status', 1000));
+
+  if (!status) {
+    return null;
+  }
+  return <Card status={status}>{getContent(status)}</Card>
+}
+```
+
+Now `MyComponent` only re-renders when the status actually changed.
 
 ## Settings no dependencies or settings the wrong dependencies
 
