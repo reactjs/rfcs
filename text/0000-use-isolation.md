@@ -1,5 +1,5 @@
 - Start Date: 2023-12-13
-- RFC PR: (leave this empty)
+- RFC PR: https://github.com/reactjs/rfcs/pull/257
 - React Issue: (leave this empty)
 
 # Summary
