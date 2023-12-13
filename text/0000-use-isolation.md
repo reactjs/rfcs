@@ -39,22 +39,21 @@ This topic is mostly for performance reasons. A few of other RFCs are proposing 
 
 When working with components, you can bail out of re-renders with `React.memo` / `shouldComponentUpdate()`.
 
-And given this tree: `<A><B/></A>`, when `A` changes, `B` may not rerender.
-But when working with hooks, if you have 2 hooks `useA` and `useB` (used within `useA`), when `useB` re-renders,
-there is no way to bail out from its renders in neither `useA`.
+And given this tree: `<A><B/></A>`, when `A` changes, `B` may not rerender.<br>
+But when working with hooks, if you have 2 hooks `useA` and `useB` (used within `useA`), when `useB` re-renders, there is no way to bail out from its renders in neither `useA`.
 
-This is an issue for large codebases that can share a lot of hooks (without having the ability of auditing all of them).
+This is an issue for large codebases that can share a lot of hooks (without having the ability of auditing all of them).<br>
 Or for libraries like `react-router-dom` that expose large objects (the router state) and where users want to only register for changes that matter to them.
 
 # Detailed design
 
 This hook is inspired by both `React.memo` where you can provide a `areEqual` function as a 2nd parameter, and by `useMemo`.
 
-When you want to make a piece of code run in _isolation\*_ from its parent component/hook, you can use `useIsolation`.
+When you want to make a piece of code run in _isolation\*_ from its parent component/hook, you can use `useIsolation`.<br>
 This hook takes 2 parameters:
 
-Using MDN’s notation: `useIsolation(callback, [deps])`
-Using TS’s notation: `useIsolation<T>(callback: () => T, deps?: ReadonlyArray<unknown>)`
+- Using MDN’s notation: `useIsolation(callback, [deps])`
+- Using TS’s notation: `useIsolation<T>(callback: () => T, deps?: ReadonlyArray<unknown>)`
 
 \*: this wouldn’t strictly run in isolation, as you may define dependencies to ease the communication between the parent scope and the isolated one.
 
@@ -126,7 +125,7 @@ With this piece of code,
 
 # Drawbacks
 
-The base principle of this new hook is to be able to create new _call scope_ (aka component-like scopes).
+The base principle of this new hook is to be able to create new _call scope_ (aka component-like scopes).<br>
 But this may be a huge change in React’s internals.
 
 As this is deeply related to this "component-like scope", it’s also impossible to polyfill / re-create on the user world and has to be implemented within React (I may be wrong on this).
@@ -139,7 +138,7 @@ As mentioned before, `useContextSelector` proposed in https://github.com/reactjs
 
 # Adoption strategy
 
-As this is a new feature, no need to do a breaking change / introduce a new major / do codemods.
+As this is a new feature, no need to do a breaking change / introduce a new major / do codemods.<br>
 It can be released in a minor version.
 
 # How we teach this
