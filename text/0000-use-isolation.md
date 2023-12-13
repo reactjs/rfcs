@@ -153,4 +153,6 @@ The only new paradigm is that as hooks will be defined within the `callback`, we
 
 # Unresolved questions
 
-I don’t really know.
+Is this concurrent-compliant?
+
+Otherwise, I don’t really know.
