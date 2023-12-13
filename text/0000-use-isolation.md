@@ -42,8 +42,12 @@ When working with components, you can bail out of re-renders with `React.memo` /
 And given this tree: `<A><B/></A>`, when `A` changes, `B` may not re-render.<br>
 But when working with hooks, if you have 2 hooks `useA` and `useB` (used within `useA`), when `useB` re-renders, there is no way to bail out from its renders in `useA`.
 
+> [!NOTE]
+> The goal of this RFC is not to provide a way for `useB` to not re-render when `useA` re-renders (even if it’s mentioned a bit with dependencies later), but to not always have to re-render `useA` when `useB` re-renders.
+
 This is an issue for large codebases that can share a lot of hooks (without having the ability of auditing all of them).<br>
 Or for libraries like `react-router-dom` that expose large objects (the router state) and where users want to only register for changes that matter to them.
+
 
 # Detailed design
 
@@ -100,6 +104,7 @@ With this piece of code,
 - if `index` gets updated, `isolated()` will have to be re-computed
 - if `other` gets updated, `isolated()` will have to be re-computed
 - if `CustomHeavyContext` gets updated, `isolated()` will have to be re-computed
+- if `MyComponent` re-renders for other reason (its parent was updated too for instance), `isolated()` will have to be re-computed
 
 ### With dependencies
 
