@@ -39,8 +39,8 @@ This topic is mostly for performance reasons. A few of other RFCs are proposing 
 
 When working with components, you can bail out of re-renders with `React.memo` / `shouldComponentUpdate()`.
 
-And given this tree: `<A><B/></A>`, when `A` changes, `B` may not rerender.<br>
-But when working with hooks, if you have 2 hooks `useA` and `useB` (used within `useA`), when `useB` re-renders, there is no way to bail out from its renders in neither `useA`.
+And given this tree: `<A><B/></A>`, when `A` changes, `B` may not re-render.<br>
+But when working with hooks, if you have 2 hooks `useA` and `useB` (used within `useA`), when `useB` re-renders, there is no way to bail out from its renders in `useA`.
 
 This is an issue for large codebases that can share a lot of hooks (without having the ability of auditing all of them).<br>
 Or for libraries like `react-router-dom` that expose large objects (the router state) and where users want to only register for changes that matter to them.
@@ -67,7 +67,7 @@ The way this would work in pseudo-code is this way:
 1. During the initial mount, call the `callback` within its _parent scope_
 2. Create a new internal _call scope_ (like a component)
 3. If the `callback` uses hooks like `useState`, `useContext`, etc., bind them to this _call scope_ instead of its parent scope
-4. If there are dependencies defined, store then in _internal slots_ (like like with `useMemo` or `useCallback`) saved on the _parent scope_
+4. If there are dependencies defined, store then in _internal slots_ (like with `useMemo` or `useCallback`) saved on the _parent scope_
 5. Store the return value of the `callback` in a _internal slot_ in the _parent scope_
 6. If there are any updates in any of the hooks defined within the _call scope_ (aka within the `callback`), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
 7. If there are any updates in the _parent scope_, check if any dependencies have changed (if no dependencies are set, recompute on all updates), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
@@ -123,6 +123,48 @@ With this piece of code,
 - if `other` gets updated, `isolated()` **won’t** have to be re-computed
 - if `CustomHeavyContext` gets updated, `isolated()` will have to be re-computed
 
+## Settings no dependencies or settings the wrong dependencies
+
+Could using `useIsolation` lead to performance issues if it’s used without dependencies, or with wrong dependencies?
+
+Ideally it shouldn’t, and when following the pseudo-code, there is no reason why it should. Let me explain: the worse-case scenario for performances would be to set no dependencies. In this situation we have 2 possibilities:
+1. the returned value isn’t stable (we re-generate a new object for instance at every recomputation)
+2. the returned value is stable
+
+For 1., it could be for example this case:
+
+```jsx
+const MyComponent = () => {
+  const notStable = React.useIsolation(() => {
+    return {};
+  });
+};
+```
+
+And in situation, it’d like just like if we were doing this code instead (with a bit of over-head for the memoization / _internal slots_):
+
+```jsx
+const MyComponent = () => {
+  const notStable = {};
+};
+```
+
+So it should be okay: it won’t cause performance regressions (at least no dramatic ones), and won’t trigger new re-renders (compared to how `MyComponent` would already behave without `useIsolation`).
+
+For 2., it could be for example this case:
+
+```jsx
+const MyComponent = () => {
+  const stable = React.useIsolation(() => {
+    return React.useContext(MyContext).foo;
+  });
+};
+```
+
+As the returned value is stable (because `React.useContext(MyContext)` will already return the same value / pointer as long as the context didn’t change), it’ll be safe to be used in the render cycle, and even in dependencies of other hooks. Even if `MyComponent` re-renders due to external factors, `stable` won’t change, so it shouldn’t lead to performance issues.
+
+TL;DR: even if no dependencies are set, performances shouldn’t be an issue, and setting them could just further improve performances.
+
 # Drawbacks
 
 The base principle of this new hook is to be able to create new _call scope_ (aka component-like scopes).<br>
@@ -131,6 +173,8 @@ But this may be a huge change in React’s internals.
 As this is deeply related to this "component-like scope", it’s also impossible to polyfill / re-create on the user world and has to be implemented within React (I may be wrong on this).
 
 This hook will also only be available in **client** code, and not in RSC.
+
+One element I didn’t mention is that if `useIsolation` uses variables from the parent scope with the **wrong dependencies**, the hook won’t re-render as expected. As mentioned in [Settings no dependencies or settings the wrong dependencies](#settings-no-dependencies-or-settings-the-wrong-dependencies), as it should be fine to not set dependencies at all, maybe we can remove them. But I feel that they would be a nice addition as you can control re-renders with even more finer control.
 
 # Alternatives
 
