@@ -288,7 +288,7 @@ As this is deeply related to this "component-like scope", it’s also impossible
 
 This hook will also only be available in **client** code, and not in RSC.
 
-One element I didn’t mention is that if `useIsolation` uses variables from the parent scope with the **wrong dependencies**, the hook won’t re-render as expected. As mentioned in [Settings no dependencies or settings the wrong dependencies](#settings-no-dependencies-or-settings-the-wrong-dependencies), as it should be fine to not set dependencies at all, maybe we can remove them. But I feel that they would be a nice addition as you can control re-renders with even more finer control.
+One element I didn’t mention is that if `useIsolation` uses variables from the parent scope with the **wrong dependencies**, the hook won’t re-render as expected. As mentioned in [Settings no dependencies or settings the wrong dependencies](#settings-no-dependencies-or-settings-the-wrong-dependencies), as it should be fine to not set dependencies at all, maybe we can remove them. But I feel that they would be a nice addition as you can control re-renders with even finer control.
 
 # Alternatives
 
