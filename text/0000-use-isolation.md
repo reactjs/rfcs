@@ -82,7 +82,7 @@ The way this would work in pseudo-code is this way:
 
 As this can accept optional dependencies, the question of "what to do if there is an update in the parent component/hook?" should be tackled.
 
-This hook would work like any other hook and follow the rule of hooks. And as it creates a new _call scope_, this doesn’t break the rule of hooks per say (as sub-hooks would not always be called), as the isolated scope would behave like a sub-component.
+This hook would work like any other hook and follow the rule of hooks. And as it creates a new _call scope_, this doesn’t break the rule of hooks per se (as sub-hooks would not always be called), as the isolated scope would behave like a sub-component.
 
 This hook should only be available in client components, but not in RSCs.
 
