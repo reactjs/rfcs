@@ -69,8 +69,8 @@ The way this would work in pseudo-code is this way:
 3. If the `callback` uses hooks like `useState`, `useContext`, etc., bind them to this _call scope_ instead of its parent scope
 4. If there are dependencies defined, store then in _internal slots_ (like like with `useMemo` or `useCallback`) saved on the _parent scope_
 5. Store the return value of the `callback` in a _internal slot_ in the _parent scope_
-6. If there are any updates in any of the hooks defined within the _call scope_ (aka within the `callback`), re-compute the `callback`, and store the return value in same _internal slot_.
-7. If there are any updates in the _parent scope_, check if any dependencies have changed (if no dependencies are set, recompute on all updates), re-compute the `callback`, and store the return value in same _internal slot_.
+6. If there are any updates in any of the hooks defined within the _call scope_ (aka within the `callback`), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
+7. If there are any updates in the _parent scope_, check if any dependencies have changed (if no dependencies are set, recompute on all updates), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
 
 ## Details on the design
 
