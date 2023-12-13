@@ -6,6 +6,8 @@
 
 This RFC proposes a new hook `useIsolation(() => …)` to allow creating a _sub-hook_ that can compute expensive values in _isolation_ and can memoize its returned value.
 
+A simple equivalent would be to introduce a new hook that would behave like `useMemo`, but in which you can also use other hooks.
+
 # Basic example
 
 Let’s say you have a context that is a bit massive, but you just want to listen to 1 value `foo` in it and only re-render when it changes, you could do something like this:
@@ -29,6 +31,60 @@ const MyComponent = () => {
   });
 };
 ```
+
+## Advanced example
+
+An example with more realistic code with a _real_ context, props, states
+
+```jsx
+const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
+
+const MyComponent = (props) => {
+  const [otherState] = React.useState({});
+
+  const [arr, setArr] = React.useState([]);
+  
+  const concatString = React.useIsolation(() => {
+    const context = React.useContext(CustomHeavyContext);
+    return [...context.foo, ...arr, ...props.otherArr].join(',');
+  }, [arr, props.otherArr]);
+};
+```
+
+In this example: `concatString` will only be recomputed if:
+- `CustomHeavyContext` changes,
+- `arr` changes,
+- `props.otherArr` changes.
+
+But not if `otherState` or other props change.<br>
+And if `CustomHeavyContext` changes but `CustomHeavyContext.foo` doesn’t, `concatString` will indeed be recomputed, but the new value will be stable (as `concatString` is a string). So `MyComponent` won’t re-render.
+
+<details><summary>Similar example with a non-stable value</summary>
+
+```jsx
+const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
+
+const MyComponent = (props) => {
+  const [otherState] = React.useState({});
+
+  const [arr, setArr] = React.useState([]);
+  
+  const foo = React.useIsolation(() => {
+    return React.useContext(CustomHeavyContext).foo;
+  }, []); // Here the dependencies could have been fully avoided, as `React.useContext(CustomHeavyContext).foo` is by definition stable
+
+  const concatArr = React.useMemo(() => {
+    return [...foo, ...arr, ...props.otherArr];
+  }, [foo, arr, props.otherArr]);
+};
+```
+
+Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavyContext).foo, ...arr, ...props.otherArr]` would re-generate a new array every time, even if `React.useContext(CustomHeavyContext).foo` doesn’t change.
+
+</details>
+
+
+
 
 # Motivation
 
@@ -73,8 +129,8 @@ The way this would work in pseudo-code is this way:
 3. If the `callback` uses hooks like `useState`, `useContext`, etc., bind them to this _call scope_ instead of its parent scope
 4. If there are dependencies defined, store then in _internal slots_ (like with `useMemo` or `useCallback`) saved on the _parent scope_
 5. Store the return value of the `callback` in a _internal slot_ in the _parent scope_
-6. If there are any updates in any of the hooks defined within the _call scope_ (aka within the `callback`), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
-7. If there are any updates in the _parent scope_, check if any dependencies have changed (if no dependencies are set, recompute on all updates), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and store the return value in same _internal slot_.
+6. If there are any updates in any of the hooks defined within the _call scope_ (aka within the `callback`), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and compare the return value in previous _internal slot_, if it’s the same, do nothing, if it changes, update the _internal slot_ and re-render the _parent scope_.
+7. If there are any updates in the _parent scope_, check if any dependencies have changed (if no dependencies are set, recompute on all updates), re-compute the `callback` within its parent scope (just like when `useMemo` recomputes), and compare the return value in previous _internal slot_, if it’s the same, do nothing, if it changes, update the _internal slot_ and re-render the _parent scope_.
 
 ## Details on the design
 
