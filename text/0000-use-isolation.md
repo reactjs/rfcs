@@ -86,6 +86,8 @@ This hook would work like any other hook and follow the rule of hooks. And as it
 
 This hook should only be available in client components, but not in RSCs.
 
+One thing to note: the `callback` doesn’t have to be stable: just like the `reducer` in `React.useReducer`, when there is an update, React should just use its current definition.
+
 ## Code examples
 
 ### Without dependencies
