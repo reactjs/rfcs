@@ -172,9 +172,12 @@ const MyComponent = (props) => {
   const concatArr = React.useIsolation(() => {
     const context = React.useContext(CustomHeavyContext);
     return React.useMemo(() => {
-      return [...context.foo, ...arr, ...props.otherArr]
+      return [...context.foo, ...arr, ...props.otherArr];
     }, [context.foo, arr, props.otherArr]);
   }, [arr, props.otherArr]);
+  // Note: this ^ dep array here is optional as even if `useIsolation` re-runs at each render of `MyComponent`,
+  // `arr` & `props.otherArr` are already in the useMemo's dependencies, so React will keep the memoized value within the `useIsolation`
+  // and return a stable variable either way
 };
 ```
 
