@@ -159,7 +159,7 @@ In this example: `concatString` will only be recomputed if:
 But not if `otherState` or other props change.<br>
 And if `CustomHeavyContext` changes but `CustomHeavyContext.foo` doesn’t, `concatString` will indeed be recomputed, but the new value will be stable (as `concatString` is a string). So `MyComponent` won’t re-render.
 
-<details><summary>Similar example with a non-stable value</summary>
+### Similar example with a non-stable value
 
 ```jsx
 const CustomHeavyContext = React.createContext({ foo: [], bar: {}, paz: new Map() });
@@ -179,8 +179,6 @@ const MyComponent = (props) => {
 ```
 
 Here we need to use `useMemo` and as computing concatenation will re-generate a new array every time, even if no array in it doesn’t change.
-
-</details>
 
 ## Wrapping existing hooks for perf optimizations only
 
