@@ -194,11 +194,11 @@ const useLongPoll = (url, delay) => {
   const [id, setId] = React.useState(0);
 
   React.useEffect(() => {
-    const intervalId = setInterval(() => setId(id => id +1), delay);
+    const intervalId = setInterval(() => setId(id => id + 1), delay);
     return () => clearInterval(intervalId);
   }, []);
 
-  const [status, setStatus] React.useState();
+  const [status, setStatus] = React.useState();
   React.useEffect(() => {
     const controller = new AbortController();
     fetchStatus(url, { signal: controller.signal }).then(result => setStatus(result));
