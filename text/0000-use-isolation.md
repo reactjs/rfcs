@@ -168,18 +168,17 @@ const MyComponent = (props) => {
   const [otherState] = React.useState({});
 
   const [arr, setArr] = React.useState([]);
-  
-  const foo = React.useIsolation(() => {
-    return React.useContext(CustomHeavyContext).foo;
-  }, []); // Here the dependencies could have been fully avoided, as `React.useContext(CustomHeavyContext).foo` is by definition stable
 
-  const concatArr = React.useMemo(() => {
-    return [...foo, ...arr, ...props.otherArr];
-  }, [foo, arr, props.otherArr]);
+  const concatArr = React.useIsolation(() => {
+    const context = React.useContext(CustomHeavyContext);
+    return React.useMemo(() => {
+      return [...context.foo, ...arr, ...props.otherArr]
+    }, [context.foo, arr, props.otherArr]);
+  }, [arr, props.otherArr]);
 };
 ```
 
-Here we need to use `useMemo` and as computing `[...React.useContext(CustomHeavyContext).foo, ...arr, ...props.otherArr]` would re-generate a new array every time, even if `React.useContext(CustomHeavyContext).foo` doesn’t change.
+Here we need to use `useMemo` and as computing concatenation will re-generate a new array every time, even if no array in it doesn’t change.
 
 </details>
 
