@@ -32,6 +32,12 @@ This adds boilerplate and can be confusing for beginners. Allowing multiple prop
 - `children` is excluded from the context value.  
 - Reserved props like `key` and `ref` are ignored as usual.
 
+## Value Handling Rules
+
+1. If the only prop is `value`, it behaves exactly like the current React Context (backward-compatible).  
+2. If multiple props are provided including `value`, `value` is just another property in the context object, e.g. `{ value: theme, foo: bar }`.  
+3. If a single new prop (not `value`) is provided, it becomes the context value as usual.
+
 Example migration:
 
 **Before (legacy pattern):**
@@ -58,8 +64,8 @@ Example migration:
 # Drawbacks
 
 - Slightly more complex implementation of the Context provider.  
-- Potential confusion if `value` and other props are passed together.  
 - Need to update documentation and teaching materials.  
+- Possible confusion if both `value` and other props are passed (clarified by Value Handling Rules).  
 
 # Alternatives
 
@@ -82,5 +88,4 @@ Example migration:
 
 # Unresolved questions
 
-- Should React warn if both `value` and other props are passed?  
-- How should TypeScript inference handle the context type when `value` is absent?
+- Should React emit a warning in developer mode when only the `value` prop is used, to encourage migration to the new prop-based pattern?
