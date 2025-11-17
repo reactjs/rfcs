@@ -60,7 +60,7 @@ This example renders a simple Note with a title and body. It renders a non-edita
 
 import db from 'db'; 
 // (A1) We import from NoteEditor.js - a Client Component.
-import NoteEditor from 'NoteEditor';
+import NoteEditor from 'noteEditor';
 
 async function Note(props) {
   const {id, isEditing} = props;
